@@ -4,6 +4,11 @@ import alias from "@rollup/plugin-alias";
 import autoprefixer from "autoprefixer";
 
 export default defineConfig({
+  server: {
+    port: 5173, // Change the port to your preferred one
+    host: "0.0.0.0", // Allows access to your local IP address
+    open: true, // Optional: Opens the browser automatically
+  },
   base: "/Chess_Younes-Lahouiti/",
   plugins: [
     alias({
