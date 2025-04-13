@@ -3,4 +3,6 @@ import "./components/web-component.component";
 
 import { logarithm } from "@utils/functions/helper-functions/math.functions";
 
-console.log(logarithm(Math.E));
+import "./sass/main.scss";
+
+console.log(logarithm(69));
