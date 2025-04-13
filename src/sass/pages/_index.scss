@@ -1,3 +1,78 @@
 @use "../utils/" as *;
 
-.index {}
+.index {
+    @include center-flex;
+}
+
+.chess {
+    &__board {
+        --_size: 100px;
+
+        container-type: inline-size;
+        container-name: chess-board;
+
+        display: grid;
+        grid-template-columns: repeat(8, var(--_size));
+        grid-template-rows: repeat(8, var(--_size));
+        justify-content: center;
+        align-content: center;
+
+        position: relative;
+
+        overflow: hidden;
+        border-radius: 5px;
+    }
+
+    &__square {
+        position: relative;
+
+        &.light-square {
+            background-color: var(--chess-light-square-color);
+        }
+
+        &.dark-square {
+            background-color: var(--chess-dark-square-color);
+        }
+    }
+
+    &__label {
+        font-family: system-ui;
+        font-size: clamp(12px, 2.5cqi, 64px);
+
+        position: absolute;
+        --_inner-padding: 5px;
+        user-select: none;
+
+        &--rank {
+            top: var(--_inner-padding);
+            left: var(--_inner-padding);
+        }
+
+        &--file {
+            bottom: var(--_inner-padding);
+            right: var(--_inner-padding);
+        }
+
+
+        &--light {
+            color: var(--chess-light-square-color);
+        }
+
+        &--dark {
+            color: var(--chess-dark-square-color);
+        }
+    }
+
+    &__piece {
+        --_x: 0px;
+        --_y: 0px;
+
+        // position: absolute;
+        top: var(--_y);
+        left: var(--_x);
+
+        touch-action: none;
+        user-select: none;
+    }
+
+}
