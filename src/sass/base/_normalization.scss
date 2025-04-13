@@ -67,6 +67,10 @@
     }
 
     body {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: 100svh;
+
         min-height: 100svh;
         overflow-x: hidden;
         background-color: var(--bg-primary);
