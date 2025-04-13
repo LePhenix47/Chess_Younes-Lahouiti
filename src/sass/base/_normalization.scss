@@ -15,6 +15,22 @@
         }
     }
 
+    /* 
+     *  This selector targets input, textarea and select elements that are 
+     *  autofilled by the browser whether they are focused or not.
+     *
+     * NOTE: You cannot override neither the background nor the color when the input is autofilled
+     * Thus we have to resort to hacks to bypass that by using a box-shadow + -webkit-text-fill-color
+     * See: https://developer.mozilla.org/en-US/docs/Web/CSS/:autofill
+     */
+    :is(input, textarea, select):is( :-moz-autofill,
+        :-webkit-autofill,
+        :autofill):is(:focus, :not(:focus)) {
+        box-shadow: 0 0 0px 100vmax var(--bg-primary) inset;
+        -webkit-text-fill-color: var(--color-primary);
+        caret-color: var(--color-primary) !important;
+    }
+
     *,
     ::before,
     ::after {
