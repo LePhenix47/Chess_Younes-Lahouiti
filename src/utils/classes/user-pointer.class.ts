@@ -1,20 +1,32 @@
 // Helper type for listener function signature
 export type PointerDragEventMap = {
-  "custom:pointer-drag-start": null;
+  "custom:pointer-drag-start": {
+    adjustedX: number;
+    adjustedY: number;
+  };
   "custom:pointer-drag-hold": null;
   "custom:pointer-drag-move": Pick<
     PointerEvent,
     "pageX" | "pageY" | "movementX" | "movementY"
-  >;
+  > &
+    PointerDragEventMap["custom:pointer-drag-start"];
   "custom:pointer-drag-leave": null;
   "custom:pointer-drag-cancel": null;
   "custom:pointer-drag-end": null;
 };
 
-export type LastPointerPositions = Pick<
-  PointerEvent,
-  "pageX" | "pageY" | "clientX" | "clientY"
->;
+// Define a utility type to make all properties mutable
+type Mutable<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
+export type LastPointerPositions = Mutable<
+  Pick<PointerEvent, "pageX" | "pageY" | "clientX" | "clientY">
+> &
+  Partial<{
+    adjustedX: number;
+    adjustedY: number;
+  }>;
 
 class UserPointer {
   public isPressing: boolean = false;
@@ -125,11 +137,10 @@ class UserPointer {
 
   public dispatchEvent = <K extends keyof PointerDragEventMap>(
     eventName: K,
-    options?: PointerDragEventMap[K],
-    contentContainer: HTMLElement = document.body
+    options?: PointerDragEventMap[K]
   ): this => {
     const customEvent = new CustomEvent(eventName, { detail: options });
-    contentContainer.dispatchEvent(customEvent);
+    this.container.dispatchEvent(customEvent);
 
     return this;
   };
@@ -180,13 +191,22 @@ class UserPointer {
     this.initYOffset =
       event.pageY + containerDomRect.y - selectedElementDomRect.y;
 
+    const lastRecordedValuesKeys = Object.keys(
+      this.lastRecordedPositions
+    ).filter((key) => {
+      return key !== "adjustedX" && key !== "adjustedY";
+    }) as (keyof PointerEvent)[];
+
+    // TODO: Code repetition here + redundancy and the code fucking sucks in general
     const lastRecordedValues = this.getCustomEventDetails(
       event,
-      Object.keys(this.lastRecordedPositions) as (keyof LastPointerPositions)[]
+      lastRecordedValuesKeys
     );
-    console.log(lastRecordedValues);
 
-    this.lastRecordedPositions = lastRecordedValues;
+    this.lastRecordedPositions = {
+      ...lastRecordedValues,
+      ...this.lastRecordedPositions,
+    };
 
     const customEventsToDispatch: readonly (keyof PointerDragEventMap)[] = [
       "custom:pointer-drag-start",
@@ -208,24 +228,49 @@ class UserPointer {
       return;
     }
 
+    const lastRecordedValuesKeys = Object.keys(
+      this.lastRecordedPositions
+    ).filter((key) => {
+      return key !== "adjustedX" && key !== "adjustedY";
+    }) as (keyof PointerEvent)[];
+
+    // TODO: Code repetition here + redundancy and the code fucking sucks in general
     const lastRecordedValues = this.getCustomEventDetails(
       event,
-      Object.keys(this.lastRecordedPositions) as (keyof LastPointerPositions)[]
+      lastRecordedValuesKeys
     );
 
-    this.lastRecordedPositions = lastRecordedValues;
+    this.lastRecordedPositions = {
+      ...lastRecordedValues,
+      ...this.lastRecordedPositions,
+    };
 
-    const wantedProperties: readonly (keyof PointerDragEventMap["custom:pointer-drag-move"])[] =
-      ["pageX", "pageY", "movementX", "movementY"];
+    const wantedProperties: readonly (keyof PointerEvent)[] = [
+      "pageX",
+      "pageY",
+      "movementX",
+      "movementY",
+    ];
 
     const customEventDetailsObject = this.getCustomEventDetails(
       event,
       wantedProperties
     );
 
-    console.debug(customEventDetailsObject);
+    // TODO: Code repetition here
+    const containerDomRect = this.container.getBoundingClientRect?.();
 
-    this.dispatchEvent("custom:pointer-drag-move", customEventDetailsObject);
+    const adjustedX = event.pageX - containerDomRect.x;
+    const adjustedY = event.pageY - containerDomRect.y;
+
+    this.lastRecordedPositions.adjustedX = adjustedX;
+    this.lastRecordedPositions.adjustedY = adjustedY;
+
+    this.dispatchEvent("custom:pointer-drag-move", {
+      ...customEventDetailsObject,
+      adjustedX: adjustedX,
+      adjustedY: adjustedY,
+    });
   };
 
   private getCustomEventDetails = <
@@ -238,6 +283,10 @@ class UserPointer {
     const customEventDetailsObject = {} as { [K in TKeys[number]]: TEvent[K] };
 
     for (const key of propertiesForCustomEvent) {
+      if (!event[key]) {
+        continue;
+      }
+
       customEventDetailsObject[key] = event[key];
     }
 
@@ -260,6 +309,15 @@ class UserPointer {
 
   public resetPointerState = (event: PointerEvent) => {
     event.preventDefault();
+
+    // TODO: Code repetition here
+    const containerDomRect = this.container.getBoundingClientRect?.();
+
+    const adjustedX = event.pageX - containerDomRect.x;
+    const adjustedY = event.pageY - containerDomRect.y;
+
+    this.lastRecordedPositions.adjustedX = adjustedX;
+    this.lastRecordedPositions.adjustedY = adjustedY;
 
     this.isPressing = false;
     this.pressedElement = null;
