@@ -16,16 +16,29 @@ class ChessBoard {
   public squareSize: number = NaN;
 
   // ? Initialize the fileMap using a Map (0-7 to 'a' to 'h')
-  public fileMap = new Map<number, string>(
+  public static fileMap = new Map<number, string>(
     Array.from({ length: 8 }, (_, index) => [
       index,
       String.fromCharCode(97 + index),
     ])
   );
 
+  // ? Initialize the fileMap using a Map (0-7 to 'a' to 'h')
+  public static reverseFileMap = new Map<string, number>(
+    Array.from({ length: 8 }, (_, index) => [
+      String.fromCharCode(97 + index),
+      index,
+    ])
+  );
+
   // ? Initialize the rankMap using a Map (0-7 to '8' to '1')
-  public rankMap = new Map<number, string>(
+  public static rankMap = new Map<number, string>(
     Array.from({ length: 8 }, (_, index) => [index, (8 - index).toString()])
+  );
+
+  // ? Initialize the rankMap using a Map (0-7 to '8' to '1')
+  public static reverseRankMap = new Map<string, number>(
+    Array.from({ length: 8 }, (_, index) => [(8 - index).toString(), index])
   );
 
   constructor(container: HTMLElement) {
@@ -58,7 +71,7 @@ class ChessBoard {
         square.dataset.file = file.toString();
         square.dataset.rank = rank.toString();
         square.dataset.algebraicNotation =
-          this.fileMap.get(file) + this.rankMap.get(rank);
+          ChessBoard.fileMap.get(file) + ChessBoard.rankMap.get(rank);
 
         const isLight: boolean = (file + rank) % 2 === 0;
         square.classList.add(isLight ? "light-square" : "dark-square");
@@ -73,7 +86,7 @@ class ChessBoard {
               "chess__label--file",
             ]
           );
-          fileLabel.textContent = this.fileMap.get(file); // Get file label from the Map
+          fileLabel.textContent = ChessBoard.fileMap.get(file); // Get file label from the Map
           square.appendChild(fileLabel);
         }
 
@@ -87,7 +100,7 @@ class ChessBoard {
               "chess__label--rank",
             ]
           );
-          rankLabel.textContent = this.rankMap.get(rank); // Get rank number from the Map
+          rankLabel.textContent = ChessBoard.rankMap.get(rank); // Get rank number from the Map
           square.appendChild(rankLabel);
         }
 

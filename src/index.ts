@@ -36,8 +36,8 @@ userPointer.on("custom:pointer-drag-end", (e) => {
     lastRecordedPositions.adjustedY / squareSize
   );
 
-  const closestFile: string = chessBoardInstance.fileMap.get(fileIndex);
-  const closestRank: string = chessBoardInstance.rankMap.get(rankIndex);
+  const closestFile: string = ChessBoard.fileMap.get(fileIndex);
+  const closestRank: string = ChessBoard.rankMap.get(rankIndex);
 
   console.log(
     lastRecordedPositions.adjustedX,
