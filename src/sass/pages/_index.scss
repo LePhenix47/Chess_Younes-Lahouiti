@@ -1,7 +1,11 @@
 @use "../utils/" as *;
 
 .index {
-    @include center-flex;
+    @include center-flex-column(20px);
+}
+
+.sprite-cranberry {
+    display: none;
 }
 
 .chess {
@@ -11,6 +15,8 @@
         container-type: inline-size;
         container-name: chess-board;
 
+        isolation: isolate;
+
         display: grid;
         grid-template-columns: repeat(8, var(--_square-size));
         grid-template-rows: repeat(8, var(--_square-size));
@@ -19,12 +25,38 @@
 
         position: relative;
 
-        overflow: hidden;
         border-radius: 5px;
+
+        touch-action: none;
+        user-select: none;
+
+        &.black-perspective {
+            rotate: 180deg;
+
+            & *:is(.chess__square, .chess__piece) {
+                rotate: 180deg;
+            }
+
+            & .chess__piece {
+                // --_rank: var(--_index-x);
+                // --_file: var(--_index-y);
+            }
+
+            & .chess__label--rank {
+                justify-self: end;
+                align-self: end;
+            }
+
+            & .chess__label--file {
+                justify-self: start;
+                align-self: start;
+            }
+        }
     }
 
     &__square {
-        position: relative;
+        display: grid;
+        grid-template-areas: "stack";
 
         &.light-square {
             background-color: var(--chess-light-square-color);
@@ -33,24 +65,46 @@
         &.dark-square {
             background-color: var(--chess-dark-square-color);
         }
+
+        &:nth-child(1 of .chess__square) {
+            border-top-left-radius: inherit;
+        }
+
+        &:nth-child(8 of .chess__square) {
+            border-top-right-radius: inherit;
+        }
+
+        &:nth-last-child(8 of .chess__square) {
+            border-bottom-left-radius: inherit;
+        }
+
+        &:nth-last-child(1 of .chess__square) {
+            border-bottom-right-radius: inherit;
+        }
     }
 
     &__label {
         font-family: system-ui;
         font-size: clamp(12px, 2.5cqi, 64px);
 
-        position: absolute;
-        --_inner-padding: 5px;
+        padding: 5px;
         user-select: none;
 
+        grid-area: stack;
+
+        height: fit-content;
+        width: fit-content;
+
+        // x axis
         &--rank {
-            top: var(--_inner-padding);
-            left: var(--_inner-padding);
+            justify-self: start;
+            align-self: start;
         }
 
+        // y axis
         &--file {
-            bottom: var(--_inner-padding);
-            right: var(--_inner-padding);
+            justify-self: end;
+            align-self: end;
         }
 
 
@@ -64,12 +118,39 @@
     }
 
     &__piece {
-        --_x: 0px;
-        --_y: 0px;
-
         position: absolute;
-        left: var(--_x);
-        top: var(--_y);
+
+        // ? For positioning pieces
+        --_index-x: 0px;
+        --_index-y: 0px;
+
+        // ? Compensation for the CSS's axis which are flipped
+        --_rank: var(--_index-y);
+        --_file: var(--_index-x);
+
+        left: calc(var(--_rank) * var(--_square-size));
+        top: calc(var(--_file) * var(--_square-size));
+
+        transition: top 150ms ease-in-out, left 150ms ease-in-out;
+
+        &.dragging {
+            // ? For the Drag and Drop behavior
+            --_drag-x: 0px;
+            --_drag-y: 0px;
+
+            left: calc(var(--_drag-x));
+            top: calc(var(--_drag-y));
+
+        }
+
+        &.no-transition {
+            transition: none;
+
+        }
+
+        &.z-index {
+            z-index: 1;
+        }
 
         width: var(--_square-size);
         height: var(--_square-size);
@@ -78,6 +159,7 @@
 
         touch-action: none;
         user-select: none;
+
 
         &>svg {
             pointer-events: none;
