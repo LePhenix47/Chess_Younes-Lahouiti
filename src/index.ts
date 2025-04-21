@@ -32,13 +32,10 @@ userPointer.on("custom:pointer-drag-move", (e) => {
 
   const { pageX, pageY } = e.detail;
 
-  const pieceCursorOffsetX = pageX - userPointer.initXOffset;
-  const pieceCursorOffsetY = pageY - userPointer.initYOffset;
+  const pieceCursorOffsetX: number = pageX - userPointer.initXOffset;
+  const pieceCursorOffsetY: number = pageY - userPointer.initYOffset;
 
-  piece.classList.add(...["dragging", "z-index", "no-transition"]);
-
-  piece.style.setProperty("--_drag-x", `${pieceCursorOffsetX}px`);
-  piece.style.setProperty("--_drag-y", `${pieceCursorOffsetY}px`);
+  chessBoardInstance.dragPiece(piece, pieceCursorOffsetX, pieceCursorOffsetY);
 
   console.log({ pieceCursorOffsetX, pieceCursorOffsetY }, e);
 });
@@ -59,28 +56,8 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 
   let rankIndex: number = Math.floor(containerY / squareSize);
 
-  const isBlackPerspective: boolean =
-    chessBoardInstance.boardPerspective === "black";
-
-  if (isBlackPerspective) {
-    fileIndex = 7 - fileIndex;
-    rankIndex = 7 - rankIndex;
-  }
-
-  const closestFile: File = ChessBoard.fileMap.get(fileIndex);
-  const closestRank: Rank = ChessBoard.rankMap.get(rankIndex);
-
-  piece.style.setProperty("--_index-x", `${rankIndex}`);
-  piece.style.setProperty("--_index-y", `${fileIndex}`);
-
-  const newPosition: AlgebraicNotation = `${closestFile}${closestRank}`;
-
-  piece.classList.remove(...["dragging", "z-index"]);
-  setTimeout(() => {
-    piece.classList.remove("no-transition");
-  }, 0);
-
-  console.log({ newPosition });
+  // TODO: Refactor code & create a method below
+  chessBoardInstance.updatePiecePosition(piece, rankIndex, fileIndex, true);
 });
 
 console.log(userPointer);

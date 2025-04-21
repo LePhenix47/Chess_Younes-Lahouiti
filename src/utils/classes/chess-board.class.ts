@@ -123,9 +123,10 @@ class ChessBoard {
     let normalizedPosition: IPieceAlgorithm["position"];
 
     // Step 1: Normalize the position
+    // ? If it's an algebraic notation
     if (typeof position === "string") {
-      const file = position[0];
-      const rank = position[1];
+      const [file, rank] = position;
+
       normalizedPosition = {
         file,
         rank,
@@ -148,6 +149,50 @@ class ChessBoard {
 
     // Step 4: Save to internal map
     this.pieces.set(normalizedPosition.algebraicNotation, piece);
+  };
+
+  public dragPiece = (
+    pieceElement: HTMLElement,
+    offsetX: number,
+    offsetY: number
+  ) => {
+    pieceElement.classList.add("dragging", "z-index", "no-transition");
+
+    pieceElement.style.setProperty("--_drag-x", `${offsetX}px`);
+    pieceElement.style.setProperty("--_drag-y", `${offsetY}px`);
+  };
+
+  // In ChessBoard class
+  public updatePiecePosition = (
+    pieceElement: HTMLElement,
+    rankIndex: number,
+    fileIndex: number,
+    noAnimation: boolean = false
+  ) => {
+    if (this.boardPerspective === "black") {
+      fileIndex = 7 - fileIndex;
+      rankIndex = 7 - rankIndex;
+    }
+
+    const closestFile: File = ChessBoard.fileMap.get(fileIndex);
+    const closestRank: Rank = ChessBoard.rankMap.get(rankIndex);
+
+    // Update the piece's position using CSS variables
+    pieceElement.style.setProperty("--_index-x", `${rankIndex}`);
+    pieceElement.style.setProperty("--_index-y", `${fileIndex}`);
+
+    const classesToRemove = ["dragging", "z-index", "no-transition"];
+
+    if (noAnimation) {
+      classesToRemove.pop();
+      setTimeout(() => {
+        pieceElement.classList.remove("no-transition");
+      }, 0);
+    }
+
+    pieceElement.classList.remove(...classesToRemove);
+
+    const newPosition: AlgebraicNotation = `${closestFile}${closestRank}`;
   };
 
   // Placeholder for FEN and PGN methods
