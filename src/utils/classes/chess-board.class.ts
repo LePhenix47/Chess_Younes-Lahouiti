@@ -1,5 +1,6 @@
 import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
 import Piece, { Color, IPieceAlgorithm, PieceType } from "./piece.class";
+import { clamp } from "@utils/functions/helper-functions/number.functions";
 
 export type File = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type Rank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -7,16 +8,6 @@ export type Rank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 export type AlgebraicNotation = `${File}${Rank}`;
 
 class ChessBoard {
-  private container: HTMLElement;
-  private readonly initialFen =
-    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-
-  private pieces = new Map<string, Piece>();
-
-  public squareSize: number = NaN;
-
-  public boardPerspective: Color = "white";
-
   public static fileMap = new Map<number, File>(
     Array.from<unknown, [number, File]>({ length: 8 }, (_, index) => [
       index,
@@ -44,6 +35,15 @@ class ChessBoard {
       index,
     ])
   );
+
+  private container: HTMLElement;
+  private readonly initialFen =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  private pieces = new Map<string, Piece>();
+
+  public selectedPiece: HTMLElement;
+  public squareSize: number = NaN;
+  public boardPerspective: Color = "white";
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -162,7 +162,47 @@ class ChessBoard {
     pieceElement.style.setProperty("--_drag-y", `${offsetY}px`);
   };
 
-  // In ChessBoard class
+  public selectPiece = (pieceElement: HTMLElement) => {
+    const isChessPiece = this.elementIsChessPiece(pieceElement);
+
+    if (!isChessPiece) {
+      console.error("Element is not a chess piece", pieceElement);
+
+      return;
+    }
+
+    this.clearSelectedPiece();
+
+    this.selectedPiece = pieceElement;
+    pieceElement.classList.add("selected");
+  };
+
+  public elementIsChessPiece = (element: HTMLElement): boolean => {
+    if (!element) {
+      return false;
+    }
+
+    return element.hasAttribute("data-piece");
+  };
+
+  public clearSelectedPiece = () => {
+    if (!this.selectedPiece) {
+      return;
+    }
+
+    this.selectedPiece.classList.remove("selected");
+    this.selectedPiece = null;
+  };
+
+  public elementIsPieceSelected = (pieceElement: HTMLElement): boolean => {
+    if (!this.selectedPiece) {
+      return false;
+    }
+
+    return this.selectedPiece.isSameNode(pieceElement);
+  };
+
+  // TODO: not finished yet
   public updatePiecePosition = (
     pieceElement: HTMLElement,
     rankIndex: number,
@@ -173,6 +213,9 @@ class ChessBoard {
       fileIndex = 7 - fileIndex;
       rankIndex = 7 - rankIndex;
     }
+
+    fileIndex = clamp(0, fileIndex, 7);
+    rankIndex = clamp(0, rankIndex, 7);
 
     const closestFile: File = ChessBoard.fileMap.get(fileIndex);
     const closestRank: Rank = ChessBoard.rankMap.get(rankIndex);
@@ -191,7 +234,6 @@ class ChessBoard {
     }
 
     pieceElement.classList.remove(...classesToRemove);
-
     const newPosition: AlgebraicNotation = `${closestFile}${closestRank}`;
   };
 
