@@ -1,10 +1,10 @@
 import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
 import Piece, { Color, IPieceAlgorithm, PieceType } from "./piece.class";
 
-type File = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
-type Rank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+export type File = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
+export type Rank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
-type AlgebraicNotation = `${File}${Rank}`;
+export type AlgebraicNotation = `${File}${Rank}`;
 
 class ChessBoard {
   private container: HTMLElement;
@@ -15,30 +15,34 @@ class ChessBoard {
 
   public squareSize: number = NaN;
 
-  // ? Initialize the fileMap using a Map (0-7 to 'a' to 'h')
-  public static fileMap = new Map<number, string>(
-    Array.from({ length: 8 }, (_, index) => [
+  public boardPerspective: Color = "white";
+
+  public static fileMap = new Map<number, File>(
+    Array.from<unknown, [number, File]>({ length: 8 }, (_, index) => [
       index,
-      String.fromCharCode(97 + index),
+      String.fromCharCode(97 + index) as File,
     ])
   );
 
-  // ? Initialize the fileMap using a Map (0-7 to 'a' to 'h')
-  public static reverseFileMap = new Map<string, number>(
-    Array.from({ length: 8 }, (_, index) => [
-      String.fromCharCode(97 + index),
+  public static reverseFileMap = new Map<File, number>(
+    Array.from<unknown, [File, number]>({ length: 8 }, (_, index) => [
+      String.fromCharCode(97 + index) as File,
       index,
     ])
   );
 
-  // ? Initialize the rankMap using a Map (0-7 to '8' to '1')
-  public static rankMap = new Map<number, string>(
-    Array.from({ length: 8 }, (_, index) => [index, (8 - index).toString()])
+  public static rankMap = new Map<number, Rank>(
+    Array.from<unknown, [number, Rank]>({ length: 8 }, (_, index) => [
+      index,
+      (8 - index).toString() as Rank,
+    ])
   );
 
-  // ? Initialize the rankMap using a Map (0-7 to '8' to '1')
-  public static reverseRankMap = new Map<string, number>(
-    Array.from({ length: 8 }, (_, index) => [(8 - index).toString(), index])
+  public static reverseRankMap = new Map<Rank, number>(
+    Array.from<unknown, [Rank, number]>({ length: 8 }, (_, index) => [
+      (8 - index).toString() as Rank,
+      index,
+    ])
   );
 
   constructor(container: HTMLElement) {
