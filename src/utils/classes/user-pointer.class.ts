@@ -52,6 +52,26 @@ class UserPointer {
   private animationFrameId: number = NaN;
   private container: HTMLElement;
 
+  static computeOffsetFromContainer = (
+    pageX: number,
+    pageY: number,
+    container: HTMLElement
+  ): { x: number; y: number } => {
+    if (!(container instanceof HTMLElement)) {
+      throw new TypeError("Container must be an HTMLElement");
+    }
+
+    const containerRect: DOMRect = container.getBoundingClientRect();
+
+    const x = pageX - containerRect.x;
+    const y = pageY - containerRect.y;
+
+    return {
+      x,
+      y,
+    };
+  };
+
   constructor(container?: HTMLElement) {
     const containerIsNotHTMLElement =
       Boolean(container) && !(container instanceof HTMLElement);
