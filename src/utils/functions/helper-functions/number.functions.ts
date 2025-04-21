@@ -127,3 +127,8 @@ export function hexadecimalToDecimal(hexadecimal: string): number {
 export function decimalToHexadecimal(decimal: number): string {
   return decimal.toString(16);
 }
+
+// utils/math.ts
+export const clamp = (min: number, value: number, max: number): number => {
+  return Math.max(min, Math.min(value, max));
+};
