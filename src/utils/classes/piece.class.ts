@@ -1,3 +1,5 @@
+import ChessBoard from "./chess-board.class";
+
 export type Color = "white" | "black";
 export type PieceType =
   | "pawn"
@@ -42,30 +44,27 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     const span = document.createElement("span");
     span.classList.add("chess__piece");
     span.innerHTML = /* html */ `
-      <svg xmlns="http://www.w3.org/2000/svg">
+      <svg>
         <use href="#${this.color}-${this.type}"></use>
       </svg>
     `;
 
     // Optional: set initial position as CSS variables
-    span.style.setProperty("--_x", this.position.rank);
-    span.style.setProperty("--_y", this.position.file);
+    console.debug(this.position.file, this.position.rank);
+
+    span.style.setProperty(
+      "--_index-x",
+      // @ts-ignore
+      ChessBoard.reverseRankMap.get(this.position.rank)
+    );
+    span.style.setProperty(
+      "--_index-y",
+      // @ts-ignore
+      ChessBoard.reverseFileMap.get(this.position.file)
+    );
     span.dataset.position = this.position.algebraicNotation;
 
     return span;
-  };
-
-  public updatePosition = (newPosition: IPieceAlgorithm["position"]): void => {
-    if (!this.element) {
-      throw new Error("Element is null");
-    }
-
-    this.element.style.setProperty("--_x", newPosition.rank);
-    this.element.style.setProperty("--_y", newPosition.file);
-    this.element.dataset.position = this.position.algebraicNotation;
-
-    this.position = newPosition;
-    this.hasMoved = true;
   };
 
   public attachToBoard = (boardElement: HTMLElement): void => {
@@ -80,6 +79,18 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     boardElement.appendChild(this.element);
   };
 
+  public updatePosition = (newPosition: IPieceAlgorithm["position"]): void => {
+    if (!this.element) {
+      throw new Error("Element is null");
+    }
+
+    this.element.style.setProperty("--_index-x", newPosition.rank);
+    this.element.style.setProperty("--_index-y", newPosition.file);
+    this.element.dataset.position = this.position.algebraicNotation;
+
+    this.position = newPosition;
+    this.hasMoved = true;
+  };
   public move = (newPosition: IPieceAlgorithm["position"]) => {
     this.position = newPosition;
     this.hasMoved = true;
