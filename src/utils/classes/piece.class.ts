@@ -63,6 +63,8 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       ChessBoard.reverseFileMap.get(this.position.file)
     );
     span.dataset.position = this.position.algebraicNotation;
+    span.dataset.piece = this.type;
+    span.dataset.color = this.color;
 
     return span;
   };
@@ -99,6 +101,14 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   public toFenChar = (): string => {
     const pieceChar = this.getPieceChar();
     return this.color === "white" ? pieceChar.toUpperCase() : pieceChar;
+  };
+
+  public promotePawn = (newType: PieceType): void => {
+    if (this.type !== "pawn") {
+      return;
+    }
+
+    // TODO: Add logic to promote the pawn
   };
 
   private getPieceChar(): string {
