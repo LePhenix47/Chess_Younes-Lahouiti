@@ -24,8 +24,8 @@ export type LastPointerPositions = Mutable<
   Pick<PointerEvent, "pageX" | "pageY" | "clientX" | "clientY">
 > &
   Partial<{
-    adjustedX: number;
-    adjustedY: number;
+    containerX: number;
+    containerY: number;
   }>;
 
 class UserPointer {
@@ -40,6 +40,8 @@ class UserPointer {
     pageY: NaN,
     clientX: NaN,
     clientY: NaN,
+    containerX: NaN,
+    containerY: NaN,
   };
 
   private readonly controller = new AbortController();
@@ -230,9 +232,7 @@ class UserPointer {
 
     const lastRecordedValuesKeys = Object.keys(
       this.lastRecordedPositions
-    ).filter((key) => {
-      return key !== "adjustedX" && key !== "adjustedY";
-    }) as (keyof PointerEvent)[];
+    ) as (keyof PointerEvent)[];
 
     // TODO: Code repetition here + redundancy and the code fucking sucks in general
     const lastRecordedValues = this.getCustomEventDetails(
@@ -245,12 +245,12 @@ class UserPointer {
       ...this.lastRecordedPositions,
     };
 
-    const wantedProperties: readonly (keyof PointerEvent)[] = [
+    const wantedProperties = [
       "pageX",
       "pageY",
       "movementX",
       "movementY",
-    ];
+    ] as const;
 
     const customEventDetailsObject = this.getCustomEventDetails(
       event,
@@ -263,8 +263,8 @@ class UserPointer {
     const adjustedX = event.pageX - containerDomRect.x;
     const adjustedY = event.pageY - containerDomRect.y;
 
-    this.lastRecordedPositions.adjustedX = adjustedX;
-    this.lastRecordedPositions.adjustedY = adjustedY;
+    this.lastRecordedPositions.containerX = adjustedX;
+    this.lastRecordedPositions.containerY = adjustedY;
 
     this.dispatchEvent("custom:pointer-drag-move", {
       ...customEventDetailsObject,
@@ -316,15 +316,15 @@ class UserPointer {
     const adjustedX = event.pageX - containerDomRect.x;
     const adjustedY = event.pageY - containerDomRect.y;
 
-    this.lastRecordedPositions.adjustedX = adjustedX;
-    this.lastRecordedPositions.adjustedY = adjustedY;
+    this.lastRecordedPositions.containerX = adjustedX;
+    this.lastRecordedPositions.containerY = adjustedY;
+
+    this.dispatchEvent("custom:pointer-drag-end");
 
     this.isPressing = false;
     this.pressedElement = null;
     this.cancelAnimationFrame();
     this.animationFrameId = NaN;
-
-    this.dispatchEvent("custom:pointer-drag-end");
   };
 
   // Start the continuous drag hold loop
