@@ -81,7 +81,17 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     boardElement.appendChild(this.element);
   };
 
-  public updatePosition = (newPosition: IPieceAlgorithm["position"]): void => {
+  public drag = (offsetX: number, offsetY: number): void => {
+    this.element.classList.add("dragging", "z-index", "no-transition");
+
+    this.element.style.setProperty("--_drag-x", `${offsetX}px`);
+    this.element.style.setProperty("--_drag-y", `${offsetY}px`);
+  };
+
+  public updatePosition = (
+    newPosition: IPieceAlgorithm["position"],
+    noAnimation = false
+  ): void => {
     if (!this.element) {
       throw new Error("Element is null");
     }
@@ -90,10 +100,17 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.setProperty("--_index-y", newPosition.file);
     this.element.dataset.position = this.position.algebraicNotation;
 
-    this.position = newPosition;
-    this.hasMoved = true;
-  };
-  public move = (newPosition: IPieceAlgorithm["position"]) => {
+    const classesToRemove = ["dragging", "z-index", "no-transition"];
+
+    if (noAnimation) {
+      classesToRemove.pop();
+      setTimeout(() => {
+        this.element.classList.remove("no-transition");
+      }, 0);
+    }
+
+    this.element.classList.remove(...classesToRemove);
+
     this.position = newPosition;
     this.hasMoved = true;
   };

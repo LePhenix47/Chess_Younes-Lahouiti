@@ -84,13 +84,13 @@ userPointer.on("custom:pointer-drag-move", (e) => {
   if (!userPointer.pressedElement.hasAttribute("data-position")) {
     return;
   }
-  const piece = userPointer.pressedElement;
 
   const { pageX, pageY } = e.detail;
 
   const pieceCursorOffsetX: number = pageX - userPointer.initXOffset;
   const pieceCursorOffsetY: number = pageY - userPointer.initYOffset;
 
+  const piece = userPointer.pressedElement;
   const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
   chessBoardInstance.dragPiece(
     draggedPiece,
