@@ -41,7 +41,7 @@ class ChessBoard {
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   private pieces = new Map<string, Piece>();
 
-  public selectedPiece: HTMLElement;
+  public selectedPiece: Piece | null = null;
   public squareSize: number = NaN;
   public boardPerspective: Color = "white";
 
@@ -113,6 +113,14 @@ class ChessBoard {
     }
   };
 
+  public getPieceFromElement = (el: HTMLElement): Piece | null => {
+    const piece: Piece | null = [...this.pieces.values()].find(
+      (piece) => piece.element === el
+    );
+
+    return piece || null;
+  };
+
   public addPiece = (
     type: PieceType,
     color: Color,
@@ -151,30 +159,24 @@ class ChessBoard {
     this.pieces.set(normalizedPosition.algebraicNotation, piece);
   };
 
-  public dragPiece = (
-    pieceElement: HTMLElement,
-    offsetX: number,
-    offsetY: number
-  ) => {
+  public dragPiece = (piece: Piece, offsetX: number, offsetY: number) => {
+    const pieceElement: HTMLElement = piece.element;
+
     pieceElement.classList.add("dragging", "z-index", "no-transition");
 
     pieceElement.style.setProperty("--_drag-x", `${offsetX}px`);
     pieceElement.style.setProperty("--_drag-y", `${offsetY}px`);
   };
 
-  public selectPiece = (pieceElement: HTMLElement) => {
-    const isChessPiece = this.elementIsChessPiece(pieceElement);
-
-    if (!isChessPiece) {
-      console.error("Element is not a chess piece", pieceElement);
-
+  public selectPiece = (el: HTMLElement) => {
+    const piece = this.getPieceFromElement(el);
+    if (!piece) {
       return;
     }
 
     this.clearSelectedPiece();
-
-    this.selectedPiece = pieceElement;
-    pieceElement.classList.add("selected");
+    this.selectedPiece = piece;
+    piece.element.classList.add("selected");
   };
 
   public elementIsChessPiece = (element: HTMLElement): boolean => {
@@ -190,21 +192,19 @@ class ChessBoard {
       return;
     }
 
-    this.selectedPiece.classList.remove("selected");
+    this.selectedPiece.element.classList.remove("selected");
     this.selectedPiece = null;
   };
 
-  public elementIsPieceSelected = (pieceElement: HTMLElement): boolean => {
-    if (!this.selectedPiece) {
-      return false;
-    }
+  public elementIsPieceSelected = (el: HTMLElement): boolean => {
+    const piece: Piece = this.getPieceFromElement(el);
 
-    return this.selectedPiece.isSameNode(pieceElement);
+    return Boolean(piece) && piece === this.selectedPiece;
   };
 
   // TODO: not finished yet
   public updatePiecePosition = (
-    pieceElement: HTMLElement,
+    piece: Piece,
     rankIndex: number,
     fileIndex: number,
     noAnimation: boolean = false
@@ -220,6 +220,7 @@ class ChessBoard {
     const closestFile: File = ChessBoard.fileMap.get(fileIndex);
     const closestRank: Rank = ChessBoard.rankMap.get(rankIndex);
 
+    const pieceElement: HTMLElement = piece.element;
     // Update the piece's position using CSS variables
     pieceElement.style.setProperty("--_index-x", `${rankIndex}`);
     pieceElement.style.setProperty("--_index-y", `${fileIndex}`);

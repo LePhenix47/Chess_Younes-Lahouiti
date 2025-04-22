@@ -11,6 +11,7 @@ import ChessBoard, {
   Rank,
 } from "@utils/classes/chess-board.class";
 import UserPointer from "@utils/classes/user-pointer.class";
+import Piece from "@utils/classes/piece.class";
 
 console.log(logarithm(1));
 
@@ -32,53 +33,49 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
   }
 
   const target = e.target as HTMLElement;
+  const isPiece: boolean = chessBoardInstance.elementIsChessPiece(target);
+  const isSquare: boolean = !isPiece;
+  const selectedPiece: Piece = chessBoardInstance.selectedPiece;
 
-  const targetIsChessPiece: boolean =
-    chessBoardInstance.elementIsChessPiece(target);
+  // * CASE 1: A piece is already selected → Try to move it
+  if (selectedPiece) {
+    const rankIndex = Number(target.dataset.rank);
+    const fileIndex = Number(target.dataset.file);
 
-  const targetIsSquare: boolean = !targetIsChessPiece;
-
-  const wasPreviouslySelectedPiece: boolean =
-    chessBoardInstance.elementIsPieceSelected(target);
-
-  if (chessBoardInstance.selectedPiece) {
-    const rankIndex: number = Number(target.dataset.rank);
-    const fileIndex: number = Number(target.dataset.file);
-    chessBoardInstance.updatePiecePosition(
-      chessBoardInstance.selectedPiece,
-      rankIndex,
-      fileIndex,
-      false
-    );
+    // Only move if clicked target has valid rank & file (i.e. it's a square)
+    if (!isNaN(rankIndex) && !isNaN(fileIndex)) {
+      chessBoardInstance.updatePiecePosition(
+        selectedPiece,
+        rankIndex,
+        fileIndex,
+        false
+      );
+    }
 
     chessBoardInstance.clearSelectedPiece();
-
     return;
   }
 
-  if (targetIsSquare) {
+  // * CASE 2: Clicked on empty square, but no piece was selected → Do nothing
+  if (isSquare) {
     return;
   }
 
-  if (
-    !wasPreviouslySelectedPiece ||
-    !target.isSameNode(chessBoardInstance.selectedPiece)
-  ) {
+  // * CASE 3: Clicked on a piece (no piece selected yet)
+  const clickedSameAsSelected =
+    selectedPiece &&
+    target.isSameNode(chessBoardInstance.selectedPiece.element);
+
+  if (!selectedPiece || !clickedSameAsSelected) {
     chessBoardInstance.selectPiece(target);
     return;
-  } else if (wasPreviouslySelectedPiece) {
+  }
+
+  // * CASE 4: Clicked again on the already selected piece → Unselect it
+  if (clickedSameAsSelected) {
     chessBoardInstance.clearSelectedPiece();
     return;
   }
-
-  // * Clicked on a square thus we must move the piece to that square
-
-  // // TODO: Logic → If no piece was previously selected then select piece
-  // // TODO: If it was selected, on click the same piece, then unselect the piece
-  // TODO: If it was selected, on click a different piece, then unselect the previous piece and select the new one
-  // TODO: If it was selected, on click an empty square, then move the piece to that square
-
-  // ! Must update the logic as well in the DnD behavior to set the selected piece (TODO for the future after implementing the click logic)
 });
 
 // TODO: Refactor all of this to make a simple method call
@@ -94,7 +91,12 @@ userPointer.on("custom:pointer-drag-move", (e) => {
   const pieceCursorOffsetX: number = pageX - userPointer.initXOffset;
   const pieceCursorOffsetY: number = pageY - userPointer.initYOffset;
 
-  chessBoardInstance.dragPiece(piece, pieceCursorOffsetX, pieceCursorOffsetY);
+  const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
+  chessBoardInstance.dragPiece(
+    draggedPiece,
+    pieceCursorOffsetX,
+    pieceCursorOffsetY
+  );
 
   console.log("custom:pointer-drag-move");
 });
@@ -116,7 +118,16 @@ userPointer.on("custom:pointer-drag-end", (e) => {
   const rankIndex: number = Math.floor(containerY / squareSize);
 
   // TODO: Refactor code & create a method below
-  chessBoardInstance.updatePiecePosition(piece, rankIndex, fileIndex, true);
+  const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
+  if (!draggedPiece) {
+    return;
+  }
+  chessBoardInstance.updatePiecePosition(
+    draggedPiece,
+    rankIndex,
+    fileIndex,
+    true
+  );
   chessBoardInstance.clearSelectedPiece();
 });
 
