@@ -222,7 +222,7 @@ class ChessBoard {
       algebraicNotation,
     };
 
-    piece.updatePosition(newPosition, noAnimation);
+    piece.moveTo(newPosition, noAnimation);
 
     // TODO: Update internal map
     // TODO for later: Also update FEN & PGN

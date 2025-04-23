@@ -16,7 +16,7 @@ export interface IPieceAlgorithm {
 }
 
 interface IPieceDOM {
-  updatePosition(position: IPieceAlgorithm["position"]): void;
+  moveTo(position: IPieceAlgorithm["position"]): void;
   attachToBoard(boardElement: HTMLElement): void;
 }
 
@@ -88,7 +88,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.setProperty("--_drag-y", `${offsetY}px`);
   };
 
-  public updatePosition = (
+  public moveTo = (
     newPosition: IPieceAlgorithm["position"],
     noAnimation = false
   ): void => {
