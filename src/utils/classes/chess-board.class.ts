@@ -1,5 +1,5 @@
 import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
-import Piece, { Color, IPieceAlgorithm, PieceType } from "./piece.class";
+import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 
 export type File = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
@@ -43,7 +43,9 @@ class ChessBoard {
 
   public selectedPiece: Piece | null = null;
   public squareSize: number = NaN;
-  public boardPerspective: Color = "white";
+  public boardPerspective: PieceColor = "white";
+
+  public turn: PieceColor = "white";
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -123,7 +125,7 @@ class ChessBoard {
 
   public addPiece = (
     type: PieceType,
-    color: Color,
+    color: PieceColor,
     position:
       | Omit<IPieceAlgorithm["position"], "algebraicNotation">
       | AlgebraicNotation
@@ -197,6 +199,15 @@ class ChessBoard {
     return Boolean(piece) && piece === this.selectedPiece;
   };
 
+  public switchTurnTo = (color?: PieceColor) => {
+    if (color) {
+      this.turn = color;
+      return;
+    }
+
+    this.turn = this.turn === "white" ? "black" : "white";
+  };
+
   // TODO: not finished yet
   public updatePiecePosition = (
     piece: Piece,
@@ -223,7 +234,7 @@ class ChessBoard {
     };
 
     piece.moveTo(newPosition, noAnimation);
-
+    this.switchTurnTo();
     // TODO: Update internal map
     // TODO for later: Also update FEN & PGN
   };

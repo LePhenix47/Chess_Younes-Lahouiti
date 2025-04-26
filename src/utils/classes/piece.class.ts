@@ -1,6 +1,6 @@
 import ChessBoard from "./chess-board.class";
 
-export type Color = "white" | "black";
+export type PieceColor = "white" | "black";
 export type PieceType =
   | "pawn"
   | "rook"
@@ -11,7 +11,7 @@ export type PieceType =
 
 export interface IPieceAlgorithm {
   type: PieceType;
-  color: Color;
+  color: PieceColor;
   position: { file: string; rank: string; algebraicNotation: string };
 }
 
@@ -22,23 +22,36 @@ interface IPieceDOM {
 
 class Piece implements IPieceAlgorithm, IPieceDOM {
   public type: PieceType;
-  public color: Color;
+  public color: PieceColor;
   public position: IPieceAlgorithm["position"];
   public hasMoved: boolean = false;
+  public isSlidingPiece: boolean = false;
 
   public element: HTMLElement | null = null;
 
   constructor(
     type: PieceType,
-    color: Color,
+    color: PieceColor,
     position: IPieceAlgorithm["position"]
   ) {
     this.type = type;
     this.color = color;
     this.position = position;
 
+    const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
+    if (slidingPieces.includes(this.type)) {
+      this.isSlidingPiece = true;
+    }
+
     this.element = this.createElement();
   }
+
+  private checkSlidingPiece = () => {
+    const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
+    if (slidingPieces.includes(this.type)) {
+      this.isSlidingPiece = true;
+    }
+  };
 
   private createElement = (): HTMLElement => {
     const span = document.createElement("span");
@@ -82,6 +95,10 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   };
 
   public drag = (offsetX: number, offsetY: number): void => {
+    if (!this.element) {
+      throw new Error("Element is null");
+    }
+
     this.element.classList.add("dragging", "z-index", "no-transition");
 
     this.element.style.setProperty("--_drag-x", `${offsetX}px`);
@@ -96,17 +113,18 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       throw new Error("Element is null");
     }
 
+    this.element.style.removeProperty("--_drag-x");
+    this.element.style.removeProperty("--_drag-y");
+
     this.element.style.setProperty("--_index-x", newPosition.rank);
     this.element.style.setProperty("--_index-y", newPosition.file);
-    this.element.dataset.position = this.position.algebraicNotation;
+
+    this.element.dataset.position = newPosition.algebraicNotation;
 
     const classesToRemove = ["dragging", "z-index", "no-transition"];
 
     if (noAnimation) {
       classesToRemove.pop();
-      setTimeout(() => {
-        this.element.classList.remove("no-transition");
-      }, 0);
     }
 
     this.element.classList.remove(...classesToRemove);
@@ -126,6 +144,8 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     }
 
     // TODO: Add logic to promote the pawn
+
+    this.checkSlidingPiece();
   };
 
   private getPieceChar(): string {
