@@ -185,7 +185,13 @@
             pointer-events: none;
         }
 
+        &:hover {
+            cursor: grab;
+        }
 
+        &:active {
+            cursor: grabbing;
+        }
 
     }
 
