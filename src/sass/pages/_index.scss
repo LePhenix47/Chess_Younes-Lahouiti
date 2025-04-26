@@ -58,6 +58,12 @@
         display: grid;
         grid-template-areas: "stack";
 
+        &.can-move {
+            --_radius: 25%;
+            --_blur: 0.5px;
+            background-image: radial-gradient(circle at center, rgb(0, 0, 0, 50%), rgb(0, 0, 0, 50%) var(--_radius), transparent calc(var(--_radius) + var(--_blur)));
+        }
+
         &.light-square {
             background-color: var(--chess-light-square-color);
         }
