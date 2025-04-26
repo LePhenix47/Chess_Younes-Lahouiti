@@ -115,13 +115,31 @@ userPointer.on("custom:pointer-drag-end", (e) => {
   const { lastRecordedPositions } = userPointer;
   const { containerX, containerY } = lastRecordedPositions;
 
+  const { pageX, pageY } = e.detail;
+
   const fileIndex: number = Math.floor(containerX / squareSize);
 
   const rankIndex: number = Math.floor(containerY / squareSize);
 
   // TODO: Refactor code & create a method below
-  const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
+  const draggedPiece: Piece = chessBoardInstance.getPieceFromElement(piece);
   if (!draggedPiece) {
+    return;
+  }
+
+  const boardDomRect: DOMRect = chessBoardElement.getBoundingClientRect();
+  const isInsideBoard: boolean =
+    pageX >= boardDomRect.left &&
+    pageX <= boardDomRect.right &&
+    pageY >= boardDomRect.top &&
+    pageY <= boardDomRect.bottom;
+
+  console.log(isInsideBoard, pageX, pageY, boardDomRect);
+
+  if (!isInsideBoard) {
+    // Not inside → snap back to original square!
+    draggedPiece.moveTo(draggedPiece.position, true); // `noAnimation = true`
+    chessBoardInstance.clearSelectedPiece();
     return;
   }
 

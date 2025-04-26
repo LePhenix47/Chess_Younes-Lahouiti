@@ -12,7 +12,10 @@ export type PointerDragEventMap = {
     PointerDragEventMap["custom:pointer-drag-start"];
   "custom:pointer-drag-leave": null;
   "custom:pointer-drag-cancel": null;
-  "custom:pointer-drag-end": null;
+  "custom:pointer-drag-end": Pick<
+    PointerEvent,
+    "pageX" | "pageY" | "movementX" | "movementY"
+  >;
 };
 
 // Define a utility type to make all properties mutable
@@ -339,7 +342,12 @@ class UserPointer {
     this.lastRecordedPositions.containerX = adjustedX;
     this.lastRecordedPositions.containerY = adjustedY;
 
-    this.dispatchEvent("custom:pointer-drag-end");
+    this.dispatchEvent("custom:pointer-drag-end", {
+      pageY: event.pageY,
+      pageX: event.pageX,
+      movementY: event.movementY,
+      movementX: event.movementX,
+    });
 
     this.isPressing = false;
     this.pressedElement = null;
