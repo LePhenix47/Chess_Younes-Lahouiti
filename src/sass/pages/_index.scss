@@ -139,6 +139,14 @@
 
         transition: top 150ms ease-in-out, left 150ms ease-in-out;
 
+        width: var(--_square-size);
+        height: var(--_square-size);
+
+        display: flex;
+
+        touch-action: none;
+        user-select: none;
+
         &.dragging {
             // ? For the Drag and Drop behavior
             --_drag-x: 0px;
@@ -158,18 +166,18 @@
             z-index: 1;
         }
 
-        width: var(--_square-size);
-        height: var(--_square-size);
+        &.captured {
+            transition: opacity 150ms ease-in-out;
 
-        display: flex;
-
-        touch-action: none;
-        user-select: none;
-
+            opacity: 0;
+        }
 
         &>svg {
             pointer-events: none;
         }
+
+
+
     }
 
 }
