@@ -184,7 +184,7 @@ class ChessBoard {
     return element.hasAttribute("data-piece");
   };
 
-  public clearSelectedPiece = () => {
+  public clearSelectedPiece = (): void => {
     if (!this.selectedPiece) {
       return;
     }
@@ -199,7 +199,7 @@ class ChessBoard {
     return Boolean(piece) && piece === this.selectedPiece;
   };
 
-  public switchTurnTo = (color?: PieceColor) => {
+  public switchTurnTo = (color?: PieceColor): void => {
     if (color) {
       this.turn = color;
       return;
@@ -233,8 +233,17 @@ class ChessBoard {
       algebraicNotation,
     };
 
+    const hasSamePosition: boolean =
+      piece.position.algebraicNotation === algebraicNotation;
     piece.moveTo(newPosition, noAnimation);
+
+    if (hasSamePosition) {
+      return;
+    }
+
     this.switchTurnTo();
+    console.log("updatePiecePosition");
+
     // TODO: Update internal map
     // TODO for later: Also update FEN & PGN
   };
