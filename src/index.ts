@@ -37,20 +37,20 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
   const isSquare: boolean = !isPiece;
   const selectedPiece: Piece = chessBoardInstance.selectedPiece;
 
+  console.log({ isPiece, isSquare, selectedPiece }, chessBoardInstance);
+
   // * CASE 1: A piece is already selected → Try to move it
   if (selectedPiece) {
     const rankIndex = Number(target.dataset.rank);
     const fileIndex = Number(target.dataset.file);
 
     // Only move if clicked target has valid rank & file (i.e. it's a square)
-    if (!isNaN(rankIndex) && !isNaN(fileIndex)) {
-      chessBoardInstance.updatePiecePosition(
-        selectedPiece,
-        rankIndex,
-        fileIndex,
-        false
-      );
-    }
+    chessBoardInstance.updatePiecePosition(
+      selectedPiece,
+      rankIndex,
+      fileIndex,
+      false
+    );
 
     chessBoardInstance.clearSelectedPiece();
     return;
@@ -91,6 +91,8 @@ userPointer.on("custom:pointer-drag-move", (e) => {
   const pieceCursorOffsetY: number = pageY - userPointer.initYOffset;
 
   const piece = userPointer.pressedElement;
+  console.log({ piece });
+
   const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
   chessBoardInstance.dragPiece(
     draggedPiece,
@@ -122,6 +124,8 @@ userPointer.on("custom:pointer-drag-end", (e) => {
   if (!draggedPiece) {
     return;
   }
+
+  console.log({ piece });
   chessBoardInstance.updatePiecePosition(
     draggedPiece,
     rankIndex,

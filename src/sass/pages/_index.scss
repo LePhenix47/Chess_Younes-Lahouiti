@@ -64,12 +64,21 @@
             background-image: radial-gradient(circle at center, rgb(0, 0, 0, 50%), rgb(0, 0, 0, 50%) var(--_radius), transparent calc(var(--_radius) + var(--_blur)));
         }
 
+
         &.light-square {
             background-color: var(--chess-light-square-color);
         }
 
         &.dark-square {
             background-color: var(--chess-dark-square-color);
+        }
+
+        &.light-square.selected {
+            background-color: red;
+        }
+
+        &.dark-square.selected {
+            background-color: rgba(255, 0, 0, 75%);
         }
 
         &:nth-child(1 of .chess__square) {

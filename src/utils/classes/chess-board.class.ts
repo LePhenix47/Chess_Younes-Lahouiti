@@ -1,4 +1,7 @@
-import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
+import {
+  getInnerCssVariables,
+  selectQuery,
+} from "@utils/functions/helper-functions/dom.functions";
 import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 
@@ -133,7 +136,7 @@ class ChessBoard {
     let normalizedPosition: IPieceAlgorithm["position"];
 
     // Step 1: Normalize the position
-    // ? If it's an algebraic notation
+    // If it's algebraic notation (e.g., "c5")
     if (typeof position === "string") {
       const [file, rank] = position;
 
@@ -151,13 +154,29 @@ class ChessBoard {
       };
     }
 
-    // Step 2: Create the piece
+    // Step 2: Convert algebraic notation to indices and update normalizedPosition
+
+    const fileIndex =
+      ChessBoard.reverseFileMap.get(normalizedPosition.file as File) ?? -1;
+    const rankIndex =
+      ChessBoard.reverseRankMap.get(normalizedPosition.rank as Rank) ?? -1;
+
+    const hasInvalidPosition = [fileIndex, rankIndex].includes(-1);
+    if (hasInvalidPosition) {
+      throw new Error(`"Invalid position: ${normalizedPosition}`);
+    }
+
+    // Step 3: Update normalizedPosition to use indices instead of algebraic notation
+    normalizedPosition.file = fileIndex.toString();
+    normalizedPosition.rank = rankIndex.toString();
+
+    // Step 4: Create the piece using the updated normalizedPosition
     const piece = new Piece(type, color, normalizedPosition);
 
-    // Step 3: Attach to board
+    // Step 5: Attach to board
     piece.attachToBoard(this.container);
 
-    // Step 4: Save to internal map
+    // Step 6: Save to internal map
     this.pieces.set(normalizedPosition.algebraicNotation, piece);
   };
 
@@ -174,6 +193,13 @@ class ChessBoard {
     this.clearSelectedPiece();
     this.selectedPiece = piece;
     piece.element.classList.add("selected");
+
+    const { algebraicNotation } = piece.position;
+    const pieceSquare = selectQuery(
+      `[data-algebraic-notation="${algebraicNotation}"]`,
+      this.container
+    );
+    pieceSquare.classList.add("selected");
   };
 
   public elementIsChessPiece = (element: HTMLElement): boolean => {
@@ -188,6 +214,16 @@ class ChessBoard {
     if (!this.selectedPiece) {
       return;
     }
+
+    const { algebraicNotation } = this.selectedPiece.position;
+
+    const pieceSquare = selectQuery(
+      `[data-algebraic-notation="${algebraicNotation}"]`,
+      this.container
+    );
+    console.log({ algebraicNotation }, pieceSquare);
+
+    pieceSquare.classList.remove("selected");
 
     this.selectedPiece.element.classList.remove("selected");
     this.selectedPiece = null;
@@ -215,37 +251,56 @@ class ChessBoard {
     fileIndex: number,
     noAnimation: boolean = false
   ) => {
-    if (this.boardPerspective === "black") {
-      fileIndex = 7 - fileIndex;
-      rankIndex = 7 - rankIndex;
-    }
+    // if (this.boardPerspective === "black") {
+    //   fileIndex = 7 - fileIndex;
+    //   rankIndex = 7 - rankIndex;
+    // }
 
     fileIndex = clamp(0, fileIndex, 7);
     rankIndex = clamp(0, rankIndex, 7);
 
-    const file: File = ChessBoard.fileMap.get(fileIndex);
-    const rank: Rank = ChessBoard.rankMap.get(rankIndex);
+    const file = ChessBoard.fileMap.get(fileIndex)!;
+    const rank = ChessBoard.rankMap.get(rankIndex)!;
     const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
 
-    const newPosition: IPieceAlgorithm["position"] = {
-      file: `${fileIndex}`,
-      rank: `${rankIndex}`,
-      algebraicNotation,
-    };
+    const targetPiece = this.pieces.get(algebraicNotation);
+    console.log({ targetPiece });
 
-    const hasSamePosition: boolean =
-      piece.position.algebraicNotation === algebraicNotation;
-    piece.moveTo(newPosition, noAnimation);
-
-    if (hasSamePosition) {
-      return;
+    // 2. If the square is occupied by any piece (either friendly or enemy), don't allow the move
+    if (targetPiece && targetPiece.color === piece.color) {
+      console.log("Square is already occupied!", piece.position);
+      piece.moveTo(piece.position, noAnimation);
+      return; // Don't proceed with the move
     }
 
-    this.switchTurnTo();
-    console.log("updatePiecePosition");
+    // Capture if another piece is on the target square
+    if (targetPiece && targetPiece.color !== piece.color) {
+      this.capturePiece(targetPiece);
+    }
 
-    // TODO: Update internal map
-    // TODO for later: Also update FEN & PGN
+    const oldPosition = piece.position.algebraicNotation;
+    const hasMoved = oldPosition !== algebraicNotation;
+
+    piece.moveTo(
+      {
+        file: `${fileIndex}`,
+        rank: `${rankIndex}`,
+        algebraicNotation,
+      },
+      noAnimation
+    );
+
+    // Update internal pieces map
+    if (hasMoved) {
+      this.pieces.delete(oldPosition);
+      this.pieces.set(algebraicNotation, piece);
+      this.switchTurnTo();
+    }
+  };
+
+  private capturePiece = (targetPiece: Piece): void => {
+    targetPiece.delete({ animate: false }); // Remove from DOM
+    this.pieces.delete(targetPiece.position.algebraicNotation); // Remove from internal map
   };
 
   // Placeholder for FEN and PGN methods

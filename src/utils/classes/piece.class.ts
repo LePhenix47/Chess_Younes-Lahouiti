@@ -38,19 +38,18 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.color = color;
     this.position = position;
 
-    const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
-    if (slidingPieces.includes(this.type)) {
-      this.isSlidingPiece = true;
-    }
+    this.checkSlidingPiece();
 
     this.element = this.createElement();
   }
 
   private checkSlidingPiece = () => {
     const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
-    if (slidingPieces.includes(this.type)) {
-      this.isSlidingPiece = true;
+    if (!slidingPieces.includes(this.type)) {
+      return;
     }
+
+    this.isSlidingPiece = true;
   };
 
   private createElement = (): HTMLElement => {
@@ -65,16 +64,8 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     // Optional: set initial position as CSS variables
     console.debug(this.position.file, this.position.rank);
 
-    span.style.setProperty(
-      "--_index-x",
-      // @ts-ignore
-      ChessBoard.reverseRankMap.get(this.position.rank)
-    );
-    span.style.setProperty(
-      "--_index-y",
-      // @ts-ignore
-      ChessBoard.reverseFileMap.get(this.position.file)
-    );
+    span.style.setProperty("--_index-x", this.position.rank);
+    span.style.setProperty("--_index-y", this.position.file);
     span.dataset.position = this.position.algebraicNotation;
     span.dataset.piece = this.type;
     span.dataset.color = this.color;
@@ -113,9 +104,13 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       throw new Error("Element is null");
     }
 
+    console.log(newPosition);
+
+    // * Remove CSS variables (clears unusued properties in the DevTools)
     this.element.style.removeProperty("--_drag-x");
     this.element.style.removeProperty("--_drag-y");
 
+    // * Set new CSS variables for the position
     this.element.style.setProperty("--_index-x", newPosition.rank);
     this.element.style.setProperty("--_index-y", newPosition.file);
 
@@ -148,7 +143,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.checkSlidingPiece();
   };
 
-  private getPieceChar(): string {
+  private getPieceChar = (): string => {
     const map = new Map<string, string>(
       Object.entries({
         pawn: "p",
@@ -167,7 +162,26 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     }
 
     return char;
-  }
+  };
+
+  public delete = ({ animate = false }: { animate?: boolean } = {}): void => {
+    if (!this.element) {
+      return;
+    }
+
+    const callback = () => {
+      this.element.remove();
+      this.element = null;
+    };
+
+    if (!animate) {
+      callback();
+      return;
+    }
+
+    this.element.classList.add("fade-out");
+    this.element.addEventListener("transitionend", callback);
+  };
 }
 
 export default Piece;
