@@ -58,14 +58,7 @@ class ChessBoard {
       "--_square-size"
     );
 
-    console.log({ parsedSquaredSizeCssVariable });
-
-    this.squareSize = Number(
-      getInnerCssVariables(this.container, "--_square-size").replace(
-        /px|%/g,
-        ""
-      )
-    );
+    this.squareSize = Number(parsedSquaredSizeCssVariable.replace(/px|%/g, ""));
   }
 
   // Generates the board layout
@@ -215,13 +208,10 @@ class ChessBoard {
       return;
     }
 
-    const { algebraicNotation } = this.selectedPiece.position;
-
     const pieceSquare = selectQuery(
-      `[data-algebraic-notation="${algebraicNotation}"]`,
+      ".selected[data-algebraic-notation]",
       this.container
     );
-    console.log({ algebraicNotation }, pieceSquare);
 
     pieceSquare.classList.remove("selected");
 
