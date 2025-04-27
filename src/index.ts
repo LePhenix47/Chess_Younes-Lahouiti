@@ -13,8 +13,6 @@ import ChessBoard, {
 import UserPointer from "@utils/classes/user-pointer.class";
 import Piece from "@utils/classes/piece.class";
 
-console.log(logarithm(1));
-
 const chessBoardElement: HTMLElement = selectQuery(
   '[data-element="chess-board"]'
 );
@@ -25,63 +23,64 @@ const userPointer = new UserPointer(chessBoardElement);
 
 let lastPointerEvent: "drag" | "click" | null = null;
 
-// TODO: refactor code because it's a fucking mess, I should be able to just call a method
 chessBoardElement.addEventListener("click", (e: MouseEvent) => {
+  e.preventDefault();
+
   if (lastPointerEvent === "drag") {
     lastPointerEvent = "click";
     return;
   }
+  console.log("%cclick", "background: #bada55; color: #222");
 
   const target = e.target as HTMLElement;
-  const isPiece: boolean = chessBoardInstance.elementIsChessPiece(target);
-  const isSquare: boolean = !isPiece;
-  const selectedPiece: Piece = chessBoardInstance.selectedPiece;
+  const isPiece = chessBoardInstance.elementIsChessPiece(target);
+  const selectedPiece = chessBoardInstance.selectedPiece;
+  const clickedPiece = isPiece
+    ? chessBoardInstance.getPieceFromElement(target)
+    : null;
 
-  console.log({ isPiece, isSquare, selectedPiece }, chessBoardInstance);
+  // 1. No piece is selected yet
+  if (!selectedPiece) {
+    if (clickedPiece && clickedPiece.color === chessBoardInstance.currentTurn) {
+      chessBoardInstance.selectPiece(target);
+    }
+    return;
+  }
 
-  // * CASE 1: A piece is already selected → Try to move it
-  if (selectedPiece) {
-    const rankIndex = Number(target.dataset.rank);
-    const fileIndex = Number(target.dataset.file);
+  // 2. Already selected a piece
 
-    // Only move if clicked target has valid rank & file (i.e. it's a square)
-    chessBoardInstance.updatePiecePosition(
-      selectedPiece,
-      rankIndex,
-      fileIndex,
-      false
-    );
-
+  // a) Clicked the same piece again → unselect
+  if (clickedPiece && clickedPiece === selectedPiece) {
     chessBoardInstance.clearSelectedPiece();
     return;
   }
 
-  // * CASE 2: Clicked on empty square, but no piece was selected → Do nothing
-  if (isSquare) {
-    return;
-  }
-
-  // * CASE 3: Clicked on a piece (no piece selected yet)
-  const clickedSameAsSelected =
-    selectedPiece &&
-    target.isSameNode(chessBoardInstance.selectedPiece.element);
-
-  if (!selectedPiece || !clickedSameAsSelected) {
+  // b) Clicked another of my own pieces → switch selection
+  if (clickedPiece && clickedPiece.color === selectedPiece.color) {
     chessBoardInstance.selectPiece(target);
     return;
   }
 
-  // * CASE 4: Clicked again on the already selected piece → Unselect it
-  if (clickedSameAsSelected) {
-    chessBoardInstance.clearSelectedPiece();
-    return;
-  }
+  // c) Clicked an empty square or an enemy piece → move
+  const fileIndex = Number(target.dataset.file);
+  const rankIndex = Number(target.dataset.rank);
+
+  chessBoardInstance.updatePiecePosition(
+    selectedPiece,
+    rankIndex,
+    fileIndex,
+    false
+  );
+  chessBoardInstance.clearSelectedPiece();
 });
 
 // TODO: Refactor all of this to make a simple method call
 userPointer.on("custom:pointer-drag-move", (e) => {
   lastPointerEvent = "drag";
-  if (!userPointer.pressedElement.hasAttribute("data-position")) {
+  const isPiece = chessBoardInstance.elementIsChessPiece(
+    userPointer.pressedElement
+  );
+  if (!isPiece) {
     return;
   }
 
@@ -91,7 +90,7 @@ userPointer.on("custom:pointer-drag-move", (e) => {
   const pieceCursorOffsetY: number = pageY - userPointer.initYOffset;
 
   const piece = userPointer.pressedElement;
-  console.log({ piece });
+  // console.log({ piece });
 
   const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
   chessBoardInstance.dragPiece(
@@ -104,7 +103,10 @@ userPointer.on("custom:pointer-drag-move", (e) => {
 });
 
 userPointer.on("custom:pointer-drag-end", (e) => {
-  if (!userPointer.pressedElement.hasAttribute("data-position")) {
+  const isPiece = chessBoardInstance.elementIsChessPiece(
+    userPointer.pressedElement
+  );
+  if (!isPiece) {
     return;
   }
   const piece = userPointer.pressedElement;
@@ -134,7 +136,7 @@ userPointer.on("custom:pointer-drag-end", (e) => {
     pageY >= boardDomRect.top &&
     pageY <= boardDomRect.bottom;
 
-  console.log(isInsideBoard, pageX, pageY, boardDomRect);
+  // console.log(isInsideBoard, pageX, pageY, boardDomRect);
 
   if (!isInsideBoard) {
     // Not inside → snap back to original square!
@@ -143,7 +145,7 @@ userPointer.on("custom:pointer-drag-end", (e) => {
     return;
   }
 
-  console.log({ piece });
+  // console.log({ piece });
   chessBoardInstance.updatePiecePosition(
     draggedPiece,
     rankIndex,
@@ -151,9 +153,9 @@ userPointer.on("custom:pointer-drag-end", (e) => {
     true
   );
   chessBoardInstance.clearSelectedPiece();
-});
 
-console.log(userPointer);
+  console.log("%ccustom:pointer-drag-end", "background: #222; color: #bada55");
+});
 
 chessBoardInstance.generateBoard();
 

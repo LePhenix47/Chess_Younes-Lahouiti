@@ -48,7 +48,7 @@ class ChessBoard {
   public squareSize: number = NaN;
   public boardPerspective: PieceColor = "white";
 
-  public turn: PieceColor = "white";
+  public currentTurn: PieceColor = "white";
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -227,11 +227,11 @@ class ChessBoard {
 
   public switchTurnTo = (color?: PieceColor): void => {
     if (color) {
-      this.turn = color;
+      this.currentTurn = color;
       return;
     }
 
-    this.turn = this.turn === "white" ? "black" : "white";
+    this.currentTurn = this.currentTurn === "white" ? "black" : "white";
   };
 
   // TODO: not finished yet
@@ -241,6 +241,11 @@ class ChessBoard {
     fileIndex: number,
     noAnimation: boolean = false
   ) => {
+    // if (piece.color !== this.currentTurn) {
+    //   console.log("Not your turn!");
+    //   return;
+    // }
+
     // if (this.boardPerspective === "black") {
     //   fileIndex = 7 - fileIndex;
     //   rankIndex = 7 - rankIndex;
@@ -254,11 +259,18 @@ class ChessBoard {
     const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
 
     const targetPiece = this.pieces.get(algebraicNotation);
-    console.log({ targetPiece });
 
     // 2. If the square is occupied by any piece (either friendly or enemy), don't allow the move
-    if (targetPiece && targetPiece.color === piece.color) {
-      console.log("Square is already occupied!", piece.position);
+    if (
+      (targetPiece && targetPiece.color === piece.color) ||
+      piece.color !== this.currentTurn
+    ) {
+      console.error(
+        targetPiece && targetPiece.color === piece.color
+          ? "Square is already occupied !"
+          : "Not your turn !",
+        piece.position
+      );
       piece.moveTo(piece.position, noAnimation);
       return; // Don't proceed with the move
     }
