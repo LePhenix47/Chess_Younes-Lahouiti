@@ -173,6 +173,14 @@ class ChessBoard {
     this.pieces.set(normalizedPosition.algebraicNotation, piece);
   };
 
+  public elementIsChessPiece = (element: HTMLElement): boolean => {
+    if (!element) {
+      return false;
+    }
+
+    return element.hasAttribute("data-piece");
+  };
+
   public dragPiece = (piece: Piece, offsetX: number, offsetY: number) => {
     piece.drag(offsetX, offsetY);
   };
@@ -193,14 +201,6 @@ class ChessBoard {
       this.container
     );
     pieceSquare.classList.add("selected");
-  };
-
-  public elementIsChessPiece = (element: HTMLElement): boolean => {
-    if (!element) {
-      return false;
-    }
-
-    return element.hasAttribute("data-piece");
   };
 
   public clearSelectedPiece = (): void => {
@@ -260,23 +260,24 @@ class ChessBoard {
 
     const targetPiece = this.pieces.get(algebraicNotation);
 
-    // 2. If the square is occupied by any piece (either friendly or enemy), don't allow the move
-    if (
-      (targetPiece && targetPiece.color === piece.color) ||
-      piece.color !== this.currentTurn
-    ) {
-      console.error(
-        targetPiece && targetPiece.color === piece.color
-          ? "Square is already occupied !"
-          : "Not your turn !",
-        piece.position
-      );
+    // * 1. If the piece is not your turn, don't allow the move
+    if (piece.color !== this.currentTurn) {
+      console.error("Not your turn !", piece.position);
+      piece.moveTo(piece.position, noAnimation);
+      return;
+    }
+
+    // * 2. If the square is occupied by any piece (either friendly or enemy), don't allow the move
+    if (targetPiece && targetPiece.color === piece.color) {
+      console.error("Square is already occupied !", piece.position);
       piece.moveTo(piece.position, noAnimation);
       return; // Don't proceed with the move
     }
 
-    // Capture if another piece is on the target square
+    // TODO: If the move is illegal, don't allow it
+
     if (targetPiece && targetPiece.color !== piece.color) {
+      // Capture if another piece is on the target square
       this.capturePiece(targetPiece);
     }
 
