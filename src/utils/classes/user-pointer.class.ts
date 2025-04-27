@@ -55,6 +55,9 @@ class UserPointer {
   private animationFrameId: number = NaN;
   private container: HTMLElement;
 
+  private pointerDownTime: number = NaN;
+  private readonly DRAG_TIME_THRESHOLD_MS = 300;
+
   static computeOffsetFromContainer = (
     pageX: number,
     pageY: number,
@@ -200,10 +203,14 @@ class UserPointer {
   private handlePointerDown = (event: PointerEvent) => {
     event.preventDefault();
 
+    this.pointerDownTime = performance.now();
+
     const isHoldingLeftClick =
       event.pointerType === "mouse" && event.button === 0;
     const isTouchingScreen = event.pointerType === "touch";
+
     this.isPressing = isHoldingLeftClick || isTouchingScreen;
+
     this.pressedElement = event.target! as HTMLElement;
 
     const selectedElementDomRect =
@@ -333,6 +340,16 @@ class UserPointer {
   public resetPointerState = (event: PointerEvent) => {
     event.preventDefault();
 
+    const pointerUpTime = performance.now();
+    const dragDuration = pointerUpTime - this.pointerDownTime;
+
+    if (dragDuration < this.DRAG_TIME_THRESHOLD_MS) {
+      console.log("%cNo drag", "background: #222; color: #bada55");
+
+      this.resetAllState();
+      return;
+    }
+
     // TODO: Code repetition here
     const containerDomRect = this.container.getBoundingClientRect?.();
 
@@ -349,6 +366,10 @@ class UserPointer {
       movementX: event.movementX,
     });
 
+    this.resetAllState();
+  };
+
+  private resetAllState = () => {
     this.isPressing = false;
     this.pressedElement = null;
     this.cancelAnimationFrame();
