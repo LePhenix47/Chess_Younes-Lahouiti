@@ -138,7 +138,7 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 
   if (!isInsideBoard) {
     // Not inside → snap back to original square!
-    draggedPiece.moveTo(draggedPiece.position, true); // `noAnimation = true`
+    draggedPiece.moveTo(draggedPiece.position, false); // `noAnimation = true`
     chessBoardInstance.clearSelectedPiece();
     return;
   }
