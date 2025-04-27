@@ -60,20 +60,25 @@ class ChessBoard {
   private pieces = new Map<string, Piece>();
 
   public selectedPiece: Piece | null = null;
-  public squareSize: number = NaN;
   public boardPerspective: PieceColor = "white";
 
   public currentTurn: PieceColor = "white";
 
   constructor(container: HTMLElement) {
     this.container = container;
+  }
 
+  public get squareSize(): number {
     const parsedSquaredSizeCssVariable = getInnerCssVariables(
-      container,
+      this.container,
       "--_square-size"
     );
 
-    this.squareSize = Number(parsedSquaredSizeCssVariable.replace(/px|%/g, ""));
+    const squareSize = Number(
+      parsedSquaredSizeCssVariable.replace(/px|%/g, "")
+    );
+
+    return squareSize;
   }
 
   // Generates the board layout
@@ -272,6 +277,7 @@ class ChessBoard {
   ) => {
     console.log("updatePiecePosition", piece, rankIndex, fileIndex);
     // TODO: Verify if we're not in check (legal moves)
+    // TODO: Verify if the piece we're trying to move ain't pinned (legal moves)
     // TODO: Verify if we're not stalemated (legal moves)
 
     // if (piece.color !== this.currentTurn) {
@@ -312,7 +318,7 @@ class ChessBoard {
     // * 2. If the square is occupied by an enemy piece, capture it
     if (targetPiece && targetPiece.color !== piece.color) {
       // Capture if another piece is on the target square
-      this.capturePiece(targetPiece);
+      this.capturePiece(targetPiece, noAnimation);
     }
 
     const oldPosition = piece.position.algebraicNotation;
@@ -335,8 +341,9 @@ class ChessBoard {
     }
   };
 
-  private capturePiece = (targetPiece: Piece): void => {
-    targetPiece.delete({ animate: false }); // Remove from DOM
+  private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
+    const animate: boolean = !noAnimation;
+    targetPiece.delete({ animate }); // Remove from DOM
     this.pieces.delete(targetPiece.position.algebraicNotation); // Remove from internal map
   };
 
