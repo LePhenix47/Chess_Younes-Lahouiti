@@ -4,6 +4,7 @@ import {
 } from "@utils/functions/helper-functions/dom.functions";
 import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
+import Player from "./player.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -63,10 +64,48 @@ class ChessBoard {
   public boardPerspective: PieceColor = "white";
 
   public currentTurn: PieceColor = "white";
+  public whitePlayer: Player;
+  public blackPlayer: Player;
 
   constructor(container: HTMLElement) {
     this.container = container;
+
+    this.whitePlayer = new Player("white");
+    this.blackPlayer = new Player("black");
   }
+
+  public get currentPlayer(): Player {
+    return this.currentTurn === "white" ? this.whitePlayer : this.blackPlayer;
+  }
+
+  public set currentPlayer(player: Player) {
+    if (player.color !== this.currentTurn) {
+      throw new Error("The player color doesn't match the current turn.");
+    }
+    if (player.color === "white") {
+      this.whitePlayer = player;
+    } else {
+      this.blackPlayer = player;
+    }
+  }
+
+  public updatePlayerState = (
+    player: Player,
+    inCheck: boolean,
+    canCastle: boolean
+  ) => {
+    player.setInCheck(inCheck);
+    player.setCanCastle(canCastle);
+  };
+
+  public switchTurnTo = (color?: PieceColor): void => {
+    if (color) {
+      this.currentTurn = color;
+      return;
+    }
+
+    this.currentTurn = this.currentTurn === "white" ? "black" : "white";
+  };
 
   public get squareSize(): number {
     const parsedSquaredSizeCssVariable = getInnerCssVariables(
@@ -259,15 +298,6 @@ class ChessBoard {
     return Boolean(piece) && piece === this.selectedPiece;
   };
 
-  public switchTurnTo = (color?: PieceColor): void => {
-    if (color) {
-      this.currentTurn = color;
-      return;
-    }
-
-    this.currentTurn = this.currentTurn === "white" ? "black" : "white";
-  };
-
   // TODO: not finished yet
   public updatePiecePosition = (
     piece: Piece,
@@ -321,8 +351,8 @@ class ChessBoard {
       this.capturePiece(targetPiece, noAnimation);
     }
 
+    // TODO: This is temporary, later on we'll record the move history
     const oldPosition = piece.position.algebraicNotation;
-    const hasMoved = oldPosition !== algebraicNotation;
 
     piece.moveTo(
       {
@@ -333,12 +363,11 @@ class ChessBoard {
       noAnimation
     );
 
-    // Update internal pieces map
-    if (hasMoved) {
-      this.pieces.delete(oldPosition);
-      this.pieces.set(algebraicNotation, piece);
-      this.switchTurnTo();
-    }
+    // Update the pieces map
+    this.pieces.delete(oldPosition);
+    this.pieces.set(algebraicNotation, piece);
+
+    this.switchTurnTo();
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
