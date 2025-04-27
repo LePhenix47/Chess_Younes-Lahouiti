@@ -39,6 +39,21 @@ class ChessBoard {
     ])
   );
 
+  public static getBoardIndicesFromAlgebraicNotation = (
+    algebraicNotation: AlgebraicNotation
+  ): IPieceAlgorithm["position"] => {
+    const [file, rank] = algebraicNotation;
+
+    const fileIndex = ChessBoard.reverseFileMap.get(file as ChessFile);
+    const rankIndex = ChessBoard.reverseRankMap.get(rank as ChessRank);
+
+    return {
+      algebraicNotation,
+      file: `${fileIndex}`,
+      rank: `${rankIndex}`,
+    };
+  };
+
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -182,12 +197,26 @@ class ChessBoard {
   };
 
   public dragPiece = (piece: Piece, offsetX: number, offsetY: number) => {
+    // Turn check: Ensure it's the current player's turn before dragging
+    if (piece.color !== this.currentTurn) {
+      piece.moveTo(piece.position, true);
+      console.error("It's not your turn! Cannot drag piece.");
+      return;
+    }
+
+    this.selectPiece(piece.element);
+
     piece.drag(offsetX, offsetY);
   };
 
   public selectPiece = (el: HTMLElement) => {
     const piece = this.getPieceFromElement(el);
     if (!piece) {
+      return;
+    }
+
+    if (piece.color !== this.currentTurn) {
+      console.error("It's not your turn! Cannot select piece.");
       return;
     }
 
@@ -241,6 +270,10 @@ class ChessBoard {
     fileIndex: number,
     noAnimation: boolean = false
   ) => {
+    console.log("updatePiecePosition", piece, rankIndex, fileIndex);
+    // TODO: Verify if we're not in check (legal moves)
+    // TODO: Verify if we're not stalemated (legal moves)
+
     // if (piece.color !== this.currentTurn) {
     //   console.log("Not your turn!");
     //   return;
@@ -262,20 +295,21 @@ class ChessBoard {
 
     // * 1. If the piece is not your turn, don't allow the move
     if (piece.color !== this.currentTurn) {
-      console.error("Not your turn !", piece.position);
+      console.error("Not your turn ! Cannot move piece.");
       piece.moveTo(piece.position, noAnimation);
       return;
     }
 
-    // * 2. If the square is occupied by any piece (either friendly or enemy), don't allow the move
+    // * 2. If the square is occupied by a friendly piece, don't allow the move
     if (targetPiece && targetPiece.color === piece.color) {
-      console.error("Square is already occupied !", piece.position);
+      console.log("Returning back to original position", piece.position);
       piece.moveTo(piece.position, noAnimation);
       return; // Don't proceed with the move
     }
 
     // TODO: If the move is illegal, don't allow it
 
+    // * 2. If the square is occupied by an enemy piece, capture it
     if (targetPiece && targetPiece.color !== piece.color) {
       // Capture if another piece is on the target square
       this.capturePiece(targetPiece);
