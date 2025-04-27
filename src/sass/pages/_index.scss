@@ -136,6 +136,7 @@
         position: absolute;
 
         --_piece-transition-duration: 150ms;
+        --_piece-transition-timing-function: ease-in-out;
 
         // ? For positioning pieces
         --_index-x: 0px;
@@ -148,7 +149,7 @@
         left: calc(var(--_rank) * var(--_square-size));
         top: calc(var(--_file) * var(--_square-size));
 
-        transition: top var(--_piece-transition-duration) ease-in-out, left var(--_piece-transition-duration) ease-in-out;
+        transition: top var(--_piece-transition-duration) var(--_piece-transition-timing-function), left var(--_piece-transition-duration) var(--_piece-transition-timing-function);
 
         width: var(--_square-size);
         height: var(--_square-size);
@@ -178,7 +179,8 @@
         }
 
         &.captured {
-            transition: opacity var(--_piece-transition-duration) ease-in-out;
+            --_capture-timing-function: var(--_piece-transition-timing-function);
+            transition: opacity var(--_piece-transition-duration) var(--_capture-timing-function);
 
             opacity: 0;
         }
