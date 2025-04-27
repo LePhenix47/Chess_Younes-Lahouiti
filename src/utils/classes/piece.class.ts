@@ -106,7 +106,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
 
     console.log(newPosition);
 
-    // * Remove CSS variables (clears unusued properties in the DevTools)
+    // * Remove CSS variables (clears unused properties in the DevTools)
     this.element.style.removeProperty("--_drag-x");
     this.element.style.removeProperty("--_drag-y");
 
@@ -116,12 +116,28 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
 
     this.element.dataset.position = newPosition.algebraicNotation;
 
-    const classesToRemove = ["dragging", "z-index", "no-transition"];
+    // TODO: This code's a mess, so after moving a piece either by click or drag we should clean up the CSS
+    // TODO: Now on click no problem, but on drag the classes still remain, not that it causes a problem but it's a mess in the piece class
+    // ? We need to remove the dragging class
+    const classesToRemove = ["dragging", "no-transition"];
 
     if (noAnimation) {
       classesToRemove.pop();
+    } else {
+      this.element.classList.add("z-index");
+      const callback = (event?: TransitionEvent) => {
+        if (!["top", "left"].includes(event.propertyName)) {
+          return;
+        }
+
+        this.element.classList.remove("z-index");
+        this.element.removeEventListener("transitionend", callback);
+      };
+
+      this.element.addEventListener("transitionend", callback);
     }
 
+    console.debug(noAnimation, classesToRemove);
     this.element.classList.remove(...classesToRemove);
 
     this.position = newPosition;
@@ -169,7 +185,15 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       return;
     }
 
-    const callback = () => {
+    const callback = (event?: TransitionEvent) => {
+      if (event && event.propertyName !== "opacity") {
+        return;
+      }
+
+      if (event) {
+        this.element.removeEventListener("transitionend", callback);
+      }
+
       this.element.remove();
       this.element = null;
     };
@@ -179,7 +203,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       return;
     }
 
-    this.element.classList.add("fade-out");
+    this.element.classList.add("captured");
     this.element.addEventListener("transitionend", callback);
   };
 }
