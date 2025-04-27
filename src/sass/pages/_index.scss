@@ -135,6 +135,8 @@
     &__piece {
         position: absolute;
 
+        --_piece-transition-duration: 150ms;
+
         // ? For positioning pieces
         --_index-x: 0px;
         --_index-y: 0px;
@@ -146,7 +148,7 @@
         left: calc(var(--_rank) * var(--_square-size));
         top: calc(var(--_file) * var(--_square-size));
 
-        transition: top 150ms ease-in-out, left 150ms ease-in-out;
+        transition: top var(--_piece-transition-duration) ease-in-out, left var(--_piece-transition-duration) ease-in-out;
 
         width: var(--_square-size);
         height: var(--_square-size);
@@ -172,11 +174,11 @@
         }
 
         &.z-index {
-            z-index: 1;
+            z-index: 5;
         }
 
         &.captured {
-            transition: opacity 150ms ease-in-out;
+            transition: opacity var(--_piece-transition-duration) ease-in-out;
 
             opacity: 0;
         }
