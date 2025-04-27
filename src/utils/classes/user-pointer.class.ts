@@ -56,7 +56,7 @@ class UserPointer {
   private container: HTMLElement;
 
   private pointerDownTime: number = NaN;
-  private readonly DRAG_TIME_THRESHOLD_MS = 300;
+  private readonly DRAG_TIME_THRESHOLD_MS = 150;
 
   static computeOffsetFromContainer = (
     pageX: number,
