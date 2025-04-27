@@ -41,9 +41,7 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
 
   // 1. No piece is selected yet
   if (!selectedPiece) {
-    if (clickedPiece && clickedPiece.color === chessBoardInstance.currentTurn) {
-      chessBoardInstance.selectPiece(target);
-    }
+    chessBoardInstance.selectPiece(target);
     return;
   }
 
@@ -62,8 +60,13 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
   }
 
   // c) Clicked an empty square or an enemy piece → move
-  const fileIndex = Number(target.dataset.file);
-  const rankIndex = Number(target.dataset.rank);
+  const attributeToCheck = clickedPiece ? "position" : "algebraicNotation";
+  const targetPosition = target.dataset[attributeToCheck] as AlgebraicNotation;
+
+  const { file, rank } =
+    ChessBoard.getBoardIndicesFromAlgebraicNotation(targetPosition);
+  const fileIndex = Number(file);
+  const rankIndex = Number(rank);
 
   chessBoardInstance.updatePiecePosition(
     selectedPiece,
