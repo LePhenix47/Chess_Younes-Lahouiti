@@ -106,39 +106,39 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
 
     console.log(newPosition);
 
-    // * Remove CSS variables (clears unused properties in the DevTools)
+    // * Remove temporary drag offset
     this.element.style.removeProperty("--_drag-x");
     this.element.style.removeProperty("--_drag-y");
 
-    // * Set new CSS variables for the position
+    // * Set new board coordinates
     this.element.style.setProperty("--_index-x", newPosition.rank);
     this.element.style.setProperty("--_index-y", newPosition.file);
-
     this.element.dataset.position = newPosition.algebraicNotation;
 
-    // TODO: This code's a mess, so after moving a piece either by click or drag we should clean up the CSS
-    // TODO: Now on click no problem, but on drag the classes still remain, not that it causes a problem but it's a mess in the piece class
-    // ? We need to remove the dragging class
-    const classesToRemove = ["dragging", "no-transition"];
-
     if (noAnimation) {
-      classesToRemove.pop();
+      // * Drag move (no animation)
+      // ? Instantly move WITHOUT transition
+      this.element.classList.remove("dragging");
+
+      setTimeout(() => {
+        this.element.classList.remove(...["no-transition", "z-index"]);
+      }, 0);
     } else {
+      // * Click move (with animation)
       this.element.classList.add("z-index");
-      const callback = (event?: TransitionEvent) => {
+      this.element.classList.remove("dragging");
+
+      const onTransitionEnd = (event: TransitionEvent) => {
         if (!["top", "left"].includes(event.propertyName)) {
           return;
         }
 
-        this.element.classList.remove("z-index");
-        this.element.removeEventListener("transitionend", callback);
+        this.element?.classList.remove("z-index");
+        this.element?.removeEventListener("transitionend", onTransitionEnd);
       };
 
-      this.element.addEventListener("transitionend", callback);
+      this.element.addEventListener("transitionend", onTransitionEnd);
     }
-
-    console.debug(noAnimation, classesToRemove);
-    this.element.classList.remove(...classesToRemove);
 
     this.position = newPosition;
     this.hasMoved = true;
