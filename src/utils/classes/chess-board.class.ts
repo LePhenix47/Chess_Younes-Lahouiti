@@ -5,36 +5,36 @@ import {
 import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 
-export type File = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
-export type Rank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
+export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
-export type AlgebraicNotation = `${File}${Rank}`;
+export type AlgebraicNotation = `${ChessFile}${ChessRank}`;
 
 class ChessBoard {
-  public static fileMap = new Map<number, File>(
-    Array.from<unknown, [number, File]>({ length: 8 }, (_, index) => [
+  public static fileMap = new Map<number, ChessFile>(
+    Array.from<unknown, [number, ChessFile]>({ length: 8 }, (_, index) => [
       index,
-      String.fromCharCode(97 + index) as File,
+      String.fromCharCode(97 + index) as ChessFile,
     ])
   );
 
-  public static reverseFileMap = new Map<File, number>(
-    Array.from<unknown, [File, number]>({ length: 8 }, (_, index) => [
-      String.fromCharCode(97 + index) as File,
+  public static reverseFileMap = new Map<ChessFile, number>(
+    Array.from<unknown, [ChessFile, number]>({ length: 8 }, (_, index) => [
+      String.fromCharCode(97 + index) as ChessFile,
       index,
     ])
   );
 
-  public static rankMap = new Map<number, Rank>(
-    Array.from<unknown, [number, Rank]>({ length: 8 }, (_, index) => [
+  public static rankMap = new Map<number, ChessRank>(
+    Array.from<unknown, [number, ChessRank]>({ length: 8 }, (_, index) => [
       index,
-      (8 - index).toString() as Rank,
+      (8 - index).toString() as ChessRank,
     ])
   );
 
-  public static reverseRankMap = new Map<Rank, number>(
-    Array.from<unknown, [Rank, number]>({ length: 8 }, (_, index) => [
-      (8 - index).toString() as Rank,
+  public static reverseRankMap = new Map<ChessRank, number>(
+    Array.from<unknown, [ChessRank, number]>({ length: 8 }, (_, index) => [
+      (8 - index).toString() as ChessRank,
       index,
     ])
   );
@@ -150,9 +150,9 @@ class ChessBoard {
     // Step 2: Convert algebraic notation to indices and update normalizedPosition
 
     const fileIndex =
-      ChessBoard.reverseFileMap.get(normalizedPosition.file as File) ?? -1;
+      ChessBoard.reverseFileMap.get(normalizedPosition.file as ChessFile) ?? -1;
     const rankIndex =
-      ChessBoard.reverseRankMap.get(normalizedPosition.rank as Rank) ?? -1;
+      ChessBoard.reverseRankMap.get(normalizedPosition.rank as ChessRank) ?? -1;
 
     const hasInvalidPosition = [fileIndex, rankIndex].includes(-1);
     if (hasInvalidPosition) {

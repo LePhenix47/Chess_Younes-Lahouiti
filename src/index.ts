@@ -7,8 +7,8 @@ import "./sass/main.scss";
 import { selectQuery } from "@utils/functions/helper-functions/dom.functions";
 import ChessBoard, {
   AlgebraicNotation,
-  File,
-  Rank,
+  ChessFile,
+  ChessRank,
 } from "@utils/classes/chess-board.class";
 import UserPointer from "@utils/classes/user-pointer.class";
 import Piece from "@utils/classes/piece.class";

@@ -3,16 +3,16 @@ import { splitString } from "./string.functions";
 /**
  * Checks if a given file has the expected type.
  *
- * @param {File} fileUploaded - The file to check its type.
+ * @param {ChessFile} fileUploaded - The file to check its type.
  * @param {string} typeExpected - The expected type of the file.
  *
  * @returns {boolean} - A Promise that resolves to a boolean indicating whether the file has the expected type or not.
  */
 export function checkFileType(
-  fileUploaded: File,
+  fileUploaded: ChessFile,
   typeExpected: string
 ): boolean {
-  const { lastModified, name, type, size }: File = fileUploaded;
+  const { lastModified, name, type, size }: ChessFile = fileUploaded;
 
   const fileType: string = splitString(type, "/")[0];
 
@@ -20,13 +20,13 @@ export function checkFileType(
 }
 
 /**
- * Converts a File object to a base64 string.
+ * Converts a ChessFile object to a base64 string.
  *
- * @param {File} fileToConvert - The File object to convert.
+ * @param {ChessFile} fileToConvert - The ChessFile object to convert.
  *
  * @returns {Promise<string>} - A Promise that resolves with the base64 string representation of the file.
  */
-export function fileToBase64String(fileToConvert: File): Promise<string> {
+export function fileToBase64String(fileToConvert: ChessFile): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
 
@@ -55,13 +55,13 @@ export function fileToBase64String(fileToConvert: File): Promise<string> {
 }
 
 /**
- * Converts a File object to a Blob URL.
+ * Converts a ChessFile object to a Blob URL.
  *
- * @param {File} fileToConvert - The File object to convert to a Blob URL.
+ * @param {ChessFile} fileToConvert - The ChessFile object to convert to a Blob URL.
  *
- * @returns {string} The Blob URL representing the File object.
+ * @returns {string} The Blob URL representing the ChessFile object.
  */
-export function fileToBlobUrl(fileToConvert: File): string {
+export function fileToBlobUrl(fileToConvert: ChessFile): string {
   return URL.createObjectURL(fileToConvert);
 }
 
