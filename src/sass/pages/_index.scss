@@ -74,11 +74,11 @@
         }
 
         &.light-square.selected {
-            background-color: red;
+            background-color: gold;
         }
 
         &.dark-square.selected {
-            background-color: rgba(255, 0, 0, 75%);
+            background-color: goldenrod;
         }
 
         &:nth-child(1 of .chess__square) {
