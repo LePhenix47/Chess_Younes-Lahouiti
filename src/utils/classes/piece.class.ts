@@ -60,12 +60,9 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
         <use href="#${this.color}-${this.type}"></use>
       </svg>
     `;
-
-    // Optional: set initial position as CSS variables
-    console.debug(this.position.file, this.position.rank);
-
     span.style.setProperty("--_index-x", this.position.rank);
     span.style.setProperty("--_index-y", this.position.file);
+
     span.dataset.position = this.position.algebraicNotation;
     span.dataset.piece = this.type;
     span.dataset.color = this.color;
@@ -115,13 +112,21 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.setProperty("--_index-y", newPosition.file);
     this.element.dataset.position = newPosition.algebraicNotation;
 
+    console.debug(this.element.classList, noAnimation);
+    // ? Minor bug fix where a clicked piece didn't have a transition
+    const hasInvalidClassesForAnimationState =
+      !noAnimation && this.element.classList.contains("no-transition");
+    if (hasInvalidClassesForAnimationState) {
+      this.element.classList.remove("no-transition", "z-index");
+    }
+
     if (noAnimation) {
       // * Drag move (no animation)
       // ? Instantly move WITHOUT transition
       this.element.classList.remove("dragging");
 
       setTimeout(() => {
-        this.element.classList.remove(...["no-transition", "z-index"]);
+        this.element.classList.remove("no-transition", "z-index");
       }, 0);
     } else {
       // * Click move (with animation)
@@ -145,7 +150,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   };
 
   public toFenChar = (): string => {
-    const pieceChar = this.getPieceChar();
+    const pieceChar = this.pieceCharacter();
     return this.color === "white" ? pieceChar.toUpperCase() : pieceChar;
   };
 
@@ -159,7 +164,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.checkSlidingPiece();
   };
 
-  private getPieceChar = (): string => {
+  private pieceCharacter = (): string => {
     const map = new Map<string, string>(
       Object.entries({
         pawn: "p",
@@ -186,7 +191,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     }
 
     const callback = (event?: TransitionEvent) => {
-      if (event && event.propertyName !== "opacity") {
+      if (Boolean(event) && event.propertyName !== "opacity") {
         return;
       }
 
