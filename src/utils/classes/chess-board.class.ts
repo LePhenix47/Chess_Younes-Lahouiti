@@ -4,7 +4,7 @@ import {
 } from "@utils/functions/helper-functions/dom.functions";
 import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
-import Player from "./player.class";
+import Player, { CastlingRights } from "./player.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -58,7 +58,7 @@ class ChessBoard {
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  private pieces = new Map<string, Piece>();
+  private readonly pieces = new Map<AlgebraicNotation, Piece>();
 
   public selectedPiece: Piece | null = null;
   public boardPerspective: PieceColor = "white";
@@ -92,7 +92,7 @@ class ChessBoard {
   public updatePlayerState = (
     player: Player,
     inCheck: boolean,
-    canCastle: boolean
+    canCastle: CastlingRights
   ) => {
     player.setInCheck(inCheck);
     player.setCanCastle(canCastle);
@@ -229,7 +229,10 @@ class ChessBoard {
     piece.attachToBoard(this.container);
 
     // Step 6: Save to internal map
-    this.pieces.set(normalizedPosition.algebraicNotation, piece);
+    this.pieces.set(
+      normalizedPosition.algebraicNotation as AlgebraicNotation,
+      piece
+    );
   };
 
   public elementIsChessPiece = (element: HTMLElement): boolean => {
@@ -364,7 +367,7 @@ class ChessBoard {
     );
 
     // Update the pieces map
-    this.pieces.delete(oldPosition);
+    this.pieces.delete(oldPosition as AlgebraicNotation);
     this.pieces.set(algebraicNotation, piece);
 
     this.switchTurnTo();
@@ -373,7 +376,9 @@ class ChessBoard {
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
     const animate: boolean = !noAnimation;
     targetPiece.delete({ animate }); // Remove from DOM
-    this.pieces.delete(targetPiece.position.algebraicNotation); // Remove from internal map
+    this.pieces.delete(
+      targetPiece.position.algebraicNotation as AlgebraicNotation
+    ); // Remove from internal map
   };
 
   // Placeholder for FEN and PGN methods
