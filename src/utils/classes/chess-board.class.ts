@@ -50,8 +50,8 @@ class ChessBoard {
 
     return {
       algebraicNotation,
-      file: `${fileIndex}`,
-      rank: `${rankIndex}`,
+      fileIndex: `${fileIndex}`,
+      rankIndex: `${rankIndex}`,
     };
   };
 
@@ -190,28 +190,32 @@ class ChessBoard {
     // Step 1: Normalize the position
     // If it's algebraic notation (e.g., "c5")
     if (typeof position === "string") {
-      const [file, rank] = position;
+      const [fileIndex, rankIndex] = position;
 
       normalizedPosition = {
-        file,
-        rank,
+        fileIndex,
+        rankIndex,
         algebraicNotation: position,
       };
     } else {
-      const { file, rank } = position;
+      const { fileIndex, rankIndex } = position;
       normalizedPosition = {
-        file,
-        rank,
-        algebraicNotation: `${file}${rank}`,
+        fileIndex,
+        rankIndex,
+        algebraicNotation: `${fileIndex}${rankIndex}`,
       };
     }
 
     // Step 2: Convert algebraic notation to indices and update normalizedPosition
 
     const fileIndex =
-      ChessBoard.reverseFileMap.get(normalizedPosition.file as ChessFile) ?? -1;
+      ChessBoard.reverseFileMap.get(
+        normalizedPosition.fileIndex as ChessFile
+      ) ?? -1;
     const rankIndex =
-      ChessBoard.reverseRankMap.get(normalizedPosition.rank as ChessRank) ?? -1;
+      ChessBoard.reverseRankMap.get(
+        normalizedPosition.rankIndex as ChessRank
+      ) ?? -1;
 
     const hasInvalidPosition = [fileIndex, rankIndex].includes(-1);
     if (hasInvalidPosition) {
@@ -219,8 +223,8 @@ class ChessBoard {
     }
 
     // Step 3: Update normalizedPosition to use indices instead of algebraic notation
-    normalizedPosition.file = fileIndex.toString();
-    normalizedPosition.rank = rankIndex.toString();
+    normalizedPosition.fileIndex = fileIndex.toString();
+    normalizedPosition.rankIndex = rankIndex.toString();
 
     // Step 4: Create the piece using the updated normalizedPosition
     const piece = new Piece(type, color, normalizedPosition);
@@ -359,8 +363,8 @@ class ChessBoard {
 
     piece.moveTo(
       {
-        file: `${fileIndex}`,
-        rank: `${rankIndex}`,
+        fileIndex: `${fileIndex}`,
+        rankIndex: `${rankIndex}`,
         algebraicNotation,
       },
       noAnimation

@@ -12,7 +12,7 @@ export type PieceType =
 export interface IPieceAlgorithm {
   type: PieceType;
   color: PieceColor;
-  position: { file: string; rank: string; algebraicNotation: string };
+  position: { fileIndex: string; rankIndex: string; algebraicNotation: string };
 }
 
 interface IPieceDOM {
@@ -60,8 +60,8 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
         <use href="#${this.color}-${this.type}"></use>
       </svg>
     `;
-    span.style.setProperty("--_index-x", this.position.rank);
-    span.style.setProperty("--_index-y", this.position.file);
+    span.style.setProperty("--_index-x", this.position.rankIndex);
+    span.style.setProperty("--_index-y", this.position.fileIndex);
 
     span.dataset.position = this.position.algebraicNotation;
     span.dataset.piece = this.type;
@@ -108,8 +108,8 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.removeProperty("--_drag-y");
 
     // * Set new board coordinates
-    this.element.style.setProperty("--_index-x", newPosition.rank);
-    this.element.style.setProperty("--_index-y", newPosition.file);
+    this.element.style.setProperty("--_index-x", newPosition.rankIndex);
+    this.element.style.setProperty("--_index-y", newPosition.fileIndex);
     this.element.dataset.position = newPosition.algebraicNotation;
 
     console.debug(this.element.classList, noAnimation);
