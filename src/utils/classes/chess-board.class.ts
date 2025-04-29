@@ -55,6 +55,22 @@ class ChessBoard {
     };
   };
 
+  public static getAlgebraicNotationFromBoardIndices = (
+    fileIndex: number,
+    rankIndex: number
+  ): AlgebraicNotation => {
+    const file = ChessBoard.fileMap.get(fileIndex);
+    const rank = ChessBoard.rankMap.get(rankIndex);
+
+    if (!file || !rank) {
+      throw new Error(
+        `Invalid board indices: fileIndex=${fileIndex}, rankIndex=${rankIndex}`
+      );
+    }
+
+    return `${file}${rank}` as AlgebraicNotation;
+  };
+
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
