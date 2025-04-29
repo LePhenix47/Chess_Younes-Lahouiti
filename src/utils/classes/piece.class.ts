@@ -1,4 +1,5 @@
 import ChessBoard from "./chess-board.class";
+import { SlidingPiece } from "./move-utils.class";
 
 export type PieceColor = "white" | "black";
 export type PieceType =
@@ -44,12 +45,13 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   }
 
   private checkSlidingPiece = () => {
-    const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
-    if (!slidingPieces.includes(this.type)) {
-      return;
-    }
+    this.isSlidingPiece = this.isPieceSlidingPiece();
+  };
 
-    this.isSlidingPiece = true;
+  public isPieceSlidingPiece = (): this is SlidingPiece => {
+    const slidingPieces: PieceType[] = ["rook", "bishop", "queen"];
+
+    return slidingPieces.includes(this.type);
   };
 
   private createElement = (): HTMLElement => {
