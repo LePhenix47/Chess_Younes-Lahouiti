@@ -1,9 +1,6 @@
 import { PieceColor } from "./piece.class"; // Assuming Piece class is imported
 
-export type CastlingRights = {
-  kingSide: boolean;
-  queenSide: boolean;
-};
+export type CastlingRights = Record<"kingSide" | "queenSide", boolean>;
 
 class Player {
   public color: PieceColor;
