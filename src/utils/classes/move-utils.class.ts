@@ -1,5 +1,6 @@
 import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import Piece from "./piece.class";
+import Player, { CastlingRights } from "./player.class";
 
 export type SlidingPieceType = "rook" | "bishop" | "queen";
 
@@ -58,12 +59,13 @@ class MoveUtils {
       rook: ["N", "S", "E", "W"],
       bishop: ["NE", "NW", "SE", "SW"],
       queen: ["N", "S", "E", "W", "NE", "NW", "SE", "SW"],
-    }) as [SlidingPieceType, DirectionKey[]][] // 👈 narrow type on values
+    }) as [SlidingPieceType, DirectionKey[]][]
   );
 
   // Public
   public static generatePseudoLegalMoves = (
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
   ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
     // TODO
   };
@@ -93,7 +95,39 @@ class MoveUtils {
     piece: Piece,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    // TODO
+    const legalMoves: AlgebraicNotation[] = [];
+
+    const directionKeys = [
+      ...Object.keys(this.directionOffsets),
+    ] as DirectionKey[];
+
+    const file = Number(piece.position.fileIndex);
+    const rank = Number(piece.position.rankIndex);
+
+    for (const directionKey of directionKeys) {
+      const [dx, dy] = MoveUtils.directionOffsetsMap.get(directionKey)!;
+
+      const newFile = file + dx;
+      const newRank = rank + dy;
+
+      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+        continue;
+      }
+
+      const targetSquare = ChessBoard.getAlgebraicNotationFromBoardIndices(
+        newFile,
+        newRank
+      );
+
+      const targetPiece = pieces.get(targetSquare);
+
+      // ? If the square is empty or has a piece of the opposite color → it's a legal move
+      if (!targetPiece || targetPiece.color !== piece.color) {
+        legalMoves.push(targetSquare);
+      }
+    }
+
+    return legalMoves;
   };
 
   // Private
