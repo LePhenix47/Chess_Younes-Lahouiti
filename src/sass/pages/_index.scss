@@ -159,6 +159,14 @@
         touch-action: none;
         user-select: none;
 
+        &>.piece-debug {
+            position: absolute;
+            right: 0;
+            top: 0;
+
+            color: black;
+        }
+
         &.dragging {
             // ? For the Drag and Drop behavior
             --_drag-x: 0px;

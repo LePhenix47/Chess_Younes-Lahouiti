@@ -10,12 +10,39 @@ export type PieceType =
   | "queen"
   | "king";
 
+/**
+ * Represents the core logical attributes of a chess piece used for move generation and game logic.
+ */
 export interface IPieceAlgorithm {
+  /** The type of the chess piece (e.g., `'pawn'`, `'rook'`, etc.) */
   type: PieceType;
+
+  /** The color of the piece, either `'white'` or `'black'` */
   color: PieceColor;
+
   position: {
+    /**
+     * File index (`0–7`), left to right from white's perspective (`a–h`).
+     */
     fileIndex: string;
+
+    /**
+     * Internal rank index (`0–7`) used for logic and movement calculations.
+     *
+     * ⚠️ **Note:** This index is **inverted** relative to algebraic notation and visual board layout.
+     *
+     * - Rank `0` corresponds to the **8th rank** (top row visually)
+     * - Rank `7` corresponds to the **1st rank** (bottom row visually)
+     *
+     * This inversion is due to CSS grids using a top-left origin, **whereas** chess uses a bottom-left origin.
+     *
+     * 👉 To convert this index to a visual/algebraic rank: `visualRank = 7 - rankIndex`
+     */
     rankIndex: string;
+
+    /**
+     * Algebraic notation of the square (e.g., `'e4'`).
+     */
     algebraicNotation: AlgebraicNotation;
   };
 }
@@ -65,6 +92,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       <svg>
         <use href="#${this.color}-${this.type}"></use>
       </svg>
+      <p class="piece-debug" data-element="piece-debug">${this.position.fileIndex}-${this.position.rankIndex}</p>
     `;
     span.style.setProperty("--_index-x", this.position.rankIndex);
     span.style.setProperty("--_index-y", this.position.fileIndex);
@@ -116,7 +144,14 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     // * Set new board coordinates
     this.element.style.setProperty("--_index-x", newPosition.rankIndex);
     this.element.style.setProperty("--_index-y", newPosition.fileIndex);
+
     this.element.dataset.position = newPosition.algebraicNotation;
+
+    const debugParagraph = this.element.querySelector<HTMLParagraphElement>(
+      "[data-element=piece-debug]"
+    );
+
+    debugParagraph.textContent = `${newPosition.fileIndex}-${newPosition.rankIndex}`;
 
     console.debug(this.element.classList, noAnimation);
     // ? Minor bug fix where a clicked piece didn't have a transition
