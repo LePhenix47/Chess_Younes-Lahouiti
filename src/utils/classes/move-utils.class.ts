@@ -24,7 +24,7 @@ type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 type Offset = readonly [number, number];
 
 class MoveUtils {
-  private static readonly directionOffsets = {
+  private static readonly cardinalDirectionOffsets = {
     /**
      * North direction, x = 0, y = 1
      */
@@ -60,7 +60,10 @@ class MoveUtils {
   } as const;
 
   private static readonly directionOffsetsMap = new Map<DirectionKey, Offset>(
-    Object.entries(MoveUtils.directionOffsets) as [DirectionKey, Offset][]
+    Object.entries(MoveUtils.cardinalDirectionOffsets) as [
+      DirectionKey,
+      Offset
+    ][]
   );
 
   private static readonly slidingDirectionsMap = new Map<
@@ -134,7 +137,40 @@ class MoveUtils {
     piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    // TODO
+    const legalAttacks: AlgebraicNotation[] = [];
+    const direction = piece.color === "white" ? 1 : -1; // white moves up, black moves down
+
+    const file = Number(piece.position.fileIndex);
+    const rank = 7 - Number(piece.position.rankIndex);
+
+    // * Diagonal left attack
+    const attackLeft: AlgebraicNotation =
+      ChessBoard.getAlgebraicNotationFromBoardIndices(
+        file - 1, // ? left square
+        rank + direction // ? move up or down by one square
+      );
+    const attackPieceLeft: Piece = pieces.get(attackLeft);
+
+    // ? Check if the diagonal left square is within bounds and has an enemy piece
+    if (Boolean(attackPieceLeft) && attackPieceLeft.color !== piece.color) {
+      legalAttacks.push(attackLeft);
+    }
+
+    // * Diagonal right attack
+    const attackRight = ChessBoard.getAlgebraicNotationFromBoardIndices(
+      file + 1, // ? left square
+      rank + direction // ? move up or down by one square
+    );
+    const attackPieceRight: Piece = pieces.get(attackRight);
+    // ? Check if the diagonal right square is within bounds and has an enemy piece
+    if (Boolean(attackPieceRight) && attackPieceRight.color !== piece.color) {
+      legalAttacks.push(attackRight);
+    }
+
+    // TODO: Implement en passant logic.
+    // TODO: Requires access to last move and move history to verify if an adjacent enemy pawn just moved two squares.
+
+    return legalAttacks;
   };
 
   private static generateKnightMoves = (
@@ -216,7 +252,7 @@ class MoveUtils {
     const legalMoves: AlgebraicNotation[] = [];
 
     const directionKeys = [
-      ...Object.keys(this.directionOffsets),
+      ...Object.keys(this.cardinalDirectionOffsets),
     ] as DirectionKey[];
 
     const file = Number(piece.position.fileIndex);
