@@ -94,39 +94,36 @@ class MoveUtils {
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
     const legalMoves: AlgebraicNotation[] = [];
-    const direction = piece.color === "white" ? 1 : -1; // Direction depends on color (white goes up, black goes down)
+    const direction = piece.color === "white" ? 1 : -1;
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
 
-    // * 1-square move
-    const squareTargetOne: AlgebraicNotation =
-      ChessBoard.getAlgebraicNotationFromBoardIndices(file, rank + direction);
-    const targetPieceOne: Piece = pieces.get(squareTargetOne);
-    // ? If there is no piece on the target square → it's a legal move
-    if (!targetPieceOne) {
-      legalMoves.push(squareTargetOne);
+    const oneStepForward = ChessBoard.getAlgebraicNotationFromBoardIndices(
+      file,
+      rank + direction
+    );
+    const oneStepPiece = pieces.get(oneStepForward);
+
+    if (!oneStepPiece) {
+      legalMoves.push(oneStepForward);
     }
 
-    // * 2-square move (only from the starting rank)
-    const isStartingPositionForWhite: boolean =
-      piece.color === "white" && rank === 1;
-    const isStartingPositionForBlack: boolean =
-      piece.color === "black" && rank === 6;
+    const isStartingRank =
+      (piece.color === "white" && rank === 1) ||
+      (piece.color === "black" && rank === 6);
 
-    if (isStartingPositionForWhite || isStartingPositionForBlack) {
-      const squareTargetTwo: AlgebraicNotation =
-        ChessBoard.getAlgebraicNotationFromBoardIndices(
-          file,
-          rank + direction * 2
-        );
+    if (isStartingRank) {
+      const twoStepsForward = ChessBoard.getAlgebraicNotationFromBoardIndices(
+        file,
+        rank + 2 * direction
+      );
+      const twoStepPiece = pieces.get(twoStepsForward);
 
-      const targetPieceTwo: Piece = pieces.get(squareTargetTwo);
-      // ? We need this check for if the way for the 2-square move is blocked
-      const twoMovePawnWayIsFree: boolean = !targetPieceOne && !targetPieceTwo;
+      const isPathClear = !oneStepPiece && !twoStepPiece;
 
-      if (twoMovePawnWayIsFree) {
-        legalMoves.push(squareTargetTwo);
+      if (isPathClear) {
+        legalMoves.push(twoStepsForward);
       }
     }
 
