@@ -63,15 +63,13 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
   const attributeToCheck = clickedPiece ? "position" : "algebraicNotation";
   const targetPosition = target.dataset[attributeToCheck] as AlgebraicNotation;
 
-  const { file, rank } =
+  const { fileIndex, rankIndex } =
     ChessBoard.getBoardIndicesFromAlgebraicNotation(targetPosition);
-  const fileIndex = Number(file);
-  const rankIndex = Number(rank);
 
   chessBoardInstance.updatePiecePosition(
     selectedPiece,
-    rankIndex,
-    fileIndex,
+    Number(rankIndex),
+    Number(fileIndex),
     false
   );
   chessBoardInstance.clearSelectedPiece();
@@ -148,7 +146,6 @@ userPointer.on("custom:pointer-drag-end", (e) => {
     return;
   }
 
-  // console.log({ piece });
   chessBoardInstance.updatePiecePosition(
     draggedPiece,
     rankIndex,
