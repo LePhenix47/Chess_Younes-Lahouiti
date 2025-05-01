@@ -195,7 +195,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     return this.color === "white" ? pieceChar.toUpperCase() : pieceChar;
   };
 
-  public promotePawn = (newType: PieceType): void => {
+  public promotePawn = (newType: Omit<PieceType, "pawn" | "king">): void => {
     if (this.type !== "pawn") {
       return;
     }
