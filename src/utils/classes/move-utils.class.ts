@@ -1,5 +1,9 @@
-import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
-import Piece from "./piece.class";
+import ChessBoard, {
+  AlgebraicNotation,
+  ChessFile,
+  ChessRank,
+} from "./chess-board.class";
+import Piece, { PieceColor } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 export type SlidingPieceType = "rook" | "bishop" | "queen";
@@ -22,6 +26,8 @@ export type KingPiece = Piece & {
 
 type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 type Offset = readonly [number, number];
+
+type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
 
 class MoveUtils {
   private static readonly cardinalDirectionOffsets = {
@@ -76,6 +82,17 @@ class MoveUtils {
       queen: ["N", "S", "E", "W", "NE", "NW", "SE", "SW"],
     }) as [SlidingPieceType, DirectionKey[]][]
   );
+
+  private static readonly knightOffsets = [
+    [1, 2],
+    [2, 1],
+    [2, -1],
+    [1, -2],
+    [-1, -2],
+    [-2, -1],
+    [-2, 1],
+    [-1, 2],
+  ];
 
   // Public
   public static generatePseudoLegalMoves = (
@@ -177,7 +194,34 @@ class MoveUtils {
     piece: Piece,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    // TODO
+    const moves: AlgebraicNotation[] = [];
+
+    const { fileIndex, rankIndex } =
+      ChessBoard.getBoardIndicesFromAlgebraicNotation(
+        piece.position.algebraicNotation
+      );
+
+    for (const [dx, dy] of MoveUtils.knightOffsets) {
+      const newFile = Number(fileIndex) + dx;
+      const newRank = 7 - Number(rankIndex) + dy;
+
+      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+        continue;
+      }
+
+      const target = ChessBoard.getAlgebraicNotationFromBoardIndices(
+        newFile,
+        newRank
+      );
+
+      const targetPiece = pieces.get(target);
+
+      if (!targetPiece || targetPiece.color !== piece.color) {
+        moves.push(target);
+      }
+    }
+
+    return moves;
   };
 
   public static getAttackedSquaresByOpponent = (
@@ -236,12 +280,100 @@ class MoveUtils {
     return [...attackedSquaresSet];
   };
 
-  private static canCastle = (
+  private static getCastleFileRank = (
+    side: "kingSide" | "queenSide",
+    color: PieceColor,
+    includeCurrentSquare: boolean = false
+  ) => {
+    const rank = color === "white" ? "1" : "8";
+
+    const files: ChessFile[] =
+      side === "kingSide"
+        ? ["f", "g"] // ? Squares the king touches: between, and destination
+        : ["c", "d"];
+
+    if (includeCurrentSquare) {
+      files.push("e");
+      files.sort();
+    }
+
+    return {
+      rank,
+      files,
+    };
+  };
+
+  private static getCastleDangerSquares = (
+    side: "kingSide" | "queenSide",
+    color: PieceColor,
+    includeCurrentSquare: boolean = false
+  ): CastleSquares[] => {
+    const { files, rank } = MoveUtils.getCastleFileRank(
+      side,
+      color,
+      includeCurrentSquare
+    );
+
+    const squares = files.map((file) => `${file}${rank}` as CastleSquares);
+
+    return squares;
+  };
+
+  public static canCastle = (
     side: "kingSide" | "queenSide",
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation | null => {
-    //  TODO
+  ): [
+    { piece: KingPiece; position: AlgebraicNotation },
+    { piece: SlidingPiece; position: AlgebraicNotation }
+  ] => {
+    if (!player.canCastle) {
+      return null;
+    }
+
+    const { color } = player;
+    const rank = color === "white" ? "1" : "8"; // Rank is based on color
+    const kingStart = `e${rank}` as AlgebraicNotation;
+    const rookStart: AlgebraicNotation =
+      side === "queenSide" ? `a${rank}` : `h${rank}`;
+
+    const king = pieces.get(kingStart) as KingPiece;
+    const rook = pieces.get(rookStart) as SlidingPiece;
+
+    if (
+      !Boolean(king) ||
+      !Boolean(rook) ||
+      king.type !== "king" ||
+      rook.type !== "rook"
+    ) {
+      return null;
+    }
+
+    if (king.hasMoved || rook.hasMoved) {
+      return null;
+    }
+
+    const pathSquaresArray = MoveUtils.getCastleDangerSquares(
+      side,
+      player.color
+    );
+
+    const attackedSquares = MoveUtils.getAttackedSquaresByOpponent(
+      player,
+      pieces
+    );
+
+    // 1. Check for attacking danger
+    for (const pathSquare of pathSquaresArray) {
+      if (attackedSquares.includes(pathSquare) || pieces.has(pathSquare)) {
+        return null;
+      }
+    }
+
+    return [
+      { piece: king, position: kingStart },
+      { piece: rook, position: rookStart },
+    ];
   };
 
   private static generateKingMoves = (
