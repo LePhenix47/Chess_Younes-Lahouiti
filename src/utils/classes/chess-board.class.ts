@@ -218,9 +218,11 @@ class ChessBoard {
       normalizedPosition = {
         fileIndex,
         rankIndex,
-        algebraicNotation: `${fileIndex}${rankIndex}`,
+        algebraicNotation: `${fileIndex}${rankIndex}` as AlgebraicNotation,
       };
     }
+
+    console.log({ position, normalizedPosition });
 
     // Step 2: Convert algebraic notation to indices and update normalizedPosition
 
@@ -328,7 +330,6 @@ class ChessBoard {
     fileIndex: number,
     noAnimation: boolean = false
   ) => {
-    console.log("updatePiecePosition", piece, rankIndex, fileIndex);
     // TODO: Verify if we're not in check (legal moves)
     // TODO: Verify if the piece we're trying to move ain't pinned (legal moves)
     // TODO: Verify if we're not stalemated (legal moves)
