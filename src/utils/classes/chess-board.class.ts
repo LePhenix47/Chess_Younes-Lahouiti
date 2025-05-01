@@ -63,9 +63,11 @@ class ChessBoard {
     const rank = ChessBoard.rankMap.get(rankIndex);
 
     if (!file || !rank) {
-      throw new Error(
-        `Invalid board indices: fileIndex=${fileIndex}, rankIndex=${rankIndex}`
+      console.error(
+        `Invalid board indices: fileIndex = ${fileIndex}, rankIndex = ${rankIndex}`
       );
+
+      return "" as AlgebraicNotation;
     }
 
     return `${file}${rank}` as AlgebraicNotation;
