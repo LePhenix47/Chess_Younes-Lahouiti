@@ -97,7 +97,7 @@ class MoveUtils {
     const direction = piece.color === "white" ? 1 : -1;
 
     const file = Number(piece.position.fileIndex);
-    const rank = Number(piece.position.rankIndex);
+    const rank = 7 - Number(piece.position.rankIndex);
 
     const oneStepForward = ChessBoard.getAlgebraicNotationFromBoardIndices(
       file,
@@ -160,12 +160,12 @@ class MoveUtils {
 
       switch (piece.type) {
         case "pawn": {
-          attacks = MoveUtils.generatePawnMoves(piece, pieces, true);
+          attacks = MoveUtils.generatePawnAttacks(piece as PawnPiece, pieces);
           break;
         }
 
         case "knight": {
-          attacks = MoveUtils.generateKnightMoves(piece, pieces);
+          attacks = MoveUtils.generateKnightMoves(piece as KnightPiece, pieces);
           break;
         }
 
@@ -180,7 +180,11 @@ class MoveUtils {
         }
 
         case "king": {
-          attacks = MoveUtils.generateKingMoves(piece, pieces, player);
+          attacks = MoveUtils.generateKingMoves(
+            piece as KingPiece,
+            pieces,
+            player
+          );
           break;
         }
 
@@ -205,7 +209,7 @@ class MoveUtils {
   };
 
   private static generateKingMoves = (
-    piece: Piece,
+    piece: KingPiece,
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
   ): AlgebraicNotation[] => {
@@ -216,7 +220,7 @@ class MoveUtils {
     ] as DirectionKey[];
 
     const file = Number(piece.position.fileIndex);
-    const rank = Number(piece.position.rankIndex);
+    const rank = 7 - Number(piece.position.rankIndex);
 
     for (const directionKey of directionKeys) {
       const [dx, dy] = MoveUtils.directionOffsetsMap.get(directionKey)!;
@@ -234,9 +238,10 @@ class MoveUtils {
       );
 
       const targetPiece = pieces.get(targetSquare);
+      const isEmptySquare: boolean = !targetPiece;
 
       // ? If the square is empty or has a piece of the opposite color → it's a legal move
-      if (!targetPiece || targetPiece.color !== piece.color) {
+      if (isEmptySquare || targetPiece.color !== piece.color) {
         legalMoves.push(targetSquare);
       }
     }
@@ -260,7 +265,7 @@ class MoveUtils {
       const [dx, dy] = MoveUtils.directionOffsetsMap.get(directionKey)!;
 
       let file = Number(piece.position.fileIndex);
-      let rank = Number(piece.position.rankIndex);
+      let rank = 7 - Number(piece.position.rankIndex);
 
       while (true) {
         file += dx;
