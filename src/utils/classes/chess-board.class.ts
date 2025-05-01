@@ -478,6 +478,21 @@ class ChessBoard {
 
   public loadPgn = (pgn: string): void => {
     /* TODO: Parse PGN */
+    /*
+    Abbreviations:
+    K - King
+    Q - Queen
+    R - Rook
+    B - Bishop
+    N - Knight
+    [No name] - Pawn
+    0-0 = castling with rook h1 or rook h8 (kingside castling)
+    0-0-0 = castling with rook a1 or rook a8 (queenside castling)
+    x = captures
+    + = check
+    # = checkmate
+    e.p. = captures "en passant"
+    */
   };
 }
 
