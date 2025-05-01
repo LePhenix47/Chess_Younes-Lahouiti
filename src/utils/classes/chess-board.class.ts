@@ -140,7 +140,21 @@ class ChessBoard {
   public generateBoard = (): void => {
     this.container.innerHTML = ""; // clear container
 
-    for (let rank = 0; rank < 8; rank++) {
+    const getLabelClasses = (
+      isDark: boolean,
+      labelType?: "rank" | "file"
+    ): string[] => [
+      "chess__label",
+      `chess__label--${isDark ? "light" : "dark"}`,
+      `chess__label--${labelType === "rank" ? "rank" : "file"}`,
+    ];
+
+    for (let visualRank = 0; visualRank < 8; visualRank++) {
+      /**
+       * Logical rank due to coordinates mismatch between visual (board) and logical (internal game logic) rank
+       */
+      const rank = 7 - visualRank;
+
       for (let file = 0; file < 8; file++) {
         const square: HTMLDivElement = document.createElement("div");
         square.classList.add("chess__square");
@@ -148,36 +162,33 @@ class ChessBoard {
         square.dataset.file = file.toString();
         square.dataset.rank = rank.toString();
         square.dataset.algebraicNotation =
-          ChessBoard.fileMap.get(file) + ChessBoard.rankMap.get(rank);
+          ChessBoard.fileMap.get(file) + ChessBoard.rankMap.get(visualRank);
 
-        const isLight: boolean = (file + rank) % 2 === 0;
-        square.classList.add(isLight ? "light-square" : "dark-square");
+        const isDark: boolean = (file + rank) % 2 === 0;
+        square.classList.add(isDark ? "dark-square" : "light-square");
 
-        // Add file label (letters 'a' to 'h') to the bottom row (rank === 7)
-        if (rank === 7) {
+        // Add file label to bottom row (visualRank === 7)
+        if (visualRank === 7) {
           const fileLabel = document.createElement("p");
-          fileLabel.classList.add(
-            ...[
-              "chess__label",
-              `chess__label--${isLight ? "dark" : "light"}`,
-              "chess__label--file",
-            ]
-          );
-          fileLabel.textContent = ChessBoard.fileMap.get(file); // Get file label from the Map
+
+          const fileLabelClasses = getLabelClasses(isDark, "file");
+
+          fileLabel.classList.add(...fileLabelClasses);
+
+          fileLabel.textContent = ChessBoard.fileMap.get(file);
           square.appendChild(fileLabel);
         }
 
-        // Add rank number (8 to 1) to the first column (file === 0)
+        // Add rank number (8 to 1) to the first column
         if (file === 0) {
+          const rankLabelClasses = getLabelClasses(isDark, "rank");
+
           const rankLabel = document.createElement("p");
-          rankLabel.classList.add(
-            ...[
-              "chess__label",
-              `chess__label--${isLight ? "dark" : "light"}`,
-              "chess__label--rank",
-            ]
-          );
-          rankLabel.textContent = ChessBoard.rankMap.get(rank); // Get rank number from the Map
+
+          rankLabel.classList.add(...rankLabelClasses);
+
+          // Show actual rank number (from 8 to 1)
+          rankLabel.textContent = ChessBoard.rankMap.get(visualRank);
           square.appendChild(rankLabel);
         }
 
