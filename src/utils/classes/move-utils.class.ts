@@ -8,6 +8,18 @@ export type SlidingPiece = Piece & {
   type: SlidingPieceType;
 };
 
+export type PawnPiece = Piece & {
+  type: "pawn";
+};
+
+export type KnightPiece = Piece & {
+  type: "knight";
+};
+
+export type KingPiece = Piece & {
+  type: "king";
+};
+
 type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 type Offset = readonly [number, number];
 
@@ -78,18 +90,53 @@ class MoveUtils {
   };
 
   private static generatePawnMoves = (
-    piece: Piece,
+    piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    // TODO
+    const legalMoves: AlgebraicNotation[] = [];
+    const direction = piece.color === "white" ? 1 : -1; // Direction depends on color (white goes up, black goes down)
+
+    const file = Number(piece.position.fileIndex);
+    const rank = Number(piece.position.rankIndex);
+
+    // * 1-square move
+    const squareTargetOne: AlgebraicNotation =
+      ChessBoard.getAlgebraicNotationFromBoardIndices(file, rank + direction);
+    const targetPieceOne: Piece = pieces.get(squareTargetOne);
+    // ? If there is no piece on the target square → it's a legal move
+    if (!targetPieceOne) {
+      legalMoves.push(squareTargetOne);
+    }
+
+    // * 2-square move (only from the starting rank)
+    const isStartingPositionForWhite: boolean =
+      piece.color === "white" && rank === 1;
+    const isStartingPositionForBlack: boolean =
+      piece.color === "black" && rank === 6;
+
+    if (isStartingPositionForWhite || isStartingPositionForBlack) {
+      const squareTargetTwo: AlgebraicNotation =
+        ChessBoard.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank + direction * 2
+        );
+
+      const targetPieceTwo: Piece = pieces.get(squareTargetTwo);
+      // ? We need this check for if the way for the 2-square move is blocked
+      const twoMovePawnWayIsFree: boolean = !targetPieceOne && !targetPieceTwo;
+
+      if (twoMovePawnWayIsFree) {
+        legalMoves.push(squareTargetTwo);
+      }
+    }
+
+    return legalMoves;
   };
 
   private static generatePawnAttacks = (
-    piece: Piece,
-    pieces: Map<AlgebraicNotation, Piece>,
-    onlyCaptures = false
+    piece: PawnPiece,
+    pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    MoveUtils.generatePawnMoves(piece, pieces);
     // TODO
   };
 
