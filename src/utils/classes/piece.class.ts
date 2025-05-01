@@ -1,4 +1,4 @@
-import ChessBoard from "./chess-board.class";
+import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import { SlidingPiece } from "./move-utils.class";
 
 export type PieceColor = "white" | "black";
@@ -13,7 +13,11 @@ export type PieceType =
 export interface IPieceAlgorithm {
   type: PieceType;
   color: PieceColor;
-  position: { fileIndex: string; rankIndex: string; algebraicNotation: string };
+  position: {
+    fileIndex: string;
+    rankIndex: string;
+    algebraicNotation: AlgebraicNotation;
+  };
 }
 
 interface IPieceDOM {
