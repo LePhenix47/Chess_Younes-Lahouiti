@@ -160,7 +160,7 @@ class ChessBoard {
         square.classList.add("chess__square");
 
         square.dataset.file = file.toString();
-        square.dataset.rank = rank.toString();
+        square.dataset.rank = rank.toString(); // ? Visual rank, the data attr are relative to the chess board, not in-game logic
         square.dataset.algebraicNotation =
           ChessBoard.fileMap.get(file) + ChessBoard.rankMap.get(visualRank);
 
