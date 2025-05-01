@@ -84,6 +84,15 @@ class MoveUtils {
     // TODO
   };
 
+  private static generatePawnAttacks = (
+    piece: Piece,
+    pieces: Map<AlgebraicNotation, Piece>,
+    onlyCaptures = false
+  ): AlgebraicNotation[] => {
+    MoveUtils.generatePawnMoves(piece, pieces);
+    // TODO
+  };
+
   private static generateKnightMoves = (
     piece: Piece,
     pieces: Map<AlgebraicNotation, Piece>
@@ -91,9 +100,70 @@ class MoveUtils {
     // TODO
   };
 
+  public static getAttackedSquaresByOpponent = (
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): AlgebraicNotation[] => {
+    const attackedSquaresSet = new Set<AlgebraicNotation>();
+
+    for (const piece of pieces.values()) {
+      // ? Ignore own pieces
+      if (piece.color === player.color) {
+        continue;
+      }
+
+      let attacks: AlgebraicNotation[] = [];
+
+      switch (piece.type) {
+        case "pawn": {
+          attacks = MoveUtils.generatePawnMoves(piece, pieces, true);
+          break;
+        }
+
+        case "knight": {
+          attacks = MoveUtils.generateKnightMoves(piece, pieces);
+          break;
+        }
+
+        case "bishop":
+        case "rook":
+        case "queen": {
+          attacks = MoveUtils.generateSlidingMoves(
+            piece as SlidingPiece,
+            pieces
+          );
+          break;
+        }
+
+        case "king": {
+          attacks = MoveUtils.generateKingMoves(piece, pieces, player);
+          break;
+        }
+
+        default:
+          break;
+      }
+
+      for (const square of attacks) {
+        attackedSquaresSet.add(square);
+      }
+    }
+
+    return [...attackedSquaresSet];
+  };
+
+  private static canCastle = (
+    side: "kingSide" | "queenSide",
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): AlgebraicNotation | null => {
+    //  TODO
+  };
+
   private static generateKingMoves = (
     piece: Piece,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
   ): AlgebraicNotation[] => {
     const legalMoves: AlgebraicNotation[] = [];
 
