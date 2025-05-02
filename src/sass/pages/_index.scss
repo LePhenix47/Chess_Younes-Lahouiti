@@ -61,7 +61,7 @@
         &.can-move {
             position: relative;
 
-            &::before {
+            &:not(.occupied)::before {
                 content: "";
                 position: absolute;
                 top: 50%;
@@ -74,6 +74,13 @@
                 background-color: rgb(0, 0, 0, 50%);
 
                 border-radius: 50%;
+            }
+
+            &.occupied {
+                --_thickness: 10px;
+
+                outline: var(--_thickness) solid rgba(9, 178, 2, 50%);
+                outline-offset: calc(-1 * var(--_thickness));
             }
         }
 
