@@ -6,13 +6,25 @@ import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import Player, { CastlingRights } from "./player.class";
 import BoardUtils from "./board-utils.class";
+import MovesGenerator from "./move-generator.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
 export type AlgebraicNotation = `${ChessFile}${ChessRank}`;
 
-class ChessBoard {
+interface IGameLogic {
+  selectPiece(el: HTMLElement): void;
+  clearSelectedPiece(): void;
+}
+
+interface IBoardUI {
+  highlightSelectedSquare(an: AlgebraicNotation): void;
+  highlightMoveTargets(moves: AlgebraicNotation[]): void;
+  clearSelectedHighlights(): void;
+}
+
+class ChessBoard implements IGameLogic, IBoardUI {
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -32,10 +44,6 @@ class ChessBoard {
     this.blackPlayer = new Player("black");
   }
 
-  public get currentPlayer(): Player {
-    return this.currentTurn === "white" ? this.whitePlayer : this.blackPlayer;
-  }
-
   public set currentPlayer(player: Player) {
     if (player.color !== this.currentTurn) {
       throw new Error("The player color doesn't match the current turn.");
@@ -45,6 +53,23 @@ class ChessBoard {
     } else {
       this.blackPlayer = player;
     }
+  }
+
+  public get currentPlayer(): Player {
+    return this.currentTurn === "white" ? this.whitePlayer : this.blackPlayer;
+  }
+
+  public get squareSize(): number {
+    const parsedSquaredSizeCssVariable = getInnerCssVariables(
+      this.container,
+      "--_square-size"
+    );
+
+    const squareSize = Number(
+      parsedSquaredSizeCssVariable.replace(/px|%/g, "")
+    );
+
+    return squareSize;
   }
 
   public updatePlayerState = (
@@ -64,19 +89,6 @@ class ChessBoard {
 
     this.currentTurn = this.currentTurn === "white" ? "black" : "white";
   };
-
-  public get squareSize(): number {
-    const parsedSquaredSizeCssVariable = getInnerCssVariables(
-      this.container,
-      "--_square-size"
-    );
-
-    const squareSize = Number(
-      parsedSquaredSizeCssVariable.replace(/px|%/g, "")
-    );
-
-    return squareSize;
-  }
 
   // Generates the board layout
   public generateBoard = (): void => {
@@ -244,14 +256,17 @@ class ChessBoard {
 
     this.clearSelectedPiece();
     this.selectedPiece = piece;
-    piece.element.classList.add("selected");
 
     const { algebraicNotation } = piece.position;
-    const pieceSquare = selectQuery(
-      `[data-algebraic-notation="${algebraicNotation}"]`,
-      this.container
+    this.highlightSelectedSquare(algebraicNotation);
+
+    const legalMoves = MovesGenerator.generateMoveForPiece(
+      this.selectedPiece,
+      this.pieces,
+      this.currentPlayer
     );
-    pieceSquare.classList.add("selected");
+
+    this.highlightMoveTargets(legalMoves);
   };
 
   public clearSelectedPiece = (): void => {
@@ -259,14 +274,9 @@ class ChessBoard {
       return;
     }
 
-    const pieceSquare = selectQuery(
-      ".selected[data-algebraic-notation]",
-      this.container
-    );
+    this.clearSelectedHighlights();
+    this.clearSquareMoves();
 
-    pieceSquare.classList.remove("selected");
-
-    this.selectedPiece.element.classList.remove("selected");
     this.selectedPiece = null;
   };
 
@@ -274,6 +284,41 @@ class ChessBoard {
     const piece: Piece = this.getPieceFromElement(el);
 
     return Boolean(piece) && piece === this.selectedPiece;
+  };
+
+  public highlightSelectedSquare = (an: AlgebraicNotation): void => {
+    const square = this.container.querySelector(
+      `[data-algebraic-notation="${an}"]`
+    ) as HTMLElement;
+
+    square?.classList?.add?.("selected");
+  };
+
+  public highlightMoveTargets = (moves: AlgebraicNotation[]): void => {
+    for (const an of moves) {
+      const square = this.container.querySelector(
+        `[data-algebraic-notation="${an}"]`
+      ) as HTMLElement;
+
+      square?.classList?.add?.("can-move");
+    }
+  };
+
+  public clearSelectedHighlights = (): void => {
+    const pieceSquare = selectQuery(
+      ".selected[data-algebraic-notation]",
+      this.container
+    );
+
+    pieceSquare.classList.remove("selected");
+  };
+
+  public clearSquareMoves = (): void => {
+    const highlighted = this.container.querySelectorAll(".can-move");
+
+    for (const el of highlighted) {
+      el.classList.remove("can-move");
+    }
   };
 
   // TODO: not finished yet
@@ -345,6 +390,8 @@ class ChessBoard {
     this.pieces.set(algebraicNotation, piece);
 
     this.switchTurnTo();
+
+    this.clearSquareMoves();
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
