@@ -29,8 +29,10 @@ class ChessBoard implements IGameLogic, IBoardUI {
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   private readonly pieces = new Map<AlgebraicNotation, Piece>();
+  private readonly squareElements = new Map<AlgebraicNotation, HTMLElement>();
 
   public selectedPiece: Piece | null = null;
+  public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
   public boardPerspective: PieceColor = "white";
 
   public currentTurn: PieceColor = "white";
@@ -147,6 +149,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
         }
 
         this.container.appendChild(square);
+
+        this.squareElements.set(
+          square.dataset.algebraicNotation as AlgebraicNotation,
+          square
+        );
       }
     }
   };
@@ -187,7 +194,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
       };
     }
 
-    console.log({ position, normalizedPosition });
+    // console.log({ position, normalizedPosition });
 
     // Step 2: Convert algebraic notation to indices and update normalizedPosition
 
@@ -237,8 +244,6 @@ class ChessBoard implements IGameLogic, IBoardUI {
       console.error("It's not your turn! Cannot drag piece.");
       return;
     }
-
-    this.selectPiece(piece.element);
 
     piece.drag(offsetX, offsetY);
   };
@@ -342,11 +347,14 @@ class ChessBoard implements IGameLogic, IBoardUI {
     //   rankIndex = 7 - rankIndex;
     // }
 
+    console.log("piece", piece);
+
     fileIndex = clamp(0, fileIndex, 7);
     rankIndex = clamp(0, rankIndex, 7);
 
-    const file = BoardUtils.fileMap.get(fileIndex)!;
-    const rank = BoardUtils.rankMap.get(rankIndex)!;
+    const file: ChessFile = BoardUtils.fileMap.get(fileIndex)!;
+    const rank: ChessRank = BoardUtils.rankMap.get(rankIndex)!;
+
     const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
 
     const targetPiece = this.pieces.get(algebraicNotation);
@@ -392,6 +400,8 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.switchTurnTo();
 
     this.clearSquareMoves();
+
+    // this.clearSelectedPiece();
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
