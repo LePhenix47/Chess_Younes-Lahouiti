@@ -202,7 +202,7 @@ class MovesGenerator {
     const direction = piece.color === "white" ? 1 : -1;
 
     const file = Number(piece.position.fileIndex);
-    const rank = 7 - Number(piece.position.rankIndex);
+    const rank = Number(piece.position.rankIndex);
 
     const oneStepForward = BoardUtils.getAlgebraicNotationFromBoardIndices(
       file,
@@ -214,9 +214,11 @@ class MovesGenerator {
       legalMoves.push(oneStepForward);
     }
 
+    const visualRank = 7 - rank;
+
     const isStartingRank: boolean =
-      (piece.color === "white" && rank === 1) ||
-      (piece.color === "black" && rank === 6);
+      (piece.color === "white" && visualRank === 1) ||
+      (piece.color === "black" && visualRank === 6);
 
     if (isStartingRank) {
       const twoStepsForward = BoardUtils.getAlgebraicNotationFromBoardIndices(
@@ -243,7 +245,7 @@ class MovesGenerator {
     const direction = piece.color === "white" ? 1 : -1; // white moves up, black moves down
 
     const file = Number(piece.position.fileIndex);
-    const rank = 7 - Number(piece.position.rankIndex);
+    const rank = Number(piece.position.rankIndex);
 
     const leftSquare = file - 1;
     const rightSquare = file + 1;
@@ -291,7 +293,7 @@ class MovesGenerator {
 
     for (const [dx, dy] of MovesGenerator.knightOffsets) {
       const newFile = Number(fileIndex) + dx;
-      const newRank = 7 - Number(rankIndex) + dy;
+      const newRank = Number(rankIndex) + dy;
 
       if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
         continue;
@@ -324,7 +326,7 @@ class MovesGenerator {
     ] as DirectionKey[];
 
     const file = Number(piece.position.fileIndex);
-    const rank = 7 - Number(piece.position.rankIndex);
+    const rank = Number(piece.position.rankIndex);
 
     for (const directionKey of directionKeys) {
       const [dx, dy] = MovesGenerator.directionOffsetsMap.get(directionKey)!;
@@ -369,7 +371,7 @@ class MovesGenerator {
       const [dx, dy] = MovesGenerator.directionOffsetsMap.get(directionKey)!;
 
       let file = Number(piece.position.fileIndex);
-      let rank = 7 - Number(piece.position.rankIndex);
+      let rank = Number(piece.position.rankIndex);
 
       while (true) {
         file += dx;
