@@ -12,6 +12,7 @@ import ChessBoard, {
 } from "@utils/classes/chess-board.class";
 import UserPointer from "@utils/classes/user-pointer.class";
 import Piece from "@utils/classes/piece.class";
+import BoardUtils from "@utils/classes/board-utils.class";
 
 const chessBoardElement: HTMLElement = selectQuery(
   '[data-element="chess-board"]'
@@ -64,7 +65,7 @@ chessBoardElement.addEventListener("click", (e: MouseEvent) => {
   const targetPosition = target.dataset[attributeToCheck] as AlgebraicNotation;
 
   const { fileIndex, rankIndex } =
-    ChessBoard.getBoardIndicesFromAlgebraicNotation(targetPosition);
+    BoardUtils.getBoardIndicesFromAlgebraicNotation(targetPosition);
 
   chessBoardInstance.updatePiecePosition(
     selectedPiece,

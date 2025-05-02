@@ -5,6 +5,7 @@ import {
 import Piece, { PieceColor, IPieceAlgorithm, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import Player, { CastlingRights } from "./player.class";
+import BoardUtils from "./board-utils.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -12,67 +13,6 @@ export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 export type AlgebraicNotation = `${ChessFile}${ChessRank}`;
 
 class ChessBoard {
-  public static fileMap = new Map<number, ChessFile>(
-    Array.from<unknown, [number, ChessFile]>({ length: 8 }, (_, index) => [
-      index,
-      String.fromCharCode(97 + index) as ChessFile,
-    ])
-  );
-
-  public static reverseFileMap = new Map<ChessFile, number>(
-    Array.from<unknown, [ChessFile, number]>({ length: 8 }, (_, index) => [
-      String.fromCharCode(97 + index) as ChessFile,
-      index,
-    ])
-  );
-
-  public static rankMap = new Map<number, ChessRank>(
-    Array.from<unknown, [number, ChessRank]>({ length: 8 }, (_, index) => [
-      index,
-      (8 - index).toString() as ChessRank,
-    ])
-  );
-
-  public static reverseRankMap = new Map<ChessRank, number>(
-    Array.from<unknown, [ChessRank, number]>({ length: 8 }, (_, index) => [
-      (8 - index).toString() as ChessRank,
-      index,
-    ])
-  );
-
-  public static getBoardIndicesFromAlgebraicNotation = (
-    algebraicNotation: AlgebraicNotation
-  ): IPieceAlgorithm["position"] => {
-    const [file, rank] = algebraicNotation;
-
-    const fileIndex = ChessBoard.reverseFileMap.get(file as ChessFile);
-    const rankIndex = ChessBoard.reverseRankMap.get(rank as ChessRank);
-
-    return {
-      algebraicNotation,
-      fileIndex: `${fileIndex}`,
-      rankIndex: `${rankIndex}`,
-    };
-  };
-
-  public static getAlgebraicNotationFromBoardIndices = (
-    fileIndex: number,
-    rankIndex: number
-  ): AlgebraicNotation => {
-    const file = ChessBoard.fileMap.get(fileIndex);
-    const rank = ChessBoard.rankMap.get(rankIndex);
-
-    if (!file || !rank) {
-      console.error(
-        `Invalid board indices: fileIndex = ${fileIndex}, rankIndex = ${rankIndex}`
-      );
-
-      return "" as AlgebraicNotation;
-    }
-
-    return `${file}${rank}` as AlgebraicNotation;
-  };
-
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
@@ -164,7 +104,7 @@ class ChessBoard {
         square.dataset.file = file.toString();
         square.dataset.rank = rank.toString(); // ? Visual rank, the data attr are relative to the chess board, not in-game logic
         square.dataset.algebraicNotation =
-          ChessBoard.fileMap.get(file) + ChessBoard.rankMap.get(visualRank);
+          BoardUtils.fileMap.get(file) + BoardUtils.rankMap.get(visualRank);
 
         const isDark: boolean = (file + rank) % 2 === 0;
         square.classList.add(isDark ? "dark-square" : "light-square");
@@ -177,7 +117,7 @@ class ChessBoard {
 
           fileLabel.classList.add(...fileLabelClasses);
 
-          fileLabel.textContent = ChessBoard.fileMap.get(file);
+          fileLabel.textContent = BoardUtils.fileMap.get(file);
           square.appendChild(fileLabel);
         }
 
@@ -190,7 +130,7 @@ class ChessBoard {
           rankLabel.classList.add(...rankLabelClasses);
 
           // Show actual rank number (from 8 to 1)
-          rankLabel.textContent = ChessBoard.rankMap.get(visualRank);
+          rankLabel.textContent = BoardUtils.rankMap.get(visualRank);
           square.appendChild(rankLabel);
         }
 
@@ -240,11 +180,11 @@ class ChessBoard {
     // Step 2: Convert algebraic notation to indices and update normalizedPosition
 
     const fileIndex =
-      ChessBoard.reverseFileMap.get(
+      BoardUtils.reverseFileMap.get(
         normalizedPosition.fileIndex as ChessFile
       ) ?? -1;
     const rankIndex =
-      ChessBoard.reverseRankMap.get(
+      BoardUtils.reverseRankMap.get(
         normalizedPosition.rankIndex as ChessRank
       ) ?? -1;
 
@@ -360,8 +300,8 @@ class ChessBoard {
     fileIndex = clamp(0, fileIndex, 7);
     rankIndex = clamp(0, rankIndex, 7);
 
-    const file = ChessBoard.fileMap.get(fileIndex)!;
-    const rank = ChessBoard.rankMap.get(rankIndex)!;
+    const file = BoardUtils.fileMap.get(fileIndex)!;
+    const rank = BoardUtils.rankMap.get(rankIndex)!;
     const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
 
     const targetPiece = this.pieces.get(algebraicNotation);
