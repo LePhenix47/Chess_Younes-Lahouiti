@@ -356,84 +356,9 @@ class ChessBoard {
   };
 
   // Placeholder for FEN and PGN methods
-  public loadFen = (fen: string): void => {
-    /* TODO: Parse FEN */
-  };
-
-  private interpretFen = (fen: string) => {
-    const [
-      board,
-      sideToMoveRaw,
-      castlingRightsRaw,
-      enPassantRaw,
-      halfMoveClock,
-      fullMoveNumber,
-    ] = fen.split(" ");
-
-    const rows = board.split("/");
-
-    const pieces: string[] = [];
-
-    for (let i = 0; i < rows.length; i++) {
-      const char: string = rows[i];
-      const expandedRow = char.replace(/\d/g, (match) =>
-        " ".repeat(Number(match))
-      );
-      pieces.push(expandedRow);
-    }
-
-    const sideToMove: "white" | "black" =
-      sideToMoveRaw === "w" ? "white" : "black";
-
-    const castlingRights = {
-      white: {
-        kingSide: castlingRightsRaw.includes("K"),
-        queenSide: castlingRightsRaw.includes("Q"),
-      },
-      black: {
-        kingSide: castlingRightsRaw.includes("k"),
-        queenSide: castlingRightsRaw.includes("q"),
-      },
-    } as const;
-
-    let enPassant = null;
-
-    if (enPassantRaw !== "-") {
-      enPassant = {
-        square: enPassantRaw,
-        file: enPassantRaw[0],
-        rank: enPassantRaw[1],
-      };
-    }
-
-    return {
-      pieces,
-      sideToMove,
-      castlingRights,
-      enPassant,
-      halfMoveClock: Number(halfMoveClock),
-      fullMoveNumber: Number(fullMoveNumber),
-    };
-  };
-
-  public loadPgn = (pgn: string): void => {
-    /* TODO: Parse PGN */
-    /*
-    Abbreviations:
-    K - King
-    Q - Queen
-    R - Rook
-    B - Bishop
-    N - Knight
-    [No name] - Pawn
-    0-0 = castling with rook h1 or rook h8 (kingside castling)
-    0-0-0 = castling with rook a1 or rook a8 (queenside castling)
-    x = captures
-    + = check
-    # = checkmate
-    e.p. = captures "en passant"
-    */
-  };
+  public loadFen = (fen: string): void => {};
+  // Placeholder for FEN and PGN methods
+  public loadPgn = (pgn: string): void => {};
 }
 
 export default ChessBoard;
