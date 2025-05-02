@@ -1,3 +1,4 @@
+import BoardUtils from "./board-utils.class";
 import ChessBoard, {
   AlgebraicNotation,
   ChessFile,
@@ -95,8 +96,8 @@ class MovesGenerator {
   ];
 
   /*
-  
-  */
+   * Move generation methods
+   */
   public static generatePseudoLegalMoves = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
@@ -323,8 +324,8 @@ class MovesGenerator {
   };
 
   /*
-  
-  */
+   * Miscellaneous methods
+   */
   public static getAttackedSquaresByOpponent = (
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
