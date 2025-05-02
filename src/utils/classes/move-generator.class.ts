@@ -29,7 +29,7 @@ type Offset = readonly [number, number];
 
 type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
 
-class MoveUtils {
+class MovesGenerator {
   private static readonly cardinalDirectionOffsets = {
     /**
      * North direction, x = 0, y = 1
@@ -66,7 +66,7 @@ class MoveUtils {
   } as const;
 
   private static readonly directionOffsetsMap = new Map<DirectionKey, Offset>(
-    Object.entries(MoveUtils.cardinalDirectionOffsets) as [
+    Object.entries(MovesGenerator.cardinalDirectionOffsets) as [
       DirectionKey,
       Offset
     ][]
@@ -94,7 +94,9 @@ class MoveUtils {
     [-1, 2],
   ];
 
-  // Public
+  /*
+  
+  */
   public static generatePseudoLegalMoves = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
@@ -119,7 +121,7 @@ class MoveUtils {
     const file = Number(piece.position.fileIndex);
     const rank = 7 - Number(piece.position.rankIndex);
 
-    const oneStepForward = ChessBoard.getAlgebraicNotationFromBoardIndices(
+    const oneStepForward = BoardUtils.getAlgebraicNotationFromBoardIndices(
       file,
       rank + direction
     );
@@ -134,7 +136,7 @@ class MoveUtils {
       (piece.color === "black" && rank === 6);
 
     if (isStartingRank) {
-      const twoStepsForward = ChessBoard.getAlgebraicNotationFromBoardIndices(
+      const twoStepsForward = BoardUtils.getAlgebraicNotationFromBoardIndices(
         file,
         rank + 2 * direction
       );
@@ -162,7 +164,7 @@ class MoveUtils {
 
     // * Diagonal left attack
     const attackLeft: AlgebraicNotation =
-      ChessBoard.getAlgebraicNotationFromBoardIndices(
+      BoardUtils.getAlgebraicNotationFromBoardIndices(
         file - 1, // ? left square
         rank + direction // ? move up or down by one square
       );
@@ -174,7 +176,7 @@ class MoveUtils {
     }
 
     // * Diagonal right attack
-    const attackRight = ChessBoard.getAlgebraicNotationFromBoardIndices(
+    const attackRight = BoardUtils.getAlgebraicNotationFromBoardIndices(
       file + 1, // ? left square
       rank + direction // ? move up or down by one square
     );
@@ -197,11 +199,11 @@ class MoveUtils {
     const moves: AlgebraicNotation[] = [];
 
     const { fileIndex, rankIndex } =
-      ChessBoard.getBoardIndicesFromAlgebraicNotation(
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(
         piece.position.algebraicNotation
       );
 
-    for (const [dx, dy] of MoveUtils.knightOffsets) {
+    for (const [dx, dy] of MovesGenerator.knightOffsets) {
       const newFile = Number(fileIndex) + dx;
       const newRank = 7 - Number(rankIndex) + dy;
 
@@ -209,7 +211,7 @@ class MoveUtils {
         continue;
       }
 
-      const target = ChessBoard.getAlgebraicNotationFromBoardIndices(
+      const target = BoardUtils.getAlgebraicNotationFromBoardIndices(
         newFile,
         newRank
       );
@@ -224,6 +226,105 @@ class MoveUtils {
     return moves;
   };
 
+  private static generateKingMoves = (
+    piece: KingPiece,
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
+  ): AlgebraicNotation[] => {
+    const legalMoves: AlgebraicNotation[] = [];
+
+    const directionKeys = [
+      ...Object.keys(this.cardinalDirectionOffsets),
+    ] as DirectionKey[];
+
+    const file = Number(piece.position.fileIndex);
+    const rank = 7 - Number(piece.position.rankIndex);
+
+    for (const directionKey of directionKeys) {
+      const [dx, dy] = MovesGenerator.directionOffsetsMap.get(directionKey)!;
+
+      const newFile = file + dx;
+      const newRank = rank + dy;
+
+      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+        continue;
+      }
+
+      const targetSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        newFile,
+        newRank
+      );
+
+      const targetPiece = pieces.get(targetSquare);
+      const isEmptySquare: boolean = !targetPiece;
+
+      // ? If the square is empty or has a piece of the opposite color → it's a legal move
+      if (isEmptySquare || targetPiece.color !== piece.color) {
+        legalMoves.push(targetSquare);
+      }
+    }
+
+    return legalMoves;
+  };
+
+  // Private
+  private static generateSlidingMoves = (
+    piece: SlidingPiece,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): AlgebraicNotation[] => {
+    const directionKeys = MovesGenerator.slidingDirectionsMap.get(piece.type);
+    if (!directionKeys) {
+      return [];
+    }
+
+    const legalMoves: AlgebraicNotation[] = [];
+
+    for (const directionKey of directionKeys) {
+      const [dx, dy] = MovesGenerator.directionOffsetsMap.get(directionKey)!;
+
+      let file = Number(piece.position.fileIndex);
+      let rank = 7 - Number(piece.position.rankIndex);
+
+      while (true) {
+        file += dx;
+        rank += dy;
+
+        // ? Skip if out of bounds
+        if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+          break;
+        }
+
+        const targetSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank
+        );
+
+        const potentialTargetPiece = pieces.get(targetSquare);
+        const isOccupied = Boolean(potentialTargetPiece);
+
+        // ? Square blocked by friendly piece → can't move further
+        if (isOccupied && potentialTargetPiece.color === piece.color) {
+          break;
+        }
+
+        // ? Square is either empty or blocked by enemy piece
+        legalMoves.push(targetSquare);
+
+        // ? Square blocked by enemy piece, we can take it but can't move further in this direction
+        if (isOccupied && potentialTargetPiece.color !== piece.color) {
+          break;
+        }
+
+        // ? Otherwise square is empty
+      }
+    }
+
+    return legalMoves;
+  };
+
+  /*
+  
+  */
   public static getAttackedSquaresByOpponent = (
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
@@ -240,19 +341,25 @@ class MoveUtils {
 
       switch (piece.type) {
         case "pawn": {
-          attacks = MoveUtils.generatePawnAttacks(piece as PawnPiece, pieces);
+          attacks = MovesGenerator.generatePawnAttacks(
+            piece as PawnPiece,
+            pieces
+          );
           break;
         }
 
         case "knight": {
-          attacks = MoveUtils.generateKnightMoves(piece as KnightPiece, pieces);
+          attacks = MovesGenerator.generateKnightMoves(
+            piece as KnightPiece,
+            pieces
+          );
           break;
         }
 
         case "bishop":
         case "rook":
         case "queen": {
-          attacks = MoveUtils.generateSlidingMoves(
+          attacks = MovesGenerator.generateSlidingMoves(
             piece as SlidingPiece,
             pieces
           );
@@ -260,7 +367,7 @@ class MoveUtils {
         }
 
         case "king": {
-          attacks = MoveUtils.generateKingMoves(
+          attacks = MovesGenerator.generateKingMoves(
             piece as KingPiece,
             pieces,
             player
@@ -308,7 +415,7 @@ class MoveUtils {
     color: PieceColor,
     includeCurrentSquare: boolean = false
   ): CastleSquares[] => {
-    const { files, rank } = MoveUtils.getCastleFileRank(
+    const { files, rank } = MovesGenerator.getCastleFileRank(
       side,
       color,
       includeCurrentSquare
@@ -353,12 +460,12 @@ class MoveUtils {
       return null;
     }
 
-    const pathSquaresArray = MoveUtils.getCastleDangerSquares(
+    const pathSquaresArray = MovesGenerator.getCastleDangerSquares(
       side,
       player.color
     );
 
-    const attackedSquares = MoveUtils.getAttackedSquaresByOpponent(
+    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
       player,
       pieces
     );
@@ -375,102 +482,6 @@ class MoveUtils {
       { piece: rook, position: rookStart },
     ];
   };
-
-  private static generateKingMoves = (
-    piece: KingPiece,
-    pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
-  ): AlgebraicNotation[] => {
-    const legalMoves: AlgebraicNotation[] = [];
-
-    const directionKeys = [
-      ...Object.keys(this.cardinalDirectionOffsets),
-    ] as DirectionKey[];
-
-    const file = Number(piece.position.fileIndex);
-    const rank = 7 - Number(piece.position.rankIndex);
-
-    for (const directionKey of directionKeys) {
-      const [dx, dy] = MoveUtils.directionOffsetsMap.get(directionKey)!;
-
-      const newFile = file + dx;
-      const newRank = rank + dy;
-
-      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
-        continue;
-      }
-
-      const targetSquare = ChessBoard.getAlgebraicNotationFromBoardIndices(
-        newFile,
-        newRank
-      );
-
-      const targetPiece = pieces.get(targetSquare);
-      const isEmptySquare: boolean = !targetPiece;
-
-      // ? If the square is empty or has a piece of the opposite color → it's a legal move
-      if (isEmptySquare || targetPiece.color !== piece.color) {
-        legalMoves.push(targetSquare);
-      }
-    }
-
-    return legalMoves;
-  };
-
-  // Private
-  private static generateSlidingMoves = (
-    piece: SlidingPiece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
-    const directionKeys = MoveUtils.slidingDirectionsMap.get(piece.type);
-    if (!directionKeys) {
-      return [];
-    }
-
-    const legalMoves: AlgebraicNotation[] = [];
-
-    for (const directionKey of directionKeys) {
-      const [dx, dy] = MoveUtils.directionOffsetsMap.get(directionKey)!;
-
-      let file = Number(piece.position.fileIndex);
-      let rank = 7 - Number(piece.position.rankIndex);
-
-      while (true) {
-        file += dx;
-        rank += dy;
-
-        // ? Skip if out of bounds
-        if (file < 0 || file > 7 || rank < 0 || rank > 7) {
-          break;
-        }
-
-        const targetSquare = ChessBoard.getAlgebraicNotationFromBoardIndices(
-          file,
-          rank
-        );
-
-        const potentialTargetPiece = pieces.get(targetSquare);
-        const isOccupied = Boolean(potentialTargetPiece);
-
-        // ? Square blocked by friendly piece → can't move further
-        if (isOccupied && potentialTargetPiece.color === piece.color) {
-          break;
-        }
-
-        // ? Square is either empty or blocked by enemy piece
-        legalMoves.push(targetSquare);
-
-        // ? Square blocked by enemy piece, we can take it but can't move further in this direction
-        if (isOccupied && potentialTargetPiece.color !== piece.color) {
-          break;
-        }
-
-        // ? Otherwise square is empty
-      }
-    }
-
-    return legalMoves;
-  };
 }
 
-export default MoveUtils;
+export default MovesGenerator;
