@@ -24,45 +24,66 @@ const userPointer = new UserPointer(chessBoardElement);
 
 let lastPointerEvent: "drag" | "click" | null = null;
 
-chessBoardElement.addEventListener("click", (e: MouseEvent) => {
-  e.preventDefault();
-
-  if (lastPointerEvent === "drag") {
-    lastPointerEvent = "click";
+userPointer.on("custom:pointer-drag-start", (e) => {
+  const isPiece = chessBoardInstance.elementIsChessPiece(
+    userPointer.pressedElement
+  );
+  if (!isPiece) {
     return;
   }
-  console.log("%cclick", "background: #bada55; color: #222");
 
-  const target = e.target as HTMLElement;
-  const isPiece = chessBoardInstance.elementIsChessPiece(target);
+  const piece = userPointer.pressedElement;
+  chessBoardInstance.selectPiece(piece);
+
+  console.log("custom:pointer-drag-start");
+});
+
+userPointer.on("custom:pointer-drag-click", (e) => {
+  lastPointerEvent = "click";
+  const { clickedElement } = e.detail;
+
+  clickedElement.classList.remove("dragging");
+
+  console.log("custom:pointer-drag-click");
+
+  // const target = e.target as HTMLElement;
+  const isPiece = chessBoardInstance.elementIsChessPiece(
+    userPointer.pressedElement
+  );
+
   const selectedPiece = chessBoardInstance.selectedPiece;
+
   const clickedPiece = isPiece
-    ? chessBoardInstance.getPieceFromElement(target)
+    ? chessBoardInstance.getPieceFromElement(userPointer.pressedElement)
     : null;
 
   // 1. No piece is selected yet
   if (!selectedPiece) {
-    chessBoardInstance.selectPiece(target);
+    chessBoardInstance.selectPiece(userPointer.pressedElement);
     return;
   }
 
   // 2. Already selected a piece
 
   // a) Clicked the same piece again → unselect
-  if (clickedPiece && clickedPiece === selectedPiece) {
-    chessBoardInstance.clearSelectedPiece();
-    return;
-  }
+  // if (clickedPiece && clickedPiece === selectedPiece) {
+  //   chessBoardInstance.clearSelectedPiece();
+  //   return;
+  // }
 
   // b) Clicked another of my own pieces → switch selection
   if (clickedPiece && clickedPiece.color === selectedPiece.color) {
-    chessBoardInstance.selectPiece(target);
+    // debugger;
+    chessBoardInstance.selectPiece(userPointer.pressedElement);
     return;
   }
 
   // c) Clicked an empty square or an enemy piece → move
+  console.log(clickedPiece);
   const attributeToCheck = clickedPiece ? "position" : "algebraicNotation";
-  const targetPosition = target.dataset[attributeToCheck] as AlgebraicNotation;
+  const targetPosition = userPointer.pressedElement.dataset[
+    attributeToCheck
+  ] as AlgebraicNotation;
 
   const { fileIndex, rankIndex } =
     BoardUtils.getBoardIndicesFromAlgebraicNotation(targetPosition);
@@ -95,20 +116,21 @@ userPointer.on("custom:pointer-drag-move", (e) => {
   // console.log({ piece });
 
   const draggedPiece = chessBoardInstance.getPieceFromElement(piece);
+
   chessBoardInstance.dragPiece(
     draggedPiece,
     pieceCursorOffsetX,
     pieceCursorOffsetY
   );
 
-  console.log("custom:pointer-drag-move");
+  // console.log("custom:pointer-drag-move");
 });
 
 userPointer.on("custom:pointer-drag-end", (e) => {
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
-  if (!isPiece) {
+  if (!isPiece || lastPointerEvent === "click") {
     return;
   }
   const piece = userPointer.pressedElement;
@@ -161,7 +183,8 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 chessBoardInstance.generateBoard();
 
 chessBoardInstance.addPiece("queen", "white", "c1");
-chessBoardInstance.addPiece("pawn", "white", "h7");
+chessBoardInstance.addPiece("pawn", "white", "h2");
+chessBoardInstance.addPiece("pawn", "black", "g7");
 chessBoardInstance.addPiece("knight", "black", "c7");
 chessBoardInstance.addPiece("rook", "black", "c8");
 chessBoardInstance.addPiece("bishop", "black", "d5");
