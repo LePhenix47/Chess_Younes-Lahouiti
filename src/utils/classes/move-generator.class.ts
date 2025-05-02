@@ -98,18 +98,100 @@ class MovesGenerator {
   /*
    * Move generation methods
    */
-  public static generatePseudoLegalMoves = (
+  public static generatePseudoLegalMoves(
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
-  ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
-    // TODO
-  };
+  ): { moves: AlgebraicNotation[]; piece: Piece }[] {
+    const result: { moves: AlgebraicNotation[]; piece: Piece }[] = [];
+
+    for (const piece of pieces.values()) {
+      if (piece.color !== player.color) {
+        continue;
+      }
+
+      const moves = MovesGenerator.generateMoveForPiece(piece, pieces, player);
+
+      if (moves.length > 0) {
+        result.push({ piece, moves });
+      }
+    }
+
+    return result;
+  }
 
   public static generateMoveForPiece = (
     piece: Piece,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
   ): AlgebraicNotation[] => {
-    // TODO
+    switch (piece.type) {
+      case "pawn": {
+        const pawnMoves = MovesGenerator.generatePawnMoves(
+          piece as PawnPiece,
+          pieces
+        );
+
+        const pawnAttacks = MovesGenerator.generatePawnAttacks(
+          piece as PawnPiece,
+          pieces
+        );
+
+        return [...pawnMoves, ...pawnAttacks];
+      }
+
+      case "knight": {
+        const knightMoves = MovesGenerator.generateKnightMoves(
+          piece as KnightPiece,
+          pieces
+        );
+        return knightMoves;
+      }
+
+      case "bishop":
+      case "rook":
+      case "queen": {
+        const slidingMoves = MovesGenerator.generateSlidingMoves(
+          piece as SlidingPiece,
+          pieces
+        );
+        return slidingMoves;
+      }
+
+      case "king": {
+        const normalMoves = MovesGenerator.generateKingMoves(
+          piece as KingPiece,
+          pieces,
+          player
+        );
+
+        const castleMoves: AlgebraicNotation[] = [];
+
+        const kingSideCastle = MovesGenerator.canCastle(
+          "kingSide",
+          player,
+          pieces
+        );
+        if (kingSideCastle) {
+          const targetSquare = player.color === "white" ? "g1" : "g8";
+          castleMoves.push(targetSquare as AlgebraicNotation);
+        }
+
+        const queenSideCastle = MovesGenerator.canCastle(
+          "queenSide",
+          player,
+          pieces
+        );
+        if (queenSideCastle) {
+          const targetSquare = player.color === "white" ? "c1" : "c8";
+          castleMoves.push(targetSquare as AlgebraicNotation);
+        }
+
+        return [...normalMoves, ...castleMoves];
+      }
+
+      default:
+        return [];
+    }
   };
 
   private static generatePawnMoves = (
@@ -132,7 +214,7 @@ class MovesGenerator {
       legalMoves.push(oneStepForward);
     }
 
-    const isStartingRank =
+    const isStartingRank: boolean =
       (piece.color === "white" && rank === 1) ||
       (piece.color === "black" && rank === 6);
 
@@ -163,10 +245,13 @@ class MovesGenerator {
     const file = Number(piece.position.fileIndex);
     const rank = 7 - Number(piece.position.rankIndex);
 
+    const leftSquare = file - 1;
+    const rightSquare = file + 1;
+
     // * Diagonal left attack
     const attackLeft: AlgebraicNotation =
       BoardUtils.getAlgebraicNotationFromBoardIndices(
-        file - 1, // ? left square
+        leftSquare, // ? left square
         rank + direction // ? move up or down by one square
       );
     const attackPieceLeft: Piece = pieces.get(attackLeft);
@@ -178,7 +263,7 @@ class MovesGenerator {
 
     // * Diagonal right attack
     const attackRight = BoardUtils.getAlgebraicNotationFromBoardIndices(
-      file + 1, // ? left square
+      rightSquare, // ? left square
       rank + direction // ? move up or down by one square
     );
     const attackPieceRight: Piece = pieces.get(attackRight);
