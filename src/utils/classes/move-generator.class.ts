@@ -199,7 +199,7 @@ class MovesGenerator {
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
     const legalMoves: AlgebraicNotation[] = [];
-    const direction = piece.color === "white" ? 1 : -1;
+    const direction = piece.color === "white" ? -1 : 1;
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
@@ -242,7 +242,7 @@ class MovesGenerator {
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
     const legalAttacks: AlgebraicNotation[] = [];
-    const direction = piece.color === "white" ? 1 : -1; // white moves up, black moves down
+    const direction = piece.color === "white" ? -1 : 1; // white moves up, black moves down
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
