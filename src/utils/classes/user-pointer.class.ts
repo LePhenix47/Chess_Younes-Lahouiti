@@ -16,6 +16,9 @@ export type PointerDragEventMap = {
     PointerEvent,
     "pageX" | "pageY" | "movementX" | "movementY"
   >;
+  "custom:pointer-drag-click": {
+    clickedElement: HTMLElement;
+  };
 };
 
 // Define a utility type to make all properties mutable
@@ -173,7 +176,7 @@ class UserPointer {
     return this;
   };
 
-  public computeRelativeViewportYOffset = (clientY: number): number => {
+  public static computeRelativeViewportYOffset = (clientY: number): number => {
     const viewportHeight: number =
       window.visualViewport?.height || window.innerHeight;
 
@@ -186,7 +189,7 @@ class UserPointer {
     return Math.round(100 * relativeToViewport);
   };
 
-  public normalizeYOffsetFromCenter = (
+  public static normalizeYOffsetFromCenter = (
     yOffsetRelativeToViewport: number
   ): number => {
     // ? Value between [-100, 100], from the center
@@ -344,7 +347,9 @@ class UserPointer {
     const dragDuration = pointerUpTime - this.pointerDownTime;
 
     if (dragDuration < this.DRAG_TIME_THRESHOLD_MS) {
-      console.log("%cNo drag", "background: #222; color: #bada55");
+      this.dispatchEvent("custom:pointer-drag-click", {
+        clickedElement: event.target as HTMLElement,
+      });
 
       this.resetAllState();
       return;
