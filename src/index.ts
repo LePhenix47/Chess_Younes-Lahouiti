@@ -24,6 +24,8 @@ const userPointer = new UserPointer(chessBoardElement);
 
 let lastPointerEvent: "drag" | "click" | null = null;
 
+let clickToggle = true;
+
 userPointer.on("custom:pointer-drag-start", (e) => {
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
@@ -41,6 +43,8 @@ userPointer.on("custom:pointer-drag-start", (e) => {
 userPointer.on("custom:pointer-drag-click", (e) => {
   lastPointerEvent = "click";
   const { clickedElement } = e.detail;
+
+  clickToggle = !clickToggle;
 
   clickedElement.classList.remove("dragging");
 
@@ -66,10 +70,10 @@ userPointer.on("custom:pointer-drag-click", (e) => {
   // 2. Already selected a piece
 
   // a) Clicked the same piece again → unselect
-  // if (clickedPiece && clickedPiece === selectedPiece) {
-  //   chessBoardInstance.clearSelectedPiece();
-  //   return;
-  // }
+  if (clickedPiece && clickedPiece === selectedPiece && clickToggle) {
+    chessBoardInstance.clearSelectedPiece();
+    return;
+  }
 
   // b) Clicked another of my own pieces → switch selection
   if (clickedPiece && clickedPiece.color === selectedPiece.color) {
