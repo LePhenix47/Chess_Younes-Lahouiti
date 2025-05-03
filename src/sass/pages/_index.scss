@@ -30,6 +30,10 @@
         touch-action: none;
         user-select: none;
 
+        @include mobile-only {
+            --_square-size: 50px;
+        }
+
         &.black-perspective {
             rotate: 180deg;
 
@@ -61,7 +65,7 @@
         &.can-move {
             position: relative;
 
-            &:not(.occupied)::before {
+            &:not([data-occupied-by])::before {
                 content: "";
                 position: absolute;
                 top: 50%;
@@ -76,7 +80,7 @@
                 border-radius: 50%;
             }
 
-            &.occupied {
+            &[data-occupied-by] {
                 --_thickness: 10px;
 
                 outline: var(--_thickness) solid rgba(9, 178, 2, 50%);
