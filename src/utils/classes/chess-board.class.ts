@@ -34,6 +34,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
   public boardPerspective: PieceColor = "white";
+  public selectPieceLegalMoves: AlgebraicNotation[] | null = null;
 
   public currentTurn: PieceColor = "white";
   public whitePlayer: Player;
@@ -292,27 +293,22 @@ class ChessBoard implements IGameLogic, IBoardUI {
   };
 
   public highlightSelectedSquare = (an: AlgebraicNotation): void => {
-    const square = this.container.querySelector(
-      `[data-algebraic-notation="${an}"]`
-    ) as HTMLElement;
+    const square: HTMLElement = this.squareElements.get(an);
 
     square?.classList?.add?.("selected");
   };
 
   public highlightMoveTargets = (moves: AlgebraicNotation[]): void => {
     for (const an of moves) {
-      const square = this.container.querySelector(
-        `[data-algebraic-notation="${an}"]`
-      ) as HTMLElement;
+      const square: HTMLElement = this.squareElements.get(an);
 
       square?.classList?.add?.("can-move");
     }
   };
 
   public clearSelectedHighlights = (): void => {
-    const pieceSquare = selectQuery(
-      ".selected[data-algebraic-notation]",
-      this.container
+    const pieceSquare = this.container.querySelector(
+      ".selected[data-algebraic-notation]"
     );
 
     pieceSquare.classList.remove("selected");
@@ -401,7 +397,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     this.clearSquareMoves();
 
-    // this.clearSelectedPiece();
+    this.clearSelectedPiece();
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
