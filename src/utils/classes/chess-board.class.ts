@@ -28,8 +28,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
   private container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  private readonly pieces = new Map<AlgebraicNotation, Piece>();
-  private readonly squareElements = new Map<AlgebraicNotation, HTMLElement>();
+  private readonly piecesMap = new Map<AlgebraicNotation, Piece>();
+  private readonly squareElementsMap = new Map<
+    AlgebraicNotation,
+    HTMLElement
+  >();
 
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
@@ -151,7 +154,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
         this.container.appendChild(square);
 
-        this.squareElements.set(
+        this.squareElementsMap.set(
           square.dataset.algebraicNotation as AlgebraicNotation,
           square
         );
@@ -160,7 +163,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
   };
 
   public getPieceFromElement = (el: HTMLElement): Piece | null => {
-    const piece: Piece | null = [...this.pieces.values()].find(
+    const piece: Piece | null = [...this.piecesMap.values()].find(
       (piece) => piece.element === el
     );
 
@@ -223,8 +226,13 @@ class ChessBoard implements IGameLogic, IBoardUI {
     // Step 5: Attach to board
     piece.attachToBoard(this.container);
 
+    this.updateSquareOccupation(
+      normalizedPosition.algebraicNotation as AlgebraicNotation,
+      piece
+    );
+
     // Step 6: Save to internal map
-    this.pieces.set(
+    this.piecesMap.set(
       normalizedPosition.algebraicNotation as AlgebraicNotation,
       piece
     );
@@ -268,7 +276,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     this.legalMovesForSelectedPiece = MovesGenerator.generateMoveForPiece(
       this.selectedPiece,
-      this.pieces,
+      this.piecesMap,
       this.currentPlayer
     );
 
@@ -293,17 +301,44 @@ class ChessBoard implements IGameLogic, IBoardUI {
   };
 
   public highlightSelectedSquare = (an: AlgebraicNotation): void => {
-    const square: HTMLElement = this.squareElements.get(an);
+    const square: HTMLElement = this.squareElementsMap.get(an);
 
     square?.classList?.add?.("selected");
   };
 
   public highlightMoveTargets = (moves: AlgebraicNotation[]): void => {
     for (const an of moves) {
-      const square: HTMLElement = this.squareElements.get(an);
+      const square: HTMLElement = this.squareElementsMap.get(an);
 
       square?.classList?.add?.("can-move");
     }
+  };
+
+  private readonly updateSquareOccupation = (
+    square: AlgebraicNotation,
+    piece: Piece | null
+  ): void => {
+    if (!piece) {
+      return;
+    }
+
+    const squareEl = this.squareElementsMap.get(square);
+    if (!squareEl) {
+      return;
+    }
+
+    const descriptor = `${piece.color}-${piece.type}`;
+    squareEl.setAttribute("data-occupied-by", descriptor);
+  };
+
+  private readonly clearSquareOccupation = (
+    square: AlgebraicNotation
+  ): void => {
+    const squareEl = this.squareElementsMap.get(square);
+    if (!squareEl) {
+      return;
+    }
+    squareEl.removeAttribute("data-occupied-by");
   };
 
   public clearSelectedHighlights = (): void => {
@@ -314,7 +349,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     console.log(
       "pieceSquare",
       pieceSquare,
-      this.squareElements.get(this.selectedPiece.position.algebraicNotation)
+      this.squareElementsMap.get(this.selectedPiece.position.algebraicNotation)
     );
 
     pieceSquare.classList.remove("selected");
@@ -322,7 +357,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
   public clearSquareMoves = (): void => {
     for (const an of this.legalMovesForSelectedPiece) {
-      const square: HTMLElement = this.squareElements.get(an);
+      const square: HTMLElement = this.squareElementsMap.get(an);
 
       square?.classList?.remove?.("can-move");
     }
@@ -357,7 +392,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
 
-    const targetPiece = this.pieces.get(algebraicNotation);
+    const targetPiece = this.piecesMap.get(algebraicNotation);
 
     // * 1. If the piece is not your turn, don't allow the move
     if (piece.color !== this.currentTurn) {
@@ -381,6 +416,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
       return; // Don't proceed with the move
     }
 
+    // TODO: Actually check for REAL legal moves
     const isPseudoIllegalMove =
       !this.legalMovesForSelectedPiece.includes(algebraicNotation);
 
@@ -406,6 +442,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     // TODO: This is temporary, later on we'll record the move history
 
+    const newPosition: IPieceAlgorithm["position"] = {
+      fileIndex: `${fileIndex}`,
+      rankIndex: `${rankIndex}`,
+      algebraicNotation,
+    };
     piece.moveTo(
       {
         fileIndex: `${fileIndex}`,
@@ -416,8 +457,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
     );
 
     // Update the pieces map
-    this.pieces.delete(oldPosition.algebraicNotation as AlgebraicNotation);
-    this.pieces.set(algebraicNotation, piece);
+    this.piecesMap.delete(oldPosition.algebraicNotation as AlgebraicNotation);
+    this.piecesMap.set(algebraicNotation, piece);
+
+    this.clearSquareOccupation(oldPosition.algebraicNotation);
+    this.updateSquareOccupation(newPosition.algebraicNotation, piece);
 
     this.switchTurnTo();
 
@@ -429,7 +473,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
     const animate: boolean = !noAnimation;
     targetPiece.delete({ animate }); // Remove from DOM
-    this.pieces.delete(
+    this.piecesMap.delete(
       targetPiece.position.algebraicNotation as AlgebraicNotation
     ); // Remove from internal map
   };
