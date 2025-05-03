@@ -18,13 +18,9 @@ const chessBoardElement: HTMLElement = selectQuery(
   '[data-element="chess-board"]'
 );
 
-const chessBoardInstance: ChessBoard = new ChessBoard(chessBoardElement);
+const chessBoardInstance = new ChessBoard(chessBoardElement);
 
 const userPointer = new UserPointer(chessBoardElement);
-
-let lastPointerEvent: "drag" | "click" | null = null;
-
-let clickToggle = true;
 
 userPointer.on("custom:pointer-drag-start", (e) => {
   const isPiece = chessBoardInstance.elementIsChessPiece(
@@ -37,14 +33,14 @@ userPointer.on("custom:pointer-drag-start", (e) => {
   const piece = userPointer.pressedElement;
   chessBoardInstance.selectPiece(piece);
 
-  console.log("custom:pointer-drag-start");
+  console.log(
+    "%ccustom:pointer-drag-start",
+    "background: darkblue; padding: 1rem"
+  );
 });
 
 userPointer.on("custom:pointer-drag-click", (e) => {
-  lastPointerEvent = "click";
   const { clickedElement } = e.detail;
-
-  clickToggle = !clickToggle;
 
   clickedElement.classList.remove("dragging");
 
@@ -70,7 +66,7 @@ userPointer.on("custom:pointer-drag-click", (e) => {
   // 2. Already selected a piece
 
   // a) Clicked the same piece again → unselect
-  if (clickedPiece && clickedPiece === selectedPiece && clickToggle) {
+  if (clickedPiece && clickedPiece === selectedPiece) {
     chessBoardInstance.clearSelectedPiece();
     return;
   }
@@ -103,7 +99,6 @@ userPointer.on("custom:pointer-drag-click", (e) => {
 
 // TODO: Refactor all of this to make a simple method call
 userPointer.on("custom:pointer-drag-move", (e) => {
-  lastPointerEvent = "drag";
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
@@ -134,7 +129,7 @@ userPointer.on("custom:pointer-drag-end", (e) => {
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
-  if (!isPiece || lastPointerEvent === "click") {
+  if (!isPiece) {
     return;
   }
   const piece = userPointer.pressedElement;
