@@ -59,7 +59,7 @@ class UserPointer {
   private container: HTMLElement;
 
   private pointerDownTime: number = NaN;
-  private readonly DRAG_TIME_THRESHOLD_MS = 150;
+  private readonly DRAG_TIME_THRESHOLD_MS = 85;
 
   static computeOffsetFromContainer = (
     pageX: number,
@@ -80,6 +80,8 @@ class UserPointer {
       y,
     };
   };
+  dragStartTimeout: NodeJS.Timeout;
+  dragStarted: any;
 
   constructor(container?: HTMLElement) {
     const containerIsNotHTMLElement =
@@ -206,19 +208,16 @@ class UserPointer {
   private handlePointerDown = (event: PointerEvent) => {
     event.preventDefault();
 
-    this.pointerDownTime = performance.now();
+    this.pointerDownTime = performance.now(); // Store the time the pointer is down
 
-    const isHoldingLeftClick =
-      event.pointerType === "mouse" && event.button === 0;
-    const isTouchingScreen = event.pointerType === "touch";
-
-    this.isPressing = isHoldingLeftClick || isTouchingScreen;
-
+    const isPressing =
+      (event.pointerType === "mouse" && event.button === 0) ||
+      event.pointerType === "touch";
+    this.isPressing = isPressing;
     this.pressedElement = event.target! as HTMLElement;
 
     const selectedElementDomRect =
       this.pressedElement.getBoundingClientRect?.();
-
     const containerDomRect = this.container.getBoundingClientRect?.();
 
     this.initXOffset =
@@ -228,82 +227,59 @@ class UserPointer {
 
     const lastRecordedValuesKeys = Object.keys(
       this.lastRecordedPositions
-    ).filter((key) => {
-      return key !== "adjustedX" && key !== "adjustedY";
-    }) as (keyof PointerEvent)[];
-
-    // TODO: Code repetition here + redundancy and the code fucking sucks in general
-    const lastRecordedValues = this.getCustomEventDetails(
-      event,
-      lastRecordedValuesKeys
-    );
-
-    this.lastRecordedPositions = {
-      ...lastRecordedValues,
-      ...this.lastRecordedPositions,
-    };
-
-    const customEventsToDispatch: readonly (keyof PointerDragEventMap)[] = [
-      "custom:pointer-drag-start",
-      "custom:pointer-drag-hold",
-    ];
-
-    for (const eventName of customEventsToDispatch) {
-      this.dispatchEvent(eventName);
-    }
-
-    if (this.listenersMap.has("custom:pointer-drag-hold")) {
-      this.startDragHoldLoop();
-    }
-    // Start the animation frame loop for drag hold
-  };
-
-  private handlePointerMove = (event: PointerEvent) => {
-    if (!this.isPressing) {
-      return;
-    }
-
-    const lastRecordedValuesKeys = Object.keys(
-      this.lastRecordedPositions
+    ).filter(
+      (key) => key !== "adjustedX" && key !== "adjustedY"
     ) as (keyof PointerEvent)[];
 
-    // TODO: Code repetition here + redundancy and the code fucking sucks in general
     const lastRecordedValues = this.getCustomEventDetails(
       event,
       lastRecordedValuesKeys
     );
-
     this.lastRecordedPositions = {
       ...lastRecordedValues,
       ...this.lastRecordedPositions,
     };
 
-    const wantedProperties = [
-      "pageX",
-      "pageY",
-      "movementX",
-      "movementY",
-    ] as const;
+    // Start the drag hold loop immediately to track dragging state
+    if (this.listenersMap.has("custom:pointer-drag-hold")) {
+      this.startDragHoldLoop(); // Start tracking drag movement
+    }
+  };
 
-    const customEventDetailsObject = this.getCustomEventDetails(
-      event,
-      wantedProperties
-    );
+  // TODO: Refactor code as it looks like a mess
+  private handlePointerMove = (event: PointerEvent) => {
+    if (!this.isPressing) return; // Ignore if no element is pressed
 
-    // TODO: Code repetition here
-    const containerDomRect = this.container.getBoundingClientRect?.();
+    const pointerMoveTime = performance.now();
+    const dragDuration = pointerMoveTime - this.pointerDownTime;
 
-    const adjustedX = event.pageX - containerDomRect.x;
-    const adjustedY = event.pageY - containerDomRect.y;
+    // Only dispatch drag start once when the threshold is met
+    const containerRect = this.container.getBoundingClientRect?.();
+    const adjustedX = event.pageX - containerRect.x;
+    const adjustedY = event.pageY - containerRect.y;
+    if (dragDuration >= this.DRAG_TIME_THRESHOLD_MS && !this.dragStarted) {
+      this.lastRecordedPositions.containerX = adjustedX;
+      this.lastRecordedPositions.containerY = adjustedY;
 
-    this.lastRecordedPositions.containerX = adjustedX;
-    this.lastRecordedPositions.containerY = adjustedY;
+      this.dispatchEvent("custom:pointer-drag-start", {
+        adjustedX,
+        adjustedY,
+      });
 
-    this.dispatchEvent("custom:pointer-drag-move", {
-      ...customEventDetailsObject,
-      adjustedX: adjustedX,
-      adjustedY: adjustedY,
-    });
+      this.dragStarted = true; // Ensure drag start is only dispatched once
+    }
+
+    // Dispatch drag move event (continuously as long as dragging is happening)
+    if (this.dragStarted) {
+      this.dispatchEvent("custom:pointer-drag-move", {
+        pageX: event.pageX,
+        pageY: event.pageY,
+        movementX: event.movementX,
+        movementY: event.movementY,
+        adjustedX,
+        adjustedY,
+      });
+    }
   };
 
   private getCustomEventDetails = <
@@ -326,8 +302,40 @@ class UserPointer {
     return customEventDetailsObject;
   };
 
+  // private handlePointerUp = (event: PointerEvent) => {
+  //   this.resetPointerState(event);
+  // };
+
   private handlePointerUp = (event: PointerEvent) => {
-    this.resetPointerState(event);
+    const pointerUpTime = performance.now();
+    const dragDuration = pointerUpTime - this.pointerDownTime; // Calculate how long the pointer was down
+
+    clearTimeout(this.dragStartTimeout); // Clear the timeout if the pointer is up
+
+    if (dragDuration < this.DRAG_TIME_THRESHOLD_MS) {
+      // Short duration means it's a click, not a drag
+      this.dispatchEvent("custom:pointer-drag-click", {
+        clickedElement: event.target as HTMLElement,
+      });
+    } else {
+      // Long duration means it's a drag
+      const containerRect = this.container.getBoundingClientRect?.();
+      const adjustedX = event.pageX - containerRect.x;
+      const adjustedY = event.pageY - containerRect.y;
+
+      this.lastRecordedPositions.containerX = adjustedX;
+      this.lastRecordedPositions.containerY = adjustedY;
+
+      this.dispatchEvent("custom:pointer-drag-end", {
+        pageY: event.pageY,
+        pageX: event.pageX,
+        movementY: event.movementY,
+        movementX: event.movementX,
+      });
+    }
+
+    // Reset all state after pointer up
+    this.resetAllState();
   };
 
   private handlePointerLeave = (event: PointerEvent) => {
@@ -343,34 +351,6 @@ class UserPointer {
   public resetPointerState = (event: PointerEvent) => {
     event.preventDefault();
 
-    const pointerUpTime = performance.now();
-    const dragDuration = pointerUpTime - this.pointerDownTime;
-
-    if (dragDuration < this.DRAG_TIME_THRESHOLD_MS) {
-      this.dispatchEvent("custom:pointer-drag-click", {
-        clickedElement: event.target as HTMLElement,
-      });
-
-      this.resetAllState();
-      return;
-    }
-
-    // TODO: Code repetition here
-    const containerDomRect = this.container.getBoundingClientRect?.();
-
-    const adjustedX = event.pageX - containerDomRect.x;
-    const adjustedY = event.pageY - containerDomRect.y;
-
-    this.lastRecordedPositions.containerX = adjustedX;
-    this.lastRecordedPositions.containerY = adjustedY;
-
-    this.dispatchEvent("custom:pointer-drag-end", {
-      pageY: event.pageY,
-      pageX: event.pageX,
-      movementY: event.movementY,
-      movementX: event.movementX,
-    });
-
     this.resetAllState();
   };
 
@@ -379,6 +359,7 @@ class UserPointer {
     this.pressedElement = null;
     this.cancelAnimationFrame();
     this.animationFrameId = NaN;
+    this.dragStarted = false;
   };
 
   // Start the continuous drag hold loop
