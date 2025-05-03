@@ -72,7 +72,18 @@ class NotationUtils {
     # = checkmate
     e.p. = captures "en passant"
 
+    Promotion:
+    - = 
+    ex: e8=Q
+    if it promotion causes check → e8=Q+
+    if it promotion causes checkmate → e8=Q#
+    if the promotion involves a capture → exf8=Q
+
     (not 100% accurate)
+
+    NOTE: how tf do pawn captures work in movetext ?? ex: exf6
+    where was the pawn before ? why not e5xf6 ???
+
     */
   };
 
