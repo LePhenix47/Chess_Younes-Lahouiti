@@ -62,7 +62,7 @@
         display: grid;
         grid-template-areas: "stack";
 
-        &.can-move {
+        &[data-available-move] {
             position: relative;
 
             &:not([data-occupied-by])::before {
@@ -89,6 +89,14 @@
         }
 
 
+        &[data-checked] {
+            --_blur-transparency: 80%;
+            --_diameter: 30px;
+            --_color: rgba(255, 0, 0, 85%);
+
+            background-image: radial-gradient(circle at center, var(--_color) var(--_diameter), transparent var(--_blur-transparency));
+        }
+
 
         &.light-square {
             background-color: var(--chess-light-square-color);
@@ -98,11 +106,11 @@
             background-color: var(--chess-dark-square-color);
         }
 
-        &.light-square.selected {
+        &.light-square[data-selected-square] {
             background-color: gold;
         }
 
-        &.dark-square.selected {
+        &.dark-square[data-selected-square] {
             background-color: goldenrod;
         }
 
