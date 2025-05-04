@@ -19,8 +19,8 @@ export type Move = {
   piece: Piece;
   capturedPiece?: Piece;
   promotion?: PieceType;
-  fenBefore: string;
-  fenAfter: string;
+  // fenBefore: string;
+  // fenAfter: string;
 };
 
 interface IGameLogic {
@@ -469,99 +469,54 @@ class ChessBoard implements IGameLogic, IBoardUI {
     rankIndex: number,
     fileIndex: number,
     noAnimation: boolean = false
-  ) => {
-    // TODOs for much later:
-    // TODO: Verify if we're not in check (legal moves)
-    // TODO: Verify if the piece we're trying to move ain't pinned (legal moves)
-    // TODO: Verify if we're not stalemated (legal moves)
-
-    // if (this.boardPerspective === "black") {
-    //   fileIndex = 7 - fileIndex;
-    //   rankIndex = 7 - rankIndex;
-    // }
-
-    const oldPosition = piece.position;
-
-    console.log("piece", piece);
+  ): void => {
+    const from = piece.position.algebraicNotation;
 
     fileIndex = clamp(0, fileIndex, 7);
     rankIndex = clamp(0, rankIndex, 7);
 
     const file: ChessFile = BoardUtils.fileMap.get(fileIndex)!;
     const rank: ChessRank = BoardUtils.rankMap.get(rankIndex)!;
+    const to = `${file}${rank}` as AlgebraicNotation;
 
-    const algebraicNotation: AlgebraicNotation = `${file}${rank}`;
+    // Prevent illegal turns
+    const isTryingToMoveOtherColorPiece: boolean =
+      piece.color !== this.currentTurn;
 
-    const targetPiece = this.piecesMap.get(algebraicNotation);
-
-    // * 1. If the piece is not your turn, don't allow the move
-    if (piece.color !== this.currentTurn) {
-      console.error("Not your turn ! Cannot move piece.");
-      piece.moveTo(oldPosition, noAnimation);
+    if (isTryingToMoveOtherColorPiece) {
+      console.error("Not your turn! Cannot move piece.");
+      piece.moveTo(piece.position, noAnimation);
       return;
     }
 
-    // * 2. If the square is occupied by a friendly piece, don't allow the move
-    const squareIsOccupiedByFriendlyPiece =
-      targetPiece && targetPiece.color === piece.color;
+    const targetPiece = this.piecesMap.get(to);
+    const isFriendlyFire = targetPiece?.color === piece.color;
 
-    if (squareIsOccupiedByFriendlyPiece) {
-      console.warn(
-        "%cSquare is occupied by a friendly piece, returning back to original position",
-        "color: white; font-weight: bold; padding: 2px 4px; border-radius: 4px;",
-        oldPosition
-      );
-
-      piece.moveTo(oldPosition, noAnimation);
-      return; // Don't proceed with the move
+    if (isFriendlyFire) {
+      console.warn("Square occupied by friendly piece.");
+      piece.moveTo(piece.position, noAnimation);
+      return;
     }
 
-    // TODO: Actually check for REAL legal moves
-    const isPseudoIllegalMove =
-      !this.legalMovesForSelectedPiece.includes(algebraicNotation);
-
+    const isPseudoIllegalMove = !this.legalMovesForSelectedPiece?.includes(to);
     if (isPseudoIllegalMove) {
-      console.warn(
-        "%cIllegal pseudo-move !!!! Returning back to original position",
-        "background: darkyellow; color: white; font-weight: bold; padding: 2px 4px; border-radius: 4px;",
-        oldPosition
-      );
-
-      piece.moveTo(oldPosition, noAnimation);
-      // TODO for much later: play error sound
-      return; // Don't proceed with the move
+      console.warn("Illegal pseudo-move!");
+      piece.moveTo(piece.position, noAnimation);
+      return;
     }
 
-    // * 2. If the square is occupied by an enemy piece, capture it
-    const isSquareOccupiedByEnemyPiece =
-      targetPiece && piece.color !== targetPiece.color;
-    if (isSquareOccupiedByEnemyPiece) {
-      this.capturePiece(targetPiece, noAnimation);
-    }
-
-    // TODO: If the move is illegal, don't allow it
-
-    // TODO: This is temporary, later on we'll record the move history
-
-    const newPosition: IPieceAlgorithm["position"] = {
-      fileIndex: `${fileIndex}`,
-      rankIndex: `${rankIndex}`,
-      algebraicNotation,
+    const move: Move = {
+      from,
+      to,
+      piece,
+      capturedPiece: targetPiece,
+      promotion: undefined, // to be handled later
+      // fenBefore: "", // to be handled when FEN supported
+      // fenAfter: "",
     };
-    piece.moveTo(newPosition, noAnimation);
 
-    // Update the pieces map
-    this.piecesMap.delete(oldPosition.algebraicNotation as AlgebraicNotation);
-    this.piecesMap.set(algebraicNotation, piece);
-
-    // TODO: Update this method
-    this.clearOccupiedSquare(oldPosition.algebraicNotation);
-    this.setOccupiedSquare(newPosition.algebraicNotation, piece);
-    this.highlightLegalMoves(this.legalMovesForSelectedPiece, "remove");
-
-    this.switchTurnTo();
-
-    this.clearSelectedPiece(oldPosition.algebraicNotation);
+    this.applyMove(move, noAnimation);
+    this.clearSelectedPiece(from);
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
@@ -570,6 +525,28 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.piecesMap.delete(
       targetPiece.position.algebraicNotation as AlgebraicNotation
     ); // Remove from internal map
+  };
+
+  private applyMove = (move: Move, noAnimation: boolean): void => {
+    const { from, to, piece, capturedPiece } = move;
+
+    if (capturedPiece) {
+      this.capturePiece(capturedPiece, noAnimation);
+    }
+
+    const newPosition = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+    piece.moveTo(newPosition, noAnimation);
+
+    this.piecesMap.delete(from);
+    this.clearOccupiedSquare(from);
+
+    this.piecesMap.set(to, piece);
+    this.setOccupiedSquare(to, piece);
+
+    this.highlightLegalMoves(this.legalMovesForSelectedPiece || [], "remove");
+    this.playedMoves.push(move);
+
+    this.switchTurnTo();
   };
 
   /**
