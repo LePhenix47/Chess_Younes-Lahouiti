@@ -251,17 +251,10 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     // * Step 6: Update square occupation
 
-    // this.updateSquareOccupation(
-    //   normalizedPosition.algebraicNotation as AlgebraicNotation,
-    //   piece
-    // );
-
-    this.updateSquareHighlight({
-      targetSquares: normalizedPosition.algebraicNotation as AlgebraicNotation,
-      type: "occupied",
-      value: `${piece.type}-${piece.color}`,
-      mode: "add",
-    });
+    this.setOccupiedSquare(
+      normalizedPosition.algebraicNotation as AlgebraicNotation,
+      piece
+    );
 
     // * Step 7: Save to internal map
     this.piecesMap.set(
@@ -317,11 +310,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
       this.currentPlayer
     );
 
-    this.updateSquareHighlight({
-      targetSquares: this.legalMovesForSelectedPiece,
-      type: "can-move",
-      mode: "add",
-    });
+    this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
   };
 
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
@@ -329,18 +318,12 @@ class ChessBoard implements IGameLogic, IBoardUI {
       return;
     }
 
-    this.updateSquareHighlight({
-      targetSquares:
-        oldPosition || this.selectedPiece.position.algebraicNotation,
-      type: "selected",
-      mode: "remove",
-    });
+    this.highlightSelectedSquare(
+      oldPosition || this.selectedPiece.position.algebraicNotation,
+      "remove"
+    );
 
-    this.updateSquareHighlight({
-      targetSquares: this.legalMovesForSelectedPiece,
-      type: "can-move",
-      mode: "remove",
-    });
+    this.highlightLegalMoves(this.legalMovesForSelectedPiece, "remove");
 
     this.selectedPiece = null;
   };
@@ -350,6 +333,10 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     return Boolean(piece) && piece === this.selectedPiece;
   };
+
+  /*
+   * Abstraction methods for updating the squares
+   */
 
   private readonly updateSquareHighlight = ({
     targetSquares,
@@ -417,6 +404,48 @@ class ChessBoard implements IGameLogic, IBoardUI {
           );
       }
     }
+  };
+
+  private readonly highlightSelectedSquare = (
+    square: AlgebraicNotation,
+    mode: "add" | "remove" | "toggle" = "add"
+  ) => {
+    this.updateSquareHighlight({
+      targetSquares: square,
+      type: "selected",
+      mode,
+    });
+  };
+
+  private readonly highlightLegalMoves = (
+    squares: AlgebraicNotation[],
+    mode: "add" | "remove" | "toggle" = "add"
+  ) => {
+    this.updateSquareHighlight({
+      targetSquares: squares,
+      type: "can-move",
+      mode,
+    });
+  };
+
+  private readonly setOccupiedSquare = (
+    square: AlgebraicNotation,
+    piece: Piece
+  ) => {
+    this.updateSquareHighlight({
+      targetSquares: square,
+      type: "occupied",
+      value: `${piece.color}-${piece.type}`,
+      mode: "add",
+    });
+  };
+
+  private readonly clearOccupiedSquare = (square: AlgebraicNotation) => {
+    this.updateSquareHighlight({
+      targetSquares: square,
+      type: "occupied",
+      mode: "remove",
+    });
   };
 
   // TODO: not finished yet
@@ -517,26 +546,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.piecesMap.set(algebraicNotation, piece);
 
     // TODO: Update this method
-    this.updateSquareHighlight({
-      targetSquares: oldPosition.algebraicNotation,
-      type: "occupied",
-      mode: "remove",
-    });
-
-    this.updateSquareHighlight({
-      targetSquares: newPosition.algebraicNotation,
-      type: "occupied",
-      value: `${piece.color}-${piece.type}`,
-      mode: "add",
-    });
+    this.clearOccupiedSquare(oldPosition.algebraicNotation);
+    this.setOccupiedSquare(newPosition.algebraicNotation, piece);
+    this.highlightLegalMoves(this.legalMovesForSelectedPiece, "remove");
 
     this.switchTurnTo();
-
-    this.updateSquareHighlight({
-      targetSquares: this.legalMovesForSelectedPiece,
-      type: "can-move",
-      mode: "remove",
-    });
 
     this.clearSelectedPiece(oldPosition.algebraicNotation);
   };
