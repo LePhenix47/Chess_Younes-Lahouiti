@@ -12,6 +12,17 @@ export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
 export type AlgebraicNotation = `${ChessFile}${ChessRank}`;
+
+export type Move = {
+  from: AlgebraicNotation;
+  to: AlgebraicNotation;
+  piece: Piece;
+  capturedPiece?: Piece;
+  promotion?: PieceType;
+  fenBefore: string;
+  fenAfter: string;
+};
+
 interface IGameLogic {
   currentTurn: PieceColor;
   currentPlayer: Player;
@@ -49,13 +60,17 @@ interface IBoardUI {
 
 class ChessBoard implements IGameLogic, IBoardUI {
   public container: HTMLElement;
-  private readonly initialFen =
+
+  public readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   private readonly piecesMap = new Map<AlgebraicNotation, Piece>();
+
   private readonly squareElementsMap = new Map<
     AlgebraicNotation,
     HTMLElement
   >();
+
+  private readonly playedMoves: Move[] = [];
 
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
@@ -518,8 +533,9 @@ class ChessBoard implements IGameLogic, IBoardUI {
     }
 
     // * 2. If the square is occupied by an enemy piece, capture it
-    if (targetPiece && targetPiece.color !== piece.color) {
-      // Capture if another piece is on the target square
+    const isSquareOccupiedByEnemyPiece =
+      targetPiece && piece.color !== targetPiece.color;
+    if (isSquareOccupiedByEnemyPiece) {
       this.capturePiece(targetPiece, noAnimation);
     }
 
@@ -532,14 +548,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
       rankIndex: `${rankIndex}`,
       algebraicNotation,
     };
-    piece.moveTo(
-      {
-        fileIndex: `${fileIndex}`,
-        rankIndex: `${rankIndex}`,
-        algebraicNotation,
-      },
-      noAnimation
-    );
+    piece.moveTo(newPosition, noAnimation);
 
     // Update the pieces map
     this.piecesMap.delete(oldPosition.algebraicNotation as AlgebraicNotation);
@@ -561,6 +570,19 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.piecesMap.delete(
       targetPiece.position.algebraicNotation as AlgebraicNotation
     ); // Remove from internal map
+  };
+
+  /**
+   * Checks and updates the repetition count for the current position.
+   * This should be called *after* a move is made and the FEN is updated.
+   * Only the relevant portion of FEN (piece placement, side to move,
+   * castling rights, and en passant square) is used for repetition detection.
+   *
+   * Once a position has occurred 3 times, it's a draw by repetition.
+   */
+  private readonly updateRepetitionTracker = (fen: string): void => {
+    // TODO: Extract repetition key from FEN and track its count in a Map<string, number>
+    // If the count reaches 3, trigger draw-by-repetition logic
   };
 
   // Placeholder for FEN and PGN methods
