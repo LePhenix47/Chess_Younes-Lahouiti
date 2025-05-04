@@ -30,6 +30,40 @@ class BoardUtils {
     ])
   );
 
+  public static pieceToEmojiMap = new Map<string, string>(
+    Object.entries({
+      P: "♙",
+      N: "♘",
+      B: "♗",
+      R: "♖",
+      Q: "♕",
+      K: "♔",
+      p: "♟",
+      n: "♞",
+      b: "♝",
+      r: "♜",
+      q: "♛",
+      k: "♚",
+    })
+  );
+
+  public static emojiToPieceMap = new Map<string, string>(
+    Object.entries({
+      "♙": "P",
+      "♘": "N",
+      "♗": "B",
+      "♖": "R",
+      "♕": "Q",
+      "♔": "K",
+      "♟": "p",
+      "♞": "n",
+      "♝": "b",
+      "♜": "r",
+      "♛": "q",
+      "♚": "k",
+    })
+  );
+
   public static getBoardIndicesFromAlgebraicNotation = (
     algebraicNotation: AlgebraicNotation
   ): IPieceAlgorithm["position"] => {
