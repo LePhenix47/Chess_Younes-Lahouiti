@@ -61,9 +61,10 @@
     &__square {
         display: grid;
         grid-template-areas: "stack";
+        position: relative;
+
 
         &[data-available-move] {
-            position: relative;
 
             &:not([data-occupied-by])::before {
                 content: "";
@@ -88,15 +89,28 @@
             }
         }
 
-
-        &[data-checked] {
+        &::after {
             --_blur-transparency: 80%;
             --_diameter: 30px;
             --_color: rgba(255, 0, 0, 85%);
 
             background-image: radial-gradient(circle at center, var(--_color) var(--_diameter), transparent var(--_blur-transparency));
+
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+
+            transition: opacity 150ms ease-in-out;
+            opacity: 0;
         }
 
+        &[data-checked]::after {
+            content: "";
+            opacity: 1;
+        }
 
         &.light-square {
             background-color: var(--chess-light-square-color);
