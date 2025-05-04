@@ -186,4 +186,5 @@ chessBoardInstance.addPiece("pawn", "black", "g7");
 chessBoardInstance.addPiece("knight", "black", "c7");
 chessBoardInstance.addPiece("rook", "black", "c8");
 chessBoardInstance.addPiece("bishop", "black", "d5");
-chessBoardInstance.addPiece("king", "black", "c5");
+chessBoardInstance.addPiece("king", "black", "e7");
+chessBoardInstance.addPiece("king", "white", "e1");
