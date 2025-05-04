@@ -19,9 +19,9 @@ interface IGameLogic {
 }
 
 interface IBoardUI {
-  highlightSelectedSquare(an: AlgebraicNotation): void;
-  highlightMoveTargets(moves: AlgebraicNotation[]): void;
-  clearSelectedHighlights(): void;
+  elementIsChessPiece(el: HTMLElement): boolean;
+  getPieceFromElement(el: HTMLElement): Piece | null;
+  get squareSize(): number;
 }
 
 class ChessBoard implements IGameLogic, IBoardUI {
@@ -179,7 +179,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
   ): void => {
     let normalizedPosition: IPieceAlgorithm["position"];
 
-    // Step 1: Normalize the position
+    // * Step 1: Normalize the position
     // If it's algebraic notation (e.g., "c5")
     if (typeof position === "string") {
       const [fileIndex, rankIndex] = position;
@@ -200,7 +200,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     // console.log({ position, normalizedPosition });
 
-    // Step 2: Convert algebraic notation to indices and update normalizedPosition
+    // * Step 2: Convert algebraic notation to indices and update normalizedPosition
 
     const fileIndex =
       BoardUtils.reverseFileMap.get(
@@ -216,22 +216,31 @@ class ChessBoard implements IGameLogic, IBoardUI {
       throw new Error(`"Invalid position: ${normalizedPosition}`);
     }
 
-    // Step 3: Update normalizedPosition to use indices instead of algebraic notation
+    // * Step 3: Update normalizedPosition to use indices instead of algebraic notation
     normalizedPosition.fileIndex = fileIndex.toString();
     normalizedPosition.rankIndex = rankIndex.toString();
 
-    // Step 4: Create the piece using the updated normalizedPosition
+    // * Step 4: Create the piece using the updated normalizedPosition
     const piece = new Piece(type, color, normalizedPosition);
 
-    // Step 5: Attach to board
+    // * Step 5: Attach to board
     piece.attachToBoard(this.container);
 
-    this.updateSquareOccupation(
-      normalizedPosition.algebraicNotation as AlgebraicNotation,
-      piece
-    );
+    // * Step 6: Update square occupation
 
-    // Step 6: Save to internal map
+    // this.updateSquareOccupation(
+    //   normalizedPosition.algebraicNotation as AlgebraicNotation,
+    //   piece
+    // );
+
+    this.updateSquareHighlight({
+      targetSquares: normalizedPosition.algebraicNotation as AlgebraicNotation,
+      type: "occupied",
+      value: `${piece.type}-${piece.color}`,
+      mode: "add",
+    });
+
+    // * Step 7: Save to internal map
     this.piecesMap.set(
       normalizedPosition.algebraicNotation as AlgebraicNotation,
       piece
@@ -273,7 +282,11 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
     const { algebraicNotation } = piece.position;
 
-    this.updateSquareHighlight(algebraicNotation, "selected", "add");
+    this.updateSquareHighlight({
+      targetSquares: algebraicNotation,
+      type: "selected",
+      mode: "add",
+    });
 
     this.legalMovesForSelectedPiece = MovesGenerator.generateMoveForPiece(
       this.selectedPiece,
@@ -281,27 +294,30 @@ class ChessBoard implements IGameLogic, IBoardUI {
       this.currentPlayer
     );
 
-    this.highlightMoveTargets(this.legalMovesForSelectedPiece);
+    this.updateSquareHighlight({
+      targetSquares: this.legalMovesForSelectedPiece,
+      type: "can-move",
+      mode: "add",
+    });
   };
 
-  public clearSelectedPiece = (): void => {
+  public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
     if (!this.selectedPiece) {
       return;
     }
 
-    // TODO: This doesn't work with our abstraction as it selects the new position for the piece
-    this.clearSelectedHighlights();
-    // this.updateSquareHighlight(
-    //   this.selectedPiece.position.algebraicNotation,
-    //   "selected",
-    //   "remove"
-    // );
+    this.updateSquareHighlight({
+      targetSquares:
+        oldPosition || this.selectedPiece.position.algebraicNotation,
+      type: "selected",
+      mode: "remove",
+    });
 
-    this.updateSquareHighlight(
-      this.legalMovesForSelectedPiece,
-      "can-move",
-      "remove"
-    );
+    this.updateSquareHighlight({
+      targetSquares: this.legalMovesForSelectedPiece,
+      type: "can-move",
+      mode: "remove",
+    });
 
     this.selectedPiece = null;
   };
@@ -312,91 +328,66 @@ class ChessBoard implements IGameLogic, IBoardUI {
     return Boolean(piece) && piece === this.selectedPiece;
   };
 
-  public highlightSelectedSquare = (an: AlgebraicNotation): void => {
-    const square: HTMLElement = this.squareElementsMap.get(an);
+  private readonly updateSquareHighlight = ({
+    targetSquares,
+    type,
+    mode = "add",
+    value = "true",
+  }: {
+    targetSquares: AlgebraicNotation | AlgebraicNotation[];
+    type: "selected" | "can-move" | "occupied";
+    mode?: "add" | "remove" | "toggle";
+    value?: string;
+  }): void => {
+    value = mode === "add" ? value : "";
 
-    square?.classList?.add?.("selected");
-  };
-
-  public highlightMoveTargets = (moves: AlgebraicNotation[]): void => {
-    for (const an of moves) {
-      const square: HTMLElement = this.squareElementsMap.get(an);
-
-      square?.classList?.add?.("can-move");
-    }
-  };
-
-  private readonly updateSquareOccupation = (
-    square: AlgebraicNotation,
-    piece: Piece | null
-  ): void => {
-    if (!piece) {
-      return;
-    }
-
-    const squareEl = this.squareElementsMap.get(square);
-    if (!squareEl) {
-      return;
-    }
-
-    const descriptor = `${piece.color}-${piece.type}`;
-    squareEl.setAttribute("data-occupied-by", descriptor);
-  };
-
-  private readonly clearSquareOccupation = (
-    square: AlgebraicNotation
-  ): void => {
-    const squareEl = this.squareElementsMap.get(square);
-    if (!squareEl) {
-      return;
-    }
-    squareEl.removeAttribute("data-occupied-by");
-  };
-
-  public clearSelectedHighlights = (): void => {
-    const pieceSquare = this.container.querySelector(
-      ".selected[data-algebraic-notation]"
-    );
-
-    console.log(
-      "pieceSquare",
-      pieceSquare,
-      this.squareElementsMap.get(this.selectedPiece.position.algebraicNotation)
-    );
-
-    pieceSquare.classList.remove("selected");
-  };
-
-  public clearSquareMoves = (): void => {
-    for (const an of this.legalMovesForSelectedPiece) {
-      const square: HTMLElement = this.squareElementsMap.get(an);
-
-      square?.classList?.remove?.("can-move");
-    }
-  };
-
-  private readonly updateSquareHighlight = (
-    targetSquares: AlgebraicNotation | AlgebraicNotation[],
-    type: "selected" | "can-move",
-    mode: "add" | "remove" | "toggle" = "add"
-  ): void => {
-    const squares =
+    const squares: AlgebraicNotation[] =
       typeof targetSquares === "string" ? [targetSquares] : targetSquares;
+
+    const attrMap = new Map<string, string>(
+      Object.entries({
+        selected: "data-selected-square",
+        "can-move": "data-available-move",
+        occupied: "data-occupied-by",
+      })
+    );
+
+    const attrName = attrMap.get(type);
+    if (!attrName) {
+      console.warn(`Unknown highlight type "${type}"`);
+      return;
+    }
+
+    console.debug(
+      `Updating squares "${squares.join(
+        ", "
+      )}" with attribute "${attrName}", value "${value}", mode "${mode}"`
+    );
 
     for (const an of squares) {
       const square = this.squareElementsMap.get(an);
       if (!square) continue;
 
       switch (mode) {
-        case "add":
-          square.classList.add(type);
+        case "add": {
+          square.setAttribute(attrName, value);
           break;
-        case "remove":
-          square.classList.remove(type);
+        }
+
+        case "remove": {
+          square.removeAttribute(attrName);
           break;
-        case "toggle":
-          square.classList.toggle(type);
+        }
+
+        case "toggle": {
+          if (square.hasAttribute(attrName)) {
+            square.removeAttribute(attrName);
+          } else {
+            square.setAttribute(attrName, value);
+          }
           break;
+        }
+
         default:
           console.warn(
             `Unknown mode "${mode}" passed to updateSquareHighlight`
@@ -503,23 +494,28 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.piecesMap.set(algebraicNotation, piece);
 
     // TODO: Update this method
-    this.clearSquareOccupation(oldPosition.algebraicNotation);
-    this.updateSquareOccupation(newPosition.algebraicNotation, piece);
-    this.updateSquareHighlight(
-      oldPosition.algebraicNotation,
-      "can-move",
-      "remove"
-    );
+    this.updateSquareHighlight({
+      targetSquares: oldPosition.algebraicNotation,
+      type: "occupied",
+      mode: "remove",
+    });
+
+    this.updateSquareHighlight({
+      targetSquares: newPosition.algebraicNotation,
+      type: "occupied",
+      value: `${piece.color}-${piece.type}`,
+      mode: "add",
+    });
 
     this.switchTurnTo();
 
-    this.updateSquareHighlight(
-      this.legalMovesForSelectedPiece,
-      "can-move",
-      "remove"
-    );
+    this.updateSquareHighlight({
+      targetSquares: this.legalMovesForSelectedPiece,
+      type: "can-move",
+      mode: "remove",
+    });
 
-    this.clearSelectedPiece();
+    this.clearSelectedPiece(oldPosition.algebraicNotation);
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
