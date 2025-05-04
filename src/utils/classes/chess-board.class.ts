@@ -12,20 +12,43 @@ export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
 
 export type AlgebraicNotation = `${ChessFile}${ChessRank}`;
-
 interface IGameLogic {
+  currentTurn: PieceColor;
+  currentPlayer: Player;
   selectPiece(el: HTMLElement): void;
-  clearSelectedPiece(): void;
+  clearSelectedPiece(oldPosition?: AlgebraicNotation): void;
+  switchTurnTo(color?: PieceColor): void;
+  updatePlayerState(
+    player: Player,
+    inCheck: boolean,
+    canCastle: CastlingRights
+  ): void;
+  updatePiecePosition(
+    piece: Piece,
+    rankIndex: number,
+    fileIndex: number,
+    noAnimation?: boolean
+  ): void;
 }
 
 interface IBoardUI {
-  elementIsChessPiece(el: HTMLElement): boolean;
-  getPieceFromElement(el: HTMLElement): Piece | null;
   get squareSize(): number;
+  container: HTMLElement;
+  elementIsChessPiece(el: HTMLElement): boolean;
+  elementIsPieceSelected(el: HTMLElement): boolean;
+  getPieceFromElement(el: HTMLElement): Piece | null;
+  addPiece(
+    type: PieceType,
+    color: PieceColor,
+    position:
+      | AlgebraicNotation
+      | Omit<IPieceAlgorithm["position"], "algebraicNotation">
+  ): void;
+  dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
 }
 
 class ChessBoard implements IGameLogic, IBoardUI {
-  private container: HTMLElement;
+  public container: HTMLElement;
   private readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
   private readonly piecesMap = new Map<AlgebraicNotation, Piece>();
