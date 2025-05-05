@@ -287,18 +287,21 @@ class ChessBoard implements IGameLogic, IBoardUI {
 
   // TODO: Update to follow the side-effect isolation pattern
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
-    if (!this.selectedPiece) {
+    const prev = this.selectedPiece;
+
+    if (!prev) {
       return;
     }
 
-    this.highlightSelectedSquare(
-      oldPosition || this.selectedPiece.position.algebraicNotation,
-      "remove"
-    );
+    const an = oldPosition || prev.position.algebraicNotation;
 
+    // ? UI update
+    this.highlightSelectedSquare(an as AlgebraicNotation, "remove");
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "remove");
 
+    // ? Logic update
     this.selectedPiece = null;
+    this.legalMovesForSelectedPiece = null;
   };
 
   public elementIsPieceSelected = (el: HTMLElement): boolean => {
