@@ -134,7 +134,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.currentTurn = this.currentTurn === "white" ? "black" : "white";
   };
 
-  // Generates the board layout
+  // TODO: Update to follow the side-effect isolation pattern
   public generateBoard = (): void => {
     this.container.innerHTML = ""; // clear container
 
@@ -208,6 +208,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     return piece || null;
   };
 
+  // TODO: Update to follow the side-effect isolation pattern
   public addPiece = (
     type: PieceType,
     color: PieceColor,
@@ -297,6 +298,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     piece.drag(offsetX, offsetY);
   };
 
+  // TODO: Update to follow the side-effect isolation pattern
   public selectPiece = (el: HTMLElement) => {
     const piece = this.getPieceFromElement(el);
     if (!piece) {
@@ -328,6 +330,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
   };
 
+  // TODO: Update to follow the side-effect isolation pattern
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
     if (!this.selectedPiece) {
       return;
@@ -463,6 +466,9 @@ class ChessBoard implements IGameLogic, IBoardUI {
     });
   };
 
+  /*
+   * Methods for handling pieces
+   */
   // TODO: not finished yet
   public updatePiecePosition = (
     piece: Piece,
@@ -470,53 +476,75 @@ class ChessBoard implements IGameLogic, IBoardUI {
     fileIndex: number,
     noAnimation: boolean = false
   ): void => {
-    const from = piece.position.algebraicNotation;
+    const to: AlgebraicNotation = this.resolveTargetSquare(
+      rankIndex,
+      fileIndex
+    );
+    const from: AlgebraicNotation = piece.position.algebraicNotation;
 
-    fileIndex = clamp(0, fileIndex, 7);
-    rankIndex = clamp(0, rankIndex, 7);
-
-    const file: ChessFile = BoardUtils.fileMap.get(fileIndex)!;
-    const rank: ChessRank = BoardUtils.rankMap.get(rankIndex)!;
-    const to = `${file}${rank}` as AlgebraicNotation;
-
-    // Prevent illegal turns
-    const isTryingToMoveOtherColorPiece: boolean =
-      piece.color !== this.currentTurn;
-
-    if (isTryingToMoveOtherColorPiece) {
-      console.error("Not your turn! Cannot move piece.");
-      piece.moveTo(piece.position, noAnimation);
+    if (!this.isMoveLegal(piece, to)) {
+      this.rejectMove(piece, noAnimation);
       return;
     }
 
-    const targetPiece = this.piecesMap.get(to);
-    const isFriendlyFire = targetPiece?.color === piece.color;
+    const move: Move = this.createMove(piece, from, to);
+    this.applyMove(move, noAnimation);
+    this.clearSelectedPiece(from);
+  };
 
+  private resolveTargetSquare = (
+    rankIndex: number,
+    fileIndex: number
+  ): AlgebraicNotation => {
+    const clampedRank = clamp(0, rankIndex, 7);
+    const clampedFile = clamp(0, fileIndex, 7);
+
+    const file = BoardUtils.fileMap.get(clampedFile)!;
+    const rank = BoardUtils.rankMap.get(clampedRank)!;
+
+    return `${file}${rank}` as AlgebraicNotation;
+  };
+
+  private isMoveLegal = (piece: Piece, to: AlgebraicNotation): boolean => {
+    if (piece.color !== this.currentTurn) {
+      console.error("Not your turn! Cannot move piece.");
+      return false;
+    }
+
+    const target: Piece = this.piecesMap.get(to);
+    const isFriendlyFire: boolean = target?.color === piece.color;
     if (isFriendlyFire) {
       console.warn("Square occupied by friendly piece.");
-      piece.moveTo(piece.position, noAnimation);
-      return;
+      return false;
     }
 
-    const isPseudoIllegalMove = !this.legalMovesForSelectedPiece?.includes(to);
+    const isPseudoIllegalMove: boolean =
+      !this.legalMovesForSelectedPiece?.includes(to);
     if (isPseudoIllegalMove) {
       console.warn("Illegal pseudo-move!");
-      piece.moveTo(piece.position, noAnimation);
-      return;
+      return false;
     }
 
-    const move: Move = {
+    return true;
+  };
+
+  private rejectMove = (piece: Piece, noAnimation: boolean): void => {
+    piece.moveTo(piece.position, noAnimation);
+  };
+
+  private createMove = (
+    piece: Piece,
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ): Move => {
+    const captured = this.piecesMap.get(to);
+    return {
       from,
       to,
       piece,
-      capturedPiece: targetPiece,
-      promotion: undefined, // to be handled later
-      // fenBefore: "", // to be handled when FEN supported
-      // fenAfter: "",
+      capturedPiece: captured,
+      promotion: undefined,
     };
-
-    this.applyMove(move, noAnimation);
-    this.clearSelectedPiece(from);
   };
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
