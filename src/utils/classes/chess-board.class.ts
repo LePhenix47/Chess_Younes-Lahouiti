@@ -216,56 +216,16 @@ class ChessBoard implements IGameLogic, IBoardUI {
       | Omit<IPieceAlgorithm["position"], "algebraicNotation">
       | AlgebraicNotation
   ): void => {
-    let normalizedPosition: IPieceAlgorithm["position"];
+    const normalizedPosition: IPieceAlgorithm["position"] =
+      BoardUtils.normalizePosition(position);
 
-    // * Step 1: Normalize the position
-    // If it's algebraic notation (e.g., "c5")
-    if (typeof position === "string") {
-      const [fileIndex, rankIndex] = position;
-
-      normalizedPosition = {
-        fileIndex,
-        rankIndex,
-        algebraicNotation: position,
-      };
-    } else {
-      const { fileIndex, rankIndex } = position;
-      normalizedPosition = {
-        fileIndex,
-        rankIndex,
-        algebraicNotation: `${fileIndex}${rankIndex}` as AlgebraicNotation,
-      };
-    }
-
-    // console.log({ position, normalizedPosition });
-
-    // * Step 2: Convert algebraic notation to indices and update normalizedPosition
-
-    const fileIndex =
-      BoardUtils.reverseFileMap.get(
-        normalizedPosition.fileIndex as ChessFile
-      ) ?? -1;
-    const rankIndex =
-      BoardUtils.reverseRankMap.get(
-        normalizedPosition.rankIndex as ChessRank
-      ) ?? -1;
-
-    const hasInvalidPosition = [fileIndex, rankIndex].includes(-1);
-    if (hasInvalidPosition) {
-      throw new Error(`"Invalid position: ${normalizedPosition}`);
-    }
-
-    // * Step 3: Update normalizedPosition to use indices instead of algebraic notation
-    normalizedPosition.fileIndex = fileIndex.toString();
-    normalizedPosition.rankIndex = rankIndex.toString();
-
-    // * Step 4: Create the piece using the updated normalizedPosition
+    // * Create the piece using the updated normalizedPosition
     const piece = new Piece(type, color, normalizedPosition);
 
-    // * Step 5: Attach to board
+    // * Attach to board
     piece.attachToBoard(this.container);
 
-    // * Step 6: Update square occupation
+    // * Update square occupation
 
     this.setOccupiedSquare(
       normalizedPosition.algebraicNotation as AlgebraicNotation,
@@ -314,12 +274,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
     this.selectedPiece = piece;
 
     const { algebraicNotation } = piece.position;
-
-    this.updateSquareHighlight({
-      targetSquares: algebraicNotation,
-      type: "selected",
-      mode: "add",
-    });
+    this.highlightSelectedSquare(algebraicNotation, "add");
 
     this.legalMovesForSelectedPiece = MovesGenerator.generateMoveForPiece(
       this.selectedPiece,
@@ -529,6 +484,7 @@ class ChessBoard implements IGameLogic, IBoardUI {
   };
 
   private rejectMove = (piece: Piece, noAnimation: boolean): void => {
+    console.error("Move rejected, putting piece back.");
     piece.moveTo(piece.position, noAnimation);
   };
 

@@ -64,9 +64,55 @@ class BoardUtils {
     })
   );
 
+  public static normalizePosition = (
+    position:
+      | Omit<IPieceAlgorithm["position"], "algebraicNotation">
+      | AlgebraicNotation
+  ): IPieceAlgorithm["position"] => {
+    // * Step 1: Normalize the position
+    let normalizedPosition: IPieceAlgorithm["position"];
+    if (typeof position === "string") {
+      const [fileIndex, rankIndex] = position;
+
+      normalizedPosition = {
+        fileIndex,
+        rankIndex,
+        algebraicNotation: position,
+      };
+    } else {
+      const { fileIndex, rankIndex } = position;
+      normalizedPosition = {
+        fileIndex,
+        rankIndex,
+        algebraicNotation: `${fileIndex}${rankIndex}` as AlgebraicNotation,
+      };
+    }
+
+    // * Step 2: Convert algebraic notation to indices and update normalizedPosition
+    const fileIndex =
+      BoardUtils.reverseFileMap.get(
+        normalizedPosition.fileIndex as ChessFile
+      ) ?? -1;
+    const rankIndex =
+      BoardUtils.reverseRankMap.get(
+        normalizedPosition.rankIndex as ChessRank
+      ) ?? -1;
+
+    const hasInvalidPosition = [fileIndex, rankIndex].includes(-1);
+    if (hasInvalidPosition) {
+      throw new Error(`"Invalid position: ${normalizedPosition}`);
+    }
+
+    // * Step 3: Update normalizedPosition to use indices instead of algebraic notation
+    normalizedPosition.fileIndex = fileIndex.toString();
+    normalizedPosition.rankIndex = rankIndex.toString();
+
+    return normalizedPosition;
+  };
+
   public static getBoardIndicesFromAlgebraicNotation = (
     algebraicNotation: AlgebraicNotation
-  ): IPieceAlgorithm["position"] => {
+  ) => {
     const [file, rank] = algebraicNotation;
 
     const fileIndex = BoardUtils.reverseFileMap.get(file as ChessFile);
@@ -85,6 +131,7 @@ class BoardUtils {
   ): AlgebraicNotation => {
     const file = BoardUtils.fileMap.get(fileIndex);
     const rank = BoardUtils.rankMap.get(rankIndex);
+    console.log({ fileIndex, rankIndex });
 
     if (!file || !rank) {
       console.error(
