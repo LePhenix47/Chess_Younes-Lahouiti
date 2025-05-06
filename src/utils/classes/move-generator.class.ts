@@ -30,7 +30,7 @@ type Offset = readonly [number, number];
 
 type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
 
-class MovesGenerator {
+abstract class MovesGenerator {
   private static readonly cardinalDirectionOffsets = {
     /**
      * North direction, x = 0, y = 1
@@ -247,6 +247,7 @@ class MovesGenerator {
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
 
+    // TODO: Make checks to not call getAlgebraicNotationFromBoardIndices if out of bounds
     const leftSquare = file - 1;
     const rightSquare = file + 1;
 

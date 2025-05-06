@@ -1,7 +1,7 @@
 import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
 import { IPieceAlgorithm } from "./piece.class";
 
-class BoardUtils {
+abstract class BoardUtils {
   public static fileMap = new Map<number, ChessFile>(
     Array.from<unknown, [number, ChessFile]>({ length: 8 }, (_, index) => [
       index,

@@ -1,4 +1,4 @@
-class NotationUtils {
+abstract class NotationUtils {
   private static interpretFen = (fen: string) => {
     const [
       board,
