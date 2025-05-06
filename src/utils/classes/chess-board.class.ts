@@ -135,67 +135,65 @@ class ChessBoard implements IGameLogic, IBoardUI {
   };
 
   // TODO: Update to follow the side-effect isolation pattern
-  public generateBoard = (): void => {
-    this.container.innerHTML = ""; // clear container
+  private readonly createSquareElement = (
+    rank: number,
+    file: number,
+    visualRank: number
+  ): HTMLDivElement => {
+    const square = document.createElement("div");
+    square.classList.add("chess__square");
 
-    const getLabelClasses = (
-      isDark: boolean,
-      labelType?: "rank" | "file"
-    ): string[] => [
+    const algebraicNotation = `${BoardUtils.fileMap.get(
+      file
+    )}${BoardUtils.rankMap.get(visualRank)}`;
+    const isDark = (file + rank) % 2 === 0;
+
+    square.dataset.file = file.toString();
+    square.dataset.rank = rank.toString();
+    square.dataset.algebraicNotation = algebraicNotation;
+    square.classList.add(isDark ? "dark-square" : "light-square");
+
+    this.addBoardLabels(square, file, visualRank, isDark);
+    return square;
+  };
+
+  private readonly addBoardLabels = (
+    square: HTMLDivElement,
+    file: number,
+    visualRank: number,
+    isDark: boolean
+  ): void => {
+    const getLabelClasses = (type: "rank" | "file"): string[] => [
       "chess__label",
       `chess__label--${isDark ? "light" : "dark"}`,
-      `chess__label--${labelType === "rank" ? "rank" : "file"}`,
+      `chess__label--${type}`,
     ];
 
+    if (visualRank === 7) {
+      const fileLabel = document.createElement("p");
+      fileLabel.classList.add(...getLabelClasses("file"));
+      fileLabel.textContent = BoardUtils.fileMap.get(file);
+      square.appendChild(fileLabel);
+    }
+
+    if (file === 0) {
+      const rankLabel = document.createElement("p");
+      rankLabel.classList.add(...getLabelClasses("rank"));
+      rankLabel.textContent = BoardUtils.rankMap.get(visualRank);
+      square.appendChild(rankLabel);
+    }
+  };
+
+  public generateBoard = (): void => {
+    this.container.innerHTML = "";
     for (let visualRank = 0; visualRank < 8; visualRank++) {
-      /**
-       * Logical rank due to coordinates mismatch between visual (board) and logical (internal game logic) rank
-       */
       const rank = 7 - visualRank;
-
       for (let file = 0; file < 8; file++) {
-        const square: HTMLDivElement = document.createElement("div");
-        square.classList.add("chess__square");
-
-        square.dataset.file = file.toString();
-        square.dataset.rank = rank.toString(); // ? Visual rank, the data attr are relative to the chess board, not in-game logic
-        square.dataset.algebraicNotation =
-          BoardUtils.fileMap.get(file) + BoardUtils.rankMap.get(visualRank);
-
-        const isDark: boolean = (file + rank) % 2 === 0;
-        square.classList.add(isDark ? "dark-square" : "light-square");
-
-        // Add file label to bottom row (visualRank === 7)
-        if (visualRank === 7) {
-          const fileLabel = document.createElement("p");
-
-          const fileLabelClasses = getLabelClasses(isDark, "file");
-
-          fileLabel.classList.add(...fileLabelClasses);
-
-          fileLabel.textContent = BoardUtils.fileMap.get(file);
-          square.appendChild(fileLabel);
-        }
-
-        // Add rank number (8 to 1) to the first column
-        if (file === 0) {
-          const rankLabelClasses = getLabelClasses(isDark, "rank");
-
-          const rankLabel = document.createElement("p");
-
-          rankLabel.classList.add(...rankLabelClasses);
-
-          // Show actual rank number (from 8 to 1)
-          rankLabel.textContent = BoardUtils.rankMap.get(visualRank);
-          square.appendChild(rankLabel);
-        }
-
+        const square = this.createSquareElement(rank, file, visualRank);
         this.container.appendChild(square);
 
-        this.squareElementsMap.set(
-          square.dataset.algebraicNotation as AlgebraicNotation,
-          square
-        );
+        const algebraic = square.dataset.algebraicNotation as AlgebraicNotation;
+        this.squareElementsMap.set(algebraic, square);
       }
     }
   };
