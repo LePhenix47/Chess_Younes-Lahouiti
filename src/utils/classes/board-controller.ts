@@ -39,27 +39,36 @@ export interface IBoardUI {
 // Or re-define if needed
 
 abstract class BoardController implements IGameLogic, IBoardUI {
-  // Board UI container
   public container: HTMLElement;
 
-  // State
+  public readonly initialFen =
+    "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+  protected readonly piecesMap = new Map<AlgebraicNotation, Piece>();
+
+  protected readonly squareElementsMap = new Map<
+    AlgebraicNotation,
+    HTMLElement
+  >();
+
+  protected readonly playedMoves: Move[] = [];
+
+  public selectedPiece: Piece | null = null;
+  public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
+  public boardPerspective: PieceColor = "white";
+  public legalMovesForSelectedPiece: AlgebraicNotation[] | null = null;
+
   public currentTurn: PieceColor = "white";
   public whitePlayer: Player;
   public blackPlayer: Player;
-  public selectedPiece: Piece | null = null;
-  public legalMovesForSelectedPiece: AlgebraicNotation[] | null = null;
-
-  private piecesMap = new Map<AlgebraicNotation, Piece>();
-  private squareElementsMap = new Map<AlgebraicNotation, HTMLElement>();
-  private playedMoves: Move[] = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
+
     this.whitePlayer = new Player("white");
     this.blackPlayer = new Player("black");
   }
 
-  private readonly createSquareElement = (
+  protected readonly createSquareElement = (
     rank: number,
     file: number,
     visualRank: number
@@ -81,7 +90,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     return square;
   };
 
-  private readonly addBoardLabels = (
+  protected readonly addBoardLabels = (
     square: HTMLDivElement,
     file: number,
     visualRank: number,
@@ -279,7 +288,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
    * Abstraction methods for updating the squares
    */
 
-  private readonly updateSquareHighlight = ({
+  protected readonly updateSquareHighlight = ({
     targetSquares,
     type,
     mode = "add",
@@ -347,7 +356,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     }
   };
 
-  private readonly highlightSelectedSquare = (
+  protected readonly highlightSelectedSquare = (
     square: AlgebraicNotation,
     mode: "add" | "remove" | "toggle" = "add"
   ) => {
@@ -358,7 +367,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     });
   };
 
-  private readonly highlightLegalMoves = (
+  protected readonly highlightLegalMoves = (
     squares: AlgebraicNotation[],
     mode: "add" | "remove" | "toggle" = "add"
   ) => {
@@ -369,7 +378,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     });
   };
 
-  private readonly setOccupiedSquare = (
+  protected readonly setOccupiedSquare = (
     square: AlgebraicNotation,
     piece: Piece
   ) => {
@@ -381,7 +390,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     });
   };
 
-  private readonly clearOccupiedSquare = (square: AlgebraicNotation) => {
+  protected readonly clearOccupiedSquare = (square: AlgebraicNotation) => {
     this.updateSquareHighlight({
       targetSquares: square,
       type: "occupied",
