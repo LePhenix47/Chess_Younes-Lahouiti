@@ -188,3 +188,4 @@ chessBoardInstance.addPiece("rook", "black", "c8");
 chessBoardInstance.addPiece("bishop", "black", "d5");
 chessBoardInstance.addPiece("king", "black", "e7");
 chessBoardInstance.addPiece("king", "white", "e1");
+chessBoardInstance.addPiece("rook", "white", "h1");
