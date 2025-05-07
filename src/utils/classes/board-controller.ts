@@ -3,7 +3,7 @@ import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import MovesGenerator from "./move-generator.class";
 
-import Piece, { PieceColor, PieceType, IPieceAlgorithm } from "./piece.class";
+import Piece, { PieceColor, PieceType, IPieceLogic } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 import type { Move, AlgebraicNotation } from "./chess-board.class"; //
@@ -32,7 +32,7 @@ export interface IBoardUI {
     color: PieceColor,
     position:
       | AlgebraicNotation
-      | Omit<IPieceAlgorithm["position"], "algebraicNotation">
+      | Omit<IPieceLogic["position"], "algebraicNotation">
   ): void;
   dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
 }
@@ -163,10 +163,10 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     type: PieceType,
     color: PieceColor,
     position:
-      | Omit<IPieceAlgorithm["position"], "algebraicNotation">
+      | Omit<IPieceLogic["position"], "algebraicNotation">
       | AlgebraicNotation
   ): void => {
-    const normalizedPosition: IPieceAlgorithm["position"] =
+    const normalizedPosition: IPieceLogic["position"] =
       BoardUtils.normalizePosition(position);
 
     // * Create the piece using the updated normalizedPosition

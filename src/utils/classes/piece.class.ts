@@ -13,7 +13,7 @@ export type PieceType =
 /**
  * Represents the core logical attributes of a chess piece used for move generation and game logic.
  */
-export interface IPieceAlgorithm {
+export interface IPieceLogic {
   /** The type of the chess piece (e.g., `'pawn'`, `'rook'`, etc.) */
   type: PieceType;
 
@@ -48,21 +48,21 @@ export interface IPieceAlgorithm {
 
   hasMoved: boolean;
   isSlidingPiece: boolean;
-  moveTo(position: IPieceAlgorithm["position"], noAnimation?: boolean): void;
+  moveTo(position: IPieceLogic["position"], noAnimation?: boolean): void;
   promotePawn(newType: Exclude<PieceType, "pawn" | "king">): void;
   toFEN(): string;
 }
 
-export interface IPieceDOM {
+export interface IPieceUI {
   attachToBoard(boardElement: HTMLElement): void;
   drag(offsetX: number, offsetY: number): void;
   delete(options?: { animate?: boolean }): void;
 }
 
-class Piece implements IPieceAlgorithm, IPieceDOM {
+class Piece implements IPieceLogic, IPieceUI {
   public type: PieceType;
   public color: PieceColor;
-  public position: IPieceAlgorithm["position"];
+  public position: IPieceLogic["position"];
   public hasMoved: boolean = false;
   public isSlidingPiece: boolean = false;
 
@@ -71,7 +71,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   constructor(
     type: PieceType,
     color: PieceColor,
-    position: IPieceAlgorithm["position"]
+    position: IPieceLogic["position"]
   ) {
     this.type = type;
     this.color = color;
@@ -134,14 +134,14 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.setProperty("--_drag-y", `${offsetY}px`);
   };
 
-  private updatePositionStyles = (pos: IPieceAlgorithm["position"]): void => {
+  private updatePositionStyles = (pos: IPieceLogic["position"]): void => {
     this.element.style.setProperty("--_index-x", pos.rankIndex);
     this.element.style.setProperty("--_index-y", pos.fileIndex);
 
     this.element.dataset.position = pos.algebraicNotation;
   };
 
-  private updateDebugText = (pos: IPieceAlgorithm["position"]): void => {
+  private updateDebugText = (pos: IPieceLogic["position"]): void => {
     const debug = this.element?.querySelector<HTMLElement>(
       "[data-element=piece-debug]"
     );
@@ -182,7 +182,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
   };
 
   public moveTo = (
-    newPos: IPieceAlgorithm["position"],
+    newPos: IPieceLogic["position"],
     noAnimation = false
   ): void => {
     this.clearDragOffset();

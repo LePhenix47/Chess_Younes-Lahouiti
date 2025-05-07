@@ -1,5 +1,5 @@
 import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
-import { IPieceAlgorithm } from "./piece.class";
+import { IPieceLogic } from "./piece.class";
 
 abstract class BoardUtils {
   public static fileMap = new Map<number, ChessFile>(
@@ -66,11 +66,11 @@ abstract class BoardUtils {
 
   public static normalizePosition = (
     position:
-      | Omit<IPieceAlgorithm["position"], "algebraicNotation">
+      | Omit<IPieceLogic["position"], "algebraicNotation">
       | AlgebraicNotation
-  ): IPieceAlgorithm["position"] => {
+  ): IPieceLogic["position"] => {
     // * Step 1: Normalize the position
-    let normalizedPosition: IPieceAlgorithm["position"];
+    let normalizedPosition: IPieceLogic["position"];
     if (typeof position === "string") {
       const [fileIndex, rankIndex] = position;
 
