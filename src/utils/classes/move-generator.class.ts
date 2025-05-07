@@ -418,10 +418,33 @@ abstract class MovesGenerator {
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
-    const attackedSquaresSet = new Set<AlgebraicNotation>();
+    const detailed = MovesGenerator.getAttackedSquaresByOpponentDetailed(
+      player,
+      pieces
+    );
 
-    for (const piece of pieces.values()) {
-      // ? Ignore own pieces
+    const attackedSquares = detailed.flatMap((entry) => entry.attacks);
+
+    const uniqueAttackedSquares = new Set(attackedSquares);
+
+    return [...uniqueAttackedSquares];
+  };
+
+  public static getAttackedSquaresByOpponentDetailed = (
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): {
+    piece: Piece;
+    from: AlgebraicNotation;
+    attacks: AlgebraicNotation[];
+  }[] => {
+    const results: {
+      piece: Piece;
+      from: AlgebraicNotation;
+      attacks: AlgebraicNotation[];
+    }[] = [];
+
+    for (const [pos, piece] of pieces) {
       if (piece.color === player.color) {
         continue;
       }
@@ -463,17 +486,58 @@ abstract class MovesGenerator {
           );
           break;
         }
-
-        default:
-          break;
       }
 
-      for (const square of attacks) {
-        attackedSquaresSet.add(square);
+      results.push({ piece, from: pos, attacks });
+    }
+
+    return results;
+  };
+
+  public static isKingInCheck = (
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
+  ): boolean => {
+    const piecesArray: Piece[] = [...pieces.values()];
+    const king = piecesArray.find((p): p is KingPiece => {
+      return p.type === "king" && p.color === player.color;
+    });
+
+    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
+      player,
+      pieces
+    );
+    return attackedSquares.includes(king.position.algebraicNotation);
+  };
+
+  public static getKingAttackers = (
+    king: KingPiece,
+    pieces: Map<AlgebraicNotation, Piece>,
+    rival: Player
+  ): { attacker: Piece; from: AlgebraicNotation }[] => {
+    if (king.color === rival.color) {
+      throw new Error("King and rival cannot be of the same color");
+    }
+
+    const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
+
+    for (const [pos, piece] of pieces) {
+      if (piece.color === king.color) {
+        continue;
+      }
+
+      const attacks: AlgebraicNotation[] = MovesGenerator.generateMoveForPiece(
+        piece,
+        pieces,
+        rival
+      );
+
+      if (attacks.includes(king.position.algebraicNotation)) {
+        attackers.push({ attacker: piece, from: pos });
       }
     }
 
-    return [...attackedSquaresSet];
+    return attackers;
   };
 
   private static getCastleFileRank = (
