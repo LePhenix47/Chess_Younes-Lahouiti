@@ -45,11 +45,18 @@ export interface IPieceAlgorithm {
      */
     algebraicNotation: AlgebraicNotation;
   };
+
+  hasMoved: boolean;
+  isSlidingPiece: boolean;
+  moveTo(position: IPieceAlgorithm["position"], noAnimation?: boolean): void;
+  promotePawn(newType: Exclude<PieceType, "pawn" | "king">): void;
+  toFEN(): string;
 }
 
-interface IPieceDOM {
-  moveTo(position: IPieceAlgorithm["position"]): void;
+export interface IPieceDOM {
   attachToBoard(boardElement: HTMLElement): void;
+  drag(offsetX: number, offsetY: number): void;
+  delete(options?: { animate?: boolean }): void;
 }
 
 class Piece implements IPieceAlgorithm, IPieceDOM {
@@ -127,72 +134,69 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.element.style.setProperty("--_drag-y", `${offsetY}px`);
   };
 
-  public moveTo = (
-    newPosition: IPieceAlgorithm["position"],
-    noAnimation = false
-  ): void => {
-    if (!this.element) {
-      throw new Error("Element is null");
-    }
+  private updatePositionStyles = (pos: IPieceAlgorithm["position"]): void => {
+    this.element.style.setProperty("--_index-x", pos.rankIndex);
+    this.element.style.setProperty("--_index-y", pos.fileIndex);
 
-    console.log(newPosition);
-
-    // * Remove temporary drag offset
-    this.element.style.removeProperty("--_drag-x");
-    this.element.style.removeProperty("--_drag-y");
-
-    // * Set new board coordinates
-    this.element.style.setProperty("--_index-x", newPosition.rankIndex);
-    this.element.style.setProperty("--_index-y", newPosition.fileIndex);
-
-    this.element.dataset.position = newPosition.algebraicNotation;
-
-    const debugParagraph = this.element.querySelector<HTMLParagraphElement>(
-      "[data-element=piece-debug]"
-    );
-
-    debugParagraph.textContent = `${newPosition.fileIndex}-${newPosition.rankIndex}`;
-
-    console.debug(this.element.classList, noAnimation);
-    // ? Minor bug fix where a clicked piece didn't have a transition
-    const hasInvalidClassesForAnimationState =
-      !noAnimation && this.element.classList.contains("no-transition");
-    if (hasInvalidClassesForAnimationState) {
-      this.element.classList.remove("no-transition", "z-index");
-    }
-
-    if (noAnimation) {
-      // * Drag move (no animation)
-      // ? Instantly move WITHOUT transition
-      this.element.classList.remove("dragging");
-
-      setTimeout(() => {
-        this.element.classList.remove("no-transition", "z-index");
-      }, 0);
-    } else {
-      // * Click move (with animation)
-      this.element.classList.add("z-index");
-      this.element.classList.remove("dragging");
-
-      const onTransitionEnd = (event: TransitionEvent) => {
-        if (!["top", "left"].includes(event.propertyName)) {
-          return;
-        }
-
-        this.element?.classList.remove("z-index");
-        this.element?.removeEventListener("transitionend", onTransitionEnd);
-      };
-
-      this.element.addEventListener("transitionend", onTransitionEnd);
-    }
-
-    this.position = newPosition;
-    this.hasMoved = true;
+    this.element.dataset.position = pos.algebraicNotation;
   };
 
-  public toFenChar = (): string => {
-    const pieceChar = this.pieceCharacter();
-    return this.color === "white" ? pieceChar.toUpperCase() : pieceChar;
+  private updateDebugText = (pos: IPieceAlgorithm["position"]): void => {
+    const debug = this.element?.querySelector<HTMLElement>(
+      "[data-element=piece-debug]"
+    );
+    if (!debug) {
+      return;
+    }
+
+    debug.textContent = `${pos.fileIndex}-${pos.rankIndex}`;
+  };
+
+  private clearDragOffset = (): void => {
+    this.element.style.removeProperty("--_drag-x");
+    this.element.style.removeProperty("--_drag-y");
+  };
+
+  private animateMove = (): void => {
+    this.element.classList.add("z-index");
+    this.element.classList.remove("dragging");
+
+    const onTransitionEnd = (e: TransitionEvent): void => {
+      if (!["top", "left"].includes(e.propertyName)) {
+        return;
+      }
+
+      this.element.classList.remove("z-index");
+      this.element.removeEventListener("transitionend", onTransitionEnd);
+    };
+
+    this.element.addEventListener("transitionend", onTransitionEnd);
+  };
+
+  private instantMove = (): void => {
+    this.element.classList.remove("dragging");
+
+    setTimeout(() => {
+      this.element?.classList.remove("no-transition", "z-index");
+    }, 0);
+  };
+
+  public moveTo = (
+    newPos: IPieceAlgorithm["position"],
+    noAnimation = false
+  ): void => {
+    this.clearDragOffset();
+    this.updatePositionStyles(newPos);
+    this.updateDebugText(newPos);
+
+    if (noAnimation) {
+      this.instantMove();
+    } else {
+      this.animateMove();
+    }
+
+    this.position = newPos;
+    this.hasMoved = true;
   };
 
   public promotePawn = (newType: Omit<PieceType, "pawn" | "king">): void => {
@@ -205,7 +209,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     this.checkSlidingPiece();
   };
 
-  private pieceCharacter = (): string => {
+  public toFEN = (): string => {
     const map = new Map<string, string>(
       Object.entries({
         pawn: "p",
@@ -223,7 +227,7 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
       throw new Error(`Unknown piece type: ${this.type}`);
     }
 
-    return char;
+    return this.color === "white" ? char.toUpperCase() : char;
   };
 
   public delete = ({ animate = false }: { animate?: boolean } = {}): void => {
@@ -232,10 +236,12 @@ class Piece implements IPieceAlgorithm, IPieceDOM {
     }
 
     const callback = (event?: TransitionEvent) => {
+      // ? An event was passed in, but it was not a transition event
       if (Boolean(event) && event.propertyName !== "opacity") {
         return;
       }
 
+      // ? If an event was passed in, remove the listener
       if (event) {
         this.element.removeEventListener("transitionend", callback);
       }
