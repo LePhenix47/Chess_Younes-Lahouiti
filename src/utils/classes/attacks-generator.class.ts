@@ -60,41 +60,54 @@ abstract class AttacksGenerator {
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
     const attackedSquares: AlgebraicNotation[] = [];
-
-    const { fileIndex, rankIndex } = piece.position;
-
     const fileValue = Number(piece.position.fileIndex);
     const rankValue = Number(piece.position.rankIndex);
 
-    for (const [_, [dx, dy]] of BaseMovesGenerator.directionOffsetsMap) {
+    for (const [
+      cardinalDirection,
+      [dx, dy],
+    ] of BaseMovesGenerator.directionOffsetsMap) {
       let file = fileValue + dx;
       let rank = rankValue + dy;
-      let passedKing = false;
+      let passedKing = false; // Flag to indicate if we've passed the enemy king
 
       while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
-          file,
-          rank
-        );
-        const target = pieces.get(square);
+        const square: AlgebraicNotation =
+          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
+        const target: Piece = pieces.get(square);
 
         if (target) {
           if (target.type === "king" && target.color !== piece.color) {
-            // Don't include king's square, but mark what's behind
+            // If we hit an enemy king, mark that we've passed the king
             passedKing = true;
+
+            // Move one square beyond the king and check if it's a valid square
             file += dx;
             rank += dy;
-            continue;
+
+            // If the square is within bounds, add it as an attacked square
+            if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+              const nextSquare =
+                BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
+              attackedSquares.push(nextSquare);
+            }
+
+            break; // Stop after processing the square beyond the king
+          } else if (target.color === piece.color) {
+            // If we hit a friendly piece, stop sliding in this direction
+            break;
           } else {
-            // Any other piece ends the ray
+            // If we hit an enemy piece (not a king), stop sliding
             break;
           }
         }
 
-        if (passedKing) {
+        // If we haven't passed the king yet, add this square to the attack list
+        if (!passedKing) {
           attackedSquares.push(square);
         }
 
+        // Continue sliding in the current direction
         file += dx;
         rank += dy;
       }
@@ -153,14 +166,14 @@ abstract class AttacksGenerator {
           attacks = BaseMovesGenerator.generateKnightMoves(
             piece as KnightPiece,
             pieces
-          );
+          ) as AlgebraicNotation[];
           break;
         }
 
         case "bishop":
         case "rook":
         case "queen": {
-          attacks = BaseMovesGenerator.generateSlidingMoves(
+          attacks = AttacksGenerator.getExtendedAttackedSquaresForSlidingPiece(
             piece as SlidingPiece,
             pieces
           );
@@ -170,9 +183,9 @@ abstract class AttacksGenerator {
         case "king": {
           attacks = BaseMovesGenerator.generateKingMoves(
             piece as KingPiece,
-            pieces,
-            player
-          );
+            pieces
+            // player
+          ) as AlgebraicNotation[];
           break;
         }
       }
