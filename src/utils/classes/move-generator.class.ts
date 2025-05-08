@@ -639,20 +639,31 @@ abstract class MovesGenerator {
   public static getPinnedPieces = (
     king: KingPiece,
     pieces: Map<AlgebraicNotation, Piece>
-  ): { pinned: Piece; by: Piece; direction: Offset }[] => {
-    const pinnedPieces: { pinned: Piece; by: Piece; direction: Offset }[] = [];
+  ): {
+    pinned: Piece;
+    by: Piece;
+    direction: Offset;
+    moves: AlgebraicNotation[];
+  }[] => {
+    const pinnedPieces: {
+      pinned: Piece;
+      by: Piece;
+      direction: Offset;
+      moves: AlgebraicNotation[];
+    }[] = [];
 
     const kingFile: number = Number(king.position.fileIndex);
     const kingRank: number = Number(king.position.rankIndex);
 
+    // Iterate over all cardinal directions (N, NE, E, etc.)
     for (const cardinalDirection of MovesGenerator.directionOffsetsMap) {
       const [directionKey, [dx, dy]] = cardinalDirection;
 
       let foundAlly: Piece | null = null;
-
       let file = kingFile + dx;
       let rank = kingRank + dy;
 
+      // * Iterate over squares in the current direction
       while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
         const targetSquare: AlgebraicNotation =
           BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
@@ -665,17 +676,17 @@ abstract class MovesGenerator {
 
         const isEmptySquare: boolean = !targetPiece;
         if (isEmptySquare) {
+          // Continue scanning if the square is empty
           file += dx;
           rank += dy;
           continue;
         }
 
         if (targetPiece.color === king.color) {
+          // If we find an ally, make sure there's no second ally in the line
           if (foundAlly) {
-            // * 2nd allied piece (piece is defended) — no pin
             break;
           }
-
           foundAlly = targetPiece;
           file += dx;
           rank += dy;
@@ -693,13 +704,39 @@ abstract class MovesGenerator {
           (targetPiece.type === "bishop" && isBishopDir) ||
           targetPiece.type === "queen";
 
-        if (canPin && foundAlly) {
-          pinnedPieces.push({
-            pinned: foundAlly,
-            by: targetPiece,
-            direction: [dx, dy],
-          });
+        if (!canPin || !foundAlly) {
+          break;
         }
+
+        // * Pin detected !!!! Now track valid moves for the pinned piece
+        const validMoves: AlgebraicNotation[] = [];
+        let moveFile = file + dx;
+        let moveRank = rank + dy;
+
+        // * Check for available moves along the direction
+        while (moveFile >= 0 && moveFile < 8 && moveRank >= 0 && moveRank < 8) {
+          const moveSquare: AlgebraicNotation =
+            BoardUtils.getAlgebraicNotationFromBoardIndices(moveFile, moveRank);
+
+          const movePiece: Piece | null = pieces.get(moveSquare);
+          if (movePiece) {
+            // If it's an enemy piece, we can stop
+            break;
+          }
+
+          validMoves.push(moveSquare);
+
+          moveFile += dx;
+          moveRank += dy;
+        }
+
+        // * Add the pinned piece with its available moves
+        pinnedPieces.push({
+          pinned: foundAlly,
+          by: targetPiece,
+          direction: [dx, dy],
+          moves: validMoves,
+        });
 
         break;
       }
