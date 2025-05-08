@@ -635,6 +635,78 @@ abstract class MovesGenerator {
       { piece: rook, position: rookStart },
     ];
   };
+
+  public static getPinnedPieces = (
+    king: KingPiece,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): { pinned: Piece; by: Piece; direction: Offset }[] => {
+    const pinnedPieces: { pinned: Piece; by: Piece; direction: Offset }[] = [];
+
+    const kingFile: number = Number(king.position.fileIndex);
+    const kingRank: number = Number(king.position.rankIndex);
+
+    for (const cardinalDirection of MovesGenerator.directionOffsetsMap) {
+      const [directionKey, [dx, dy]] = cardinalDirection;
+
+      let foundAlly: Piece | null = null;
+
+      let file = kingFile + dx;
+      let rank = kingRank + dy;
+
+      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+        const targetSquare: AlgebraicNotation =
+          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
+
+        const targetPiece: Piece | null = pieces.get(targetSquare);
+        const isKing: boolean = targetPiece === king;
+        if (isKing) {
+          break;
+        }
+
+        const isEmptySquare: boolean = !targetPiece;
+        if (isEmptySquare) {
+          file += dx;
+          rank += dy;
+          continue;
+        }
+
+        if (targetPiece.color === king.color) {
+          if (foundAlly) {
+            // * 2nd allied piece (piece is defended) — no pin
+            break;
+          }
+
+          foundAlly = targetPiece;
+          file += dx;
+          rank += dy;
+          continue;
+        }
+
+        // Enemy piece
+        const isRookDir: boolean = ["N", "S", "E", "W"].includes(directionKey);
+        const isBishopDir: boolean = ["NE", "NW", "SE", "SW"].includes(
+          directionKey
+        );
+
+        const canPin: boolean =
+          (targetPiece.type === "rook" && isRookDir) ||
+          (targetPiece.type === "bishop" && isBishopDir) ||
+          targetPiece.type === "queen";
+
+        if (canPin && foundAlly) {
+          pinnedPieces.push({
+            pinned: foundAlly,
+            by: targetPiece,
+            direction: [dx, dy],
+          });
+        }
+
+        break;
+      }
+    }
+
+    return pinnedPieces;
+  };
 }
 
 export default MovesGenerator;
