@@ -1,3 +1,5 @@
+import AttacksGenerator from "./attacks-generator.class";
+import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import { AlgebraicNotation, ChessFile } from "./chess-board.class";
 import MovesGenerator, {
@@ -20,7 +22,7 @@ abstract class RulesEngine {
       return p.type === "king" && p.color === player.color;
     });
 
-    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
+    const attackedSquares = AttacksGenerator.getAttackedSquaresByOpponent(
       player,
       pieces
     );
@@ -136,7 +138,7 @@ abstract class RulesEngine {
       player.color
     );
 
-    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
+    const attackedSquares = AttacksGenerator.getAttackedSquaresByOpponent(
       player,
       pieces
     );
@@ -174,7 +176,7 @@ abstract class RulesEngine {
     const kingRank: number = Number(king.position.rankIndex);
 
     // Iterate over all cardinal directions (N, NE, E, etc.)
-    for (const cardinalDirection of MovesGenerator.directionOffsetsMap) {
+    for (const cardinalDirection of BaseMovesGenerator.directionOffsetsMap) {
       const [directionKey, [dx, dy]] = cardinalDirection;
 
       let foundAlly: Piece | null = null;
