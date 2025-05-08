@@ -112,7 +112,7 @@ abstract class BoardUtils {
 
   public static getBoardIndicesFromAlgebraicNotation = (
     algebraicNotation: AlgebraicNotation
-  ) => {
+  ): IPieceLogic["position"] => {
     const [file, rank] = algebraicNotation;
 
     const fileIndex = BoardUtils.reverseFileMap.get(file as ChessFile);
