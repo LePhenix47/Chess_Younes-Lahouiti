@@ -39,6 +39,13 @@ class ChessBoard extends BoardController {
     );
     const from: AlgebraicNotation = piece.position.algebraicNotation;
 
+    // ? Cannot skip turn
+    const pieceHasNotMoved: boolean = from === to;
+    if (pieceHasNotMoved) {
+      this.rejectMove(piece, noAnimation);
+      return;
+    }
+
     if (!this.isMoveLegal(piece, to)) {
       this.rejectMove(piece, noAnimation);
       return;

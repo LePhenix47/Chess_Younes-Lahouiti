@@ -196,7 +196,14 @@ class Piece implements IPieceLogic, IPieceUI {
     }
 
     this.position = newPos;
-    this.hasMoved = true;
+
+    if (this.hasMoved) {
+      return;
+    }
+
+    const hasMoved: boolean =
+      newPos.algebraicNotation !== this.position.algebraicNotation;
+    this.hasMoved = hasMoved;
   };
 
   public promotePawn = (newType: Omit<PieceType, "pawn" | "king">): void => {
