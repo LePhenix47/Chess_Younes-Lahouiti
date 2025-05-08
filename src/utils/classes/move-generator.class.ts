@@ -127,6 +127,111 @@ abstract class MovesGenerator {
     }
   };
 
+  public static generateLegalMovesForPlayer(
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): Map<Piece, AlgebraicNotation[]> {
+    const legalMoves = new Map<Piece, AlgebraicNotation[]>();
+
+    const playerPieces = [...pieces.values()].filter(
+      (p) => p.color === player.color
+    );
+
+    const king = playerPieces.find((p): p is KingPiece => p.type === "king");
+
+    const attackers = RulesEngine.getKingAttackers(
+      king,
+      pieces,
+      player.getRival() // TODO: Fix
+    );
+    const inCheck = attackers.length > 0;
+    const pinnedInfo = RulesEngine.getPinnedPieces(king, pieces);
+    const pinnedSet = new Set(pinnedInfo.map((entry) => entry.pinned));
+
+    const kingMoves = BaseMovesGenerator.generateKingMoves(king, pieces, {
+      detailed: false,
+    }) as AlgebraicNotation[];
+    const attackedSquares = new Set(
+      AttacksGenerator.getAttackedSquaresByOpponent(player, pieces)
+    );
+
+    const filteredKingMoves = kingMoves.filter(
+      (move) => !attackedSquares.has(move)
+    );
+    if (filteredKingMoves.length) {
+      legalMoves.set(king, filteredKingMoves);
+    }
+
+    if (attackers.length >= 2) {
+      return legalMoves; // only king moves allowed
+    }
+
+    const blockingSquares = new Set<AlgebraicNotation>();
+    if (attackers.length === 1) {
+      const attacker = attackers[0].attacker;
+      const fileStep = Math.sign(
+        Number(king.position.fileIndex) - Number(attacker.position.fileIndex)
+      );
+      const rankStep = Math.sign(
+        Number(king.position.rankIndex) - Number(attacker.position.rankIndex)
+      );
+
+      let file = Number(attacker.position.fileIndex) + fileStep;
+      let rank = Number(attacker.position.rankIndex) + rankStep;
+      while (
+        file !== Number(king.position.fileIndex) ||
+        rank !== Number(king.position.rankIndex)
+      ) {
+        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank
+        );
+        blockingSquares.add(square);
+        file += fileStep;
+        rank += rankStep;
+      }
+      blockingSquares.add(attacker.position.algebraicNotation);
+    }
+
+    for (const piece of playerPieces) {
+      if (piece === king) continue;
+
+      const pseudoMoves = MovesGenerator.generateMoveForPiece(
+        piece,
+        pieces,
+        player
+        // { detailed: false }
+      ) as AlgebraicNotation[];
+
+      if (pinnedSet.has(piece)) {
+        const pinEntry = pinnedInfo.find((entry) => entry.pinned === piece);
+        const legalAlongPin = new Set(pinEntry.moves);
+        const allowedMoves = pseudoMoves.filter((move) =>
+          legalAlongPin.has(move)
+        );
+        if (
+          allowedMoves.length &&
+          (!inCheck || allowedMoves.some((m) => blockingSquares.has(m)))
+        ) {
+          legalMoves.set(piece, allowedMoves);
+        }
+      } else {
+        if (!inCheck) {
+          if (pseudoMoves.length) legalMoves.set(piece, pseudoMoves);
+        } else {
+          const filteredMoves = pseudoMoves.filter((m) =>
+            blockingSquares.has(m)
+          );
+          if (filteredMoves.length) {
+            legalMoves.set(piece, filteredMoves);
+          }
+        }
+      }
+    }
+
+    return legalMoves;
+  }
+
   /*
    * Miscellaneous methods
    */
