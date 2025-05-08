@@ -31,7 +31,7 @@
         user-select: none;
 
         @include mobile-only {
-            --_square-size: max((100vw / 8), 35px);
+            --_square-size: max((100cqi/ 8), 35px);
         }
 
         &.black-perspective {
