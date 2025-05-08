@@ -8,8 +8,10 @@ import MovesGenerator, {
   SlidingPiece,
   SlidingPieceType,
 } from "./move-generator.class";
-import Piece from "./piece.class";
+import Piece, { IPieceLogic } from "./piece.class";
 import Player from "./player.class";
+
+type DetailedMove = { moves: IPieceLogic["position"][]; piece: Piece };
 
 abstract class BaseMovesGenerator {
   private static readonly cardinalDirectionOffsets = {
@@ -78,9 +80,12 @@ abstract class BaseMovesGenerator {
 
   public static generatePawnMoves = (
     piece: PawnPiece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
-    const legalMoves: AlgebraicNotation[] = [];
+    pieces: Map<AlgebraicNotation, Piece>,
+    options?: { detailed?: boolean }
+  ): AlgebraicNotation[] | DetailedMove => {
+    const movePositions: AlgebraicNotation[] = [];
+    const detailedMovePositions: DetailedMove["moves"] = [];
+
     const direction = piece.color === "white" ? -1 : 1;
 
     const file = Number(piece.position.fileIndex);
@@ -93,7 +98,12 @@ abstract class BaseMovesGenerator {
     const oneStepPiece = pieces.get(oneStepForward);
 
     if (!oneStepPiece) {
-      legalMoves.push(oneStepForward);
+      BaseMovesGenerator.addMoveToArray(
+        oneStepForward,
+        options,
+        movePositions,
+        detailedMovePositions
+      );
     }
 
     const visualRank = 7 - rank;
@@ -107,23 +117,40 @@ abstract class BaseMovesGenerator {
         file,
         rank + 2 * direction
       );
-      const twoStepPiece = pieces.get(twoStepsForward);
 
-      const isPathClear = !oneStepPiece && !twoStepPiece;
+      const twoStepPiece: Piece | null = pieces.get(twoStepsForward);
+
+      const isPathClear: boolean = !oneStepPiece && !twoStepPiece;
 
       if (isPathClear) {
-        legalMoves.push(twoStepsForward);
+        BaseMovesGenerator.addMoveToArray(
+          twoStepsForward,
+          options,
+          movePositions,
+          detailedMovePositions
+        );
       }
     }
 
-    return legalMoves;
+    if (options?.detailed) {
+      // Return the piece with its detailed move positions
+      return {
+        piece,
+        moves: detailedMovePositions,
+      };
+    }
+
+    // Return plain algebraic notation if not detailed
+    return movePositions;
   };
 
   public static generateKnightMoves = (
     piece: Piece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
-    const moves: AlgebraicNotation[] = [];
+    pieces: Map<AlgebraicNotation, Piece>,
+    options?: { detailed?: boolean }
+  ): AlgebraicNotation[] | DetailedMove => {
+    const movePositions: AlgebraicNotation[] = [];
+    const detailedMovePositions: DetailedMove["moves"] = [];
 
     const { fileIndex, rankIndex } =
       BoardUtils.getBoardIndicesFromAlgebraicNotation(
@@ -146,19 +173,34 @@ abstract class BaseMovesGenerator {
       const targetPiece = pieces.get(target);
 
       if (!targetPiece || targetPiece.color !== piece.color) {
-        moves.push(target);
+        BaseMovesGenerator.addMoveToArray(
+          target,
+          options,
+          movePositions,
+          detailedMovePositions
+        );
       }
     }
 
-    return moves;
+    if (options?.detailed) {
+      // Return the piece with its detailed move positions
+      return {
+        piece,
+        moves: detailedMovePositions,
+      };
+    }
+
+    // Return plain algebraic notation if not detailed
+    return movePositions;
   };
 
   public static generateKingMoves = (
     piece: KingPiece,
     pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
-  ): AlgebraicNotation[] => {
-    const legalMoves: AlgebraicNotation[] = [];
+    options?: { detailed?: boolean }
+  ): AlgebraicNotation[] | DetailedMove => {
+    const movePositions: AlgebraicNotation[] = [];
+    const detailedMovePositions: DetailedMove["moves"] = [];
 
     const directionKeys = [
       ...Object.keys(this.cardinalDirectionOffsets),
@@ -188,26 +230,42 @@ abstract class BaseMovesGenerator {
 
       // ? If the square is empty or has a piece of the opposite color → it's a legal move
       if (isEmptySquare || targetPiece.color !== piece.color) {
-        legalMoves.push(targetSquare);
+        BaseMovesGenerator.addMoveToArray(
+          targetSquare,
+          options,
+          movePositions,
+          detailedMovePositions
+        );
       }
     }
 
-    return legalMoves;
+    if (options?.detailed) {
+      // Return the piece with its detailed move positions
+      return {
+        piece,
+        moves: detailedMovePositions,
+      };
+    }
+
+    // Return plain algebraic notation if not detailed
+    return movePositions;
   };
 
   // Private
   public static generateSlidingMoves = (
     piece: SlidingPiece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
+    pieces: Map<AlgebraicNotation, Piece>,
+    options?: { detailed?: boolean }
+  ): AlgebraicNotation[] | DetailedMove => {
     const directionKeys = BaseMovesGenerator.slidingDirectionsMap.get(
       piece.type
     );
     if (!directionKeys) {
-      return [];
+      return options?.detailed ? { piece, moves: [] } : [];
     }
 
-    const legalMoves: AlgebraicNotation[] = [];
+    const movePositions: AlgebraicNotation[] = [];
+    const detailedMovePositions: DetailedMove["moves"] = [];
 
     for (const directionKey of directionKeys) {
       const [dx, dy] =
@@ -220,37 +278,60 @@ abstract class BaseMovesGenerator {
         file += dx;
         rank += dy;
 
-        // ? Skip if out of bounds
+        // Out of bounds
         if (file < 0 || file > 7 || rank < 0 || rank > 7) {
           break;
         }
 
-        const targetSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
-          file,
-          rank
-        );
-
+        const targetSquare: AlgebraicNotation =
+          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
         const potentialTargetPiece = pieces.get(targetSquare);
         const isOccupied = Boolean(potentialTargetPiece);
 
-        // ? Square blocked by friendly piece → can't move further
         if (isOccupied && potentialTargetPiece.color === piece.color) {
           break;
         }
 
-        // ? Square is either empty or blocked by enemy piece
-        legalMoves.push(targetSquare);
+        BaseMovesGenerator.addMoveToArray(
+          targetSquare,
+          options,
+          movePositions,
+          detailedMovePositions
+        );
 
-        // ? Square blocked by enemy piece, we can take it but can't move further in this direction
         if (isOccupied && potentialTargetPiece.color !== piece.color) {
           break;
         }
-
-        // ? Otherwise square is empty
       }
     }
 
-    return legalMoves;
+    if (options?.detailed) {
+      // Return the piece with its detailed move positions
+      return {
+        piece,
+        moves: detailedMovePositions,
+      };
+    }
+
+    // Return plain algebraic notation if not detailed
+    return movePositions;
+  };
+
+  private static addMoveToArray = (
+    move: AlgebraicNotation,
+    options: { detailed?: boolean } | undefined,
+    movePositions: AlgebraicNotation[],
+    detailedMovePositions: DetailedMove["moves"]
+  ): void => {
+    if (options?.detailed) {
+      const position: IPieceLogic["position"] =
+        BoardUtils.getBoardIndicesFromAlgebraicNotation(move);
+      // ? If detailed, push to the detailed move positions array
+      detailedMovePositions.push(position);
+    } else {
+      // ? Otherwise, push to the algebraic notation moves array
+      movePositions.push(move);
+    }
   };
 }
 
