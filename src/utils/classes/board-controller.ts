@@ -84,6 +84,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     square.dataset.file = file.toString();
     square.dataset.rank = rank.toString();
     square.dataset.algebraicNotation = algebraicNotation;
+    square.dataset.square = "";
     square.classList.add(isDark ? "dark-square" : "light-square");
 
     this.addBoardLabels(square, file, visualRank, isDark);
@@ -147,14 +148,12 @@ abstract class BoardController implements IGameLogic, IBoardUI {
   }
 
   public get squareSize(): number {
-    const parsedSquaredSizeCssVariable = getInnerCssVariables(
-      this.container,
-      "--_square-size"
-    );
+    const square =
+      this.container.querySelector<HTMLDivElement>("[data-square]");
 
-    const squareSize = Number(
-      parsedSquaredSizeCssVariable.replace(/px|%/g, "")
-    );
+    const squareSize = square.offsetWidth;
+
+    console.log(squareSize);
 
     return squareSize;
   }
