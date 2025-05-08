@@ -1,11 +1,8 @@
 import BoardUtils from "./board-utils.class";
-import ChessBoard, {
-  AlgebraicNotation,
-  ChessFile,
-  ChessRank,
-} from "./chess-board.class";
-import Piece, { PieceColor } from "./piece.class";
-import Player, { CastlingRights } from "./player.class";
+import { AlgebraicNotation } from "./chess-board.class";
+import Piece from "./piece.class";
+import Player from "./player.class";
+import RulesEngine from "./rules-engine.class";
 
 export type SlidingPieceType = "rook" | "bishop" | "queen";
 
@@ -25,10 +22,8 @@ export type KingPiece = Piece & {
   type: "king";
 };
 
-type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
-type Offset = readonly [number, number];
-
-type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
+export type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
+export type Offset = readonly [number, number];
 
 abstract class MovesGenerator {
   private static readonly cardinalDirectionOffsets = {
@@ -66,14 +61,14 @@ abstract class MovesGenerator {
     SW: [-1, -1],
   } as const;
 
-  private static readonly directionOffsetsMap = new Map<DirectionKey, Offset>(
+  public static readonly directionOffsetsMap = new Map<DirectionKey, Offset>(
     Object.entries(MovesGenerator.cardinalDirectionOffsets) as [
       DirectionKey,
       Offset
     ][]
   );
 
-  private static readonly slidingDirectionsMap = new Map<
+  public static readonly slidingDirectionsMap = new Map<
     SlidingPieceType,
     DirectionKey[]
   >(
@@ -85,14 +80,14 @@ abstract class MovesGenerator {
   );
 
   private static readonly knightOffsets = [
-    [1, 2],
-    [2, 1],
-    [2, -1],
-    [1, -2],
-    [-1, -2],
-    [-2, -1],
-    [-2, 1],
-    [-1, 2],
+    [1, 2], // * →↑↑
+    [2, 1], // * →→↑
+    [2, -1], // * →→↓
+    [1, -2], // * →↓↓
+    [-1, -2], // * ←↓↓
+    [-2, -1], // * ←←↓
+    [-2, 1], // * ←←↑
+    [-1, 2], // * ←↑↑
   ];
 
   /*
@@ -166,7 +161,7 @@ abstract class MovesGenerator {
 
         const castleMoves: AlgebraicNotation[] = [];
 
-        const kingSideCastle = MovesGenerator.canCastle(
+        const kingSideCastle = RulesEngine.canCastle(
           "kingSide",
           player,
           pieces
@@ -176,7 +171,7 @@ abstract class MovesGenerator {
           castleMoves.push(targetSquare as AlgebraicNotation);
         }
 
-        const queenSideCastle = MovesGenerator.canCastle(
+        const queenSideCastle = RulesEngine.canCastle(
           "queenSide",
           player,
           pieces
@@ -411,9 +406,54 @@ abstract class MovesGenerator {
     return legalMoves;
   };
 
-  /*
-   * Miscellaneous methods
-   */
+  static getExtendedAttackedSquaresForSlidingPiece(
+    piece: SlidingPiece,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): AlgebraicNotation[] {
+    const attackedSquares: AlgebraicNotation[] = [];
+
+    const { fileIndex, rankIndex } = piece.position;
+
+    const fileValue = Number(piece.position.fileIndex);
+    const rankValue = Number(piece.position.rankIndex);
+
+    for (const [_, [dx, dy]] of MovesGenerator.directionOffsetsMap) {
+      let file = fileValue + dx;
+      let rank = rankValue + dy;
+      let passedKing = false;
+
+      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank
+        );
+        const target = pieces.get(square);
+
+        if (target) {
+          if (target.type === "king" && target.color !== piece.color) {
+            // Don't include king's square, but mark what's behind
+            passedKing = true;
+            file += dx;
+            rank += dy;
+            continue;
+          } else {
+            // Any other piece ends the ray
+            break;
+          }
+        }
+
+        if (passedKing) {
+          attackedSquares.push(square);
+        }
+
+        file += dx;
+        rank += dy;
+      }
+    }
+
+    return attackedSquares;
+  }
+
   public static getAttackedSquaresByOpponent = (
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
@@ -493,257 +533,9 @@ abstract class MovesGenerator {
 
     return results;
   };
-
-  public static isKingInCheck = (
-    pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
-  ): boolean => {
-    const piecesArray: Piece[] = [...pieces.values()];
-    const king = piecesArray.find((p): p is KingPiece => {
-      return p.type === "king" && p.color === player.color;
-    });
-
-    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
-      player,
-      pieces
-    );
-    return attackedSquares.includes(king.position.algebraicNotation);
-  };
-
-  public static getKingAttackers = (
-    king: KingPiece,
-    pieces: Map<AlgebraicNotation, Piece>,
-    rival: Player
-  ): { attacker: Piece; from: AlgebraicNotation }[] => {
-    if (king.color === rival.color) {
-      throw new Error("King and rival cannot be of the same color");
-    }
-
-    const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
-
-    for (const [pos, piece] of pieces) {
-      if (piece.color === king.color) {
-        continue;
-      }
-
-      const attacks: AlgebraicNotation[] = MovesGenerator.generateMoveForPiece(
-        piece,
-        pieces,
-        rival
-      );
-
-      if (attacks.includes(king.position.algebraicNotation)) {
-        attackers.push({ attacker: piece, from: pos });
-      }
-    }
-
-    return attackers;
-  };
-
-  private static getCastleFileRank = (
-    side: "kingSide" | "queenSide",
-    color: PieceColor,
-    includeCurrentSquare: boolean = false
-  ) => {
-    const rank = color === "white" ? "1" : "8";
-
-    const files: ChessFile[] =
-      side === "kingSide"
-        ? ["f", "g"] // ? Squares the king touches: between, and destination
-        : ["c", "d"];
-
-    if (includeCurrentSquare) {
-      files.push("e");
-      files.sort();
-    }
-
-    return {
-      rank,
-      files,
-    };
-  };
-
-  private static getCastleDangerSquares = (
-    side: "kingSide" | "queenSide",
-    color: PieceColor,
-    includeCurrentSquare: boolean = false
-  ): CastleSquares[] => {
-    const { files, rank } = MovesGenerator.getCastleFileRank(
-      side,
-      color,
-      includeCurrentSquare
-    );
-
-    const squares = files.map((file) => `${file}${rank}` as CastleSquares);
-
-    return squares;
-  };
-
-  public static canCastle = (
-    side: "kingSide" | "queenSide",
-    player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): [
-    { piece: KingPiece; position: AlgebraicNotation },
-    { piece: SlidingPiece; position: AlgebraicNotation }
-  ] => {
-    if (!player.canCastle) {
-      return null;
-    }
-
-    const { color } = player;
-    const rank = color === "white" ? "1" : "8"; // Rank is based on color
-    const kingStart = `e${rank}` as AlgebraicNotation;
-    const rookStart: AlgebraicNotation =
-      side === "queenSide" ? `a${rank}` : `h${rank}`;
-
-    const king = pieces.get(kingStart) as KingPiece;
-    const rook = pieces.get(rookStart) as SlidingPiece;
-
-    if (
-      !Boolean(king) ||
-      !Boolean(rook) ||
-      king.type !== "king" ||
-      rook.type !== "rook"
-    ) {
-      return null;
-    }
-
-    if (king.hasMoved || rook.hasMoved) {
-      return null;
-    }
-
-    const pathSquaresArray = MovesGenerator.getCastleDangerSquares(
-      side,
-      player.color
-    );
-
-    const attackedSquares = MovesGenerator.getAttackedSquaresByOpponent(
-      player,
-      pieces
-    );
-
-    // 1. Check for attacking danger
-    for (const pathSquare of pathSquaresArray) {
-      if (attackedSquares.includes(pathSquare) || pieces.has(pathSquare)) {
-        return null;
-      }
-    }
-
-    return [
-      { piece: king, position: kingStart },
-      { piece: rook, position: rookStart },
-    ];
-  };
-
-  public static getPinnedPieces = (
-    king: KingPiece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): {
-    pinned: Piece;
-    by: Piece;
-    direction: Offset;
-    moves: AlgebraicNotation[];
-  }[] => {
-    const pinnedPieces: {
-      pinned: Piece;
-      by: Piece;
-      direction: Offset;
-      moves: AlgebraicNotation[];
-    }[] = [];
-
-    const kingFile: number = Number(king.position.fileIndex);
-    const kingRank: number = Number(king.position.rankIndex);
-
-    // Iterate over all cardinal directions (N, NE, E, etc.)
-    for (const cardinalDirection of MovesGenerator.directionOffsetsMap) {
-      const [directionKey, [dx, dy]] = cardinalDirection;
-
-      let foundAlly: Piece | null = null;
-      let file = kingFile + dx;
-      let rank = kingRank + dy;
-
-      // * Iterate over squares in the current direction
-      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-        const targetSquare: AlgebraicNotation =
-          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
-
-        const targetPiece: Piece | null = pieces.get(targetSquare);
-        const isKing: boolean = targetPiece === king;
-        if (isKing) {
-          break;
-        }
-
-        const isEmptySquare: boolean = !targetPiece;
-        if (isEmptySquare) {
-          // Continue scanning if the square is empty
-          file += dx;
-          rank += dy;
-          continue;
-        }
-
-        if (targetPiece.color === king.color) {
-          // If we find an ally, make sure there's no second ally in the line
-          if (foundAlly) {
-            break;
-          }
-          foundAlly = targetPiece;
-          file += dx;
-          rank += dy;
-          continue;
-        }
-
-        // Enemy piece
-        const isRookDir: boolean = ["N", "S", "E", "W"].includes(directionKey);
-        const isBishopDir: boolean = ["NE", "NW", "SE", "SW"].includes(
-          directionKey
-        );
-
-        const canPin: boolean =
-          (targetPiece.type === "rook" && isRookDir) ||
-          (targetPiece.type === "bishop" && isBishopDir) ||
-          targetPiece.type === "queen";
-
-        if (!canPin || !foundAlly) {
-          break;
-        }
-
-        // * Pin detected !!!! Now track valid moves for the pinned piece
-        const validMoves: AlgebraicNotation[] = [];
-        let moveFile = file + dx;
-        let moveRank = rank + dy;
-
-        // * Check for available moves along the direction
-        while (moveFile >= 0 && moveFile < 8 && moveRank >= 0 && moveRank < 8) {
-          const moveSquare: AlgebraicNotation =
-            BoardUtils.getAlgebraicNotationFromBoardIndices(moveFile, moveRank);
-
-          const movePiece: Piece | null = pieces.get(moveSquare);
-          if (movePiece) {
-            // If it's an enemy piece, we can stop
-            break;
-          }
-
-          validMoves.push(moveSquare);
-
-          moveFile += dx;
-          moveRank += dy;
-        }
-
-        // * Add the pinned piece with its available moves
-        pinnedPieces.push({
-          pinned: foundAlly,
-          by: targetPiece,
-          direction: [dx, dy],
-          moves: validMoves,
-        });
-
-        break;
-      }
-    }
-
-    return pinnedPieces;
-  };
+  /*
+   * Miscellaneous methods
+   */
 }
 
 export default MovesGenerator;
