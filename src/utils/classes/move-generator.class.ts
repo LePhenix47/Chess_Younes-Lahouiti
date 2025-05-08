@@ -62,7 +62,7 @@ abstract class MovesGenerator {
         const pawnMoves = BaseMovesGenerator.generatePawnMoves(
           piece as PawnPiece,
           pieces
-        );
+        ) as AlgebraicNotation[];
 
         const pawnAttacks = AttacksGenerator.generatePawnAttacks(
           piece as PawnPiece,
@@ -76,7 +76,7 @@ abstract class MovesGenerator {
         const knightMoves = BaseMovesGenerator.generateKnightMoves(
           piece as KnightPiece,
           pieces
-        );
+        ) as AlgebraicNotation[];
         return knightMoves;
       }
 
@@ -86,16 +86,16 @@ abstract class MovesGenerator {
         const slidingMoves = BaseMovesGenerator.generateSlidingMoves(
           piece as SlidingPiece,
           pieces
-        );
+        ) as AlgebraicNotation[];
         return slidingMoves;
       }
 
       case "king": {
         const normalMoves = BaseMovesGenerator.generateKingMoves(
           piece as KingPiece,
-          pieces,
-          player
-        );
+          pieces
+          // player
+        ) as AlgebraicNotation[];
 
         const castleMoves: AlgebraicNotation[] = [];
 
