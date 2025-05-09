@@ -11,6 +11,43 @@ import Piece from "./piece.class";
 import Player from "./player.class";
 
 abstract class AttacksGenerator {
+  public static generatePawnAttackSquares = (
+    piece: PawnPiece
+  ): AlgebraicNotation[] => {
+    const attackSquares: AlgebraicNotation[] = [];
+
+    const direction = piece.color === "white" ? -1 : 1; // Up for white, down for black
+    const file = Number(piece.position.fileIndex);
+    const rank = Number(piece.position.rankIndex);
+
+    // Define bounds for attack checks
+    const isFileInBoundsLeft = file - 1 >= 0;
+    const isFileInBoundsRight = file + 1 < 8;
+    const isRankInBounds = rank + direction >= 0 && rank + direction < 8;
+
+    // Top-left diagonal (relative to pawn perspective)
+    if (isFileInBoundsLeft && isRankInBounds) {
+      attackSquares.push(
+        BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file - 1,
+          rank + direction
+        )
+      );
+    }
+
+    // Top-right diagonal (relative to pawn perspective)
+    if (isFileInBoundsRight && isRankInBounds) {
+      attackSquares.push(
+        BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file + 1,
+          rank + direction
+        )
+      );
+    }
+
+    return attackSquares;
+  };
+
   public static generatePawnAttacks = (
     piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>
@@ -77,7 +114,12 @@ abstract class AttacksGenerator {
           file,
           rank
         );
-        const target = pieces.get(square);
+
+        const target: Piece | null = pieces.get(square);
+
+        if (target?.color === piece.color) {
+          break;
+        }
 
         attackedSquares.push(square); // Always add square as attacked
 
@@ -153,9 +195,8 @@ abstract class AttacksGenerator {
 
       switch (piece.type) {
         case "pawn": {
-          attacks = AttacksGenerator.generatePawnAttacks(
-            piece as PawnPiece,
-            pieces
+          attacks = AttacksGenerator.generatePawnAttackSquares(
+            piece as PawnPiece
           );
           break;
         }
