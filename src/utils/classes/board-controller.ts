@@ -43,14 +43,14 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
   public readonly initialFen =
     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-  protected readonly piecesMap = new Map<AlgebraicNotation, Piece>();
+  public readonly piecesMap = new Map<AlgebraicNotation, Piece>();
 
   protected readonly squareElementsMap = new Map<
     AlgebraicNotation,
     HTMLElement
   >();
 
-  protected readonly playedMoves: Move[] = [];
+  public readonly playedMoves: Move[] = [];
 
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
@@ -145,6 +145,10 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
   public get currentPlayer(): Player {
     return this.currentTurn === "white" ? this.whitePlayer : this.blackPlayer;
+  }
+
+  public get rivalPlayer(): Player {
+    return this.currentTurn === "white" ? this.blackPlayer : this.whitePlayer;
   }
 
   public get squareSize(): number {
