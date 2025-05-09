@@ -68,6 +68,13 @@ class Piece implements IPieceLogic, IPieceUI {
 
   public element: HTMLElement | null = null;
 
+  public static isType = (
+    type: PieceType,
+    pieceType: PieceType[]
+  ): type is PieceType => {
+    return pieceType.includes(type);
+  };
+
   constructor(
     type: PieceType,
     color: PieceColor,
@@ -243,7 +250,7 @@ class Piece implements IPieceLogic, IPieceUI {
     }
 
     const callback = (event?: TransitionEvent) => {
-      // ? An event was passed in, but it was not a transition event
+      // ? An event was passed in, but it was not an transition on the opacity
       if (Boolean(event) && event.propertyName !== "opacity") {
         return;
       }
