@@ -213,8 +213,9 @@ abstract class AttacksGenerator {
         case "king": {
           attacks = BaseMovesGenerator.generateKingMoves(
             piece as KingPiece,
-            pieces
-            // player
+            pieces,
+            player,
+            { includeCastling: false }
           ) as AlgebraicNotation[];
           break;
         }

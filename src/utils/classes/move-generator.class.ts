@@ -94,33 +94,12 @@ abstract class MovesGenerator {
       case "king": {
         const normalMoves = BaseMovesGenerator.generateKingMoves(
           piece as KingPiece,
-          pieces
-          // player
+          pieces,
+          player,
+          { includeCastling: true }
         ) as AlgebraicNotation[];
 
-        const castleMoves: AlgebraicNotation[] = [];
-
-        const kingSideCastle = RulesEngine.canCastle(
-          "kingSide",
-          player,
-          pieces
-        );
-        if (kingSideCastle) {
-          const targetSquare = player.color === "white" ? "g1" : "g8";
-          castleMoves.push(targetSquare as AlgebraicNotation);
-        }
-
-        const queenSideCastle = RulesEngine.canCastle(
-          "queenSide",
-          player,
-          pieces
-        );
-        if (queenSideCastle) {
-          const targetSquare = player.color === "white" ? "c1" : "c8";
-          castleMoves.push(targetSquare as AlgebraicNotation);
-        }
-
-        return [...normalMoves, ...castleMoves];
+        return normalMoves;
       }
 
       default:
@@ -148,7 +127,8 @@ abstract class MovesGenerator {
 
     const kingMoves = BaseMovesGenerator.generateKingMoves(
       king,
-      pieces
+      pieces,
+      player
     ) as AlgebraicNotation[];
 
     const attackedSquares = new Set<AlgebraicNotation>(
