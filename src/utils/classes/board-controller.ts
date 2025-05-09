@@ -242,7 +242,43 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       this.currentPlayer
     );
 
+    this.test();
+
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
+  };
+
+  test = () => {
+    // TODO: Test that the new methods work correctly
+    // const result = BaseMovesGenerator.generateKingMoves(
+    //   this.piecesMap.get("e1")! as KingPiece,
+    //   this.piecesMap
+    // );
+    // console.log("Raw King Moves:", result);
+
+    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+      this.currentPlayer,
+      this.piecesMap
+    );
+
+    this.updateSquareHighlight({
+      targetSquares: attacked,
+      className: "test",
+      mode: "add",
+    });
+
+    console.log("Opponent attacked squares:", attacked);
+  };
+  clearTest = () => {
+    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+      this.currentPlayer,
+      this.piecesMap
+    );
+
+    this.updateSquareHighlight({
+      targetSquares: attacked,
+      className: "test",
+      mode: "remove",
+    });
   };
 
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
@@ -336,7 +372,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       }
 
       case "remove": {
-        square.classList.add(className);
+        square.classList.remove(className);
         break;
       }
 
