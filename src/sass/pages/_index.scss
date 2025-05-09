@@ -8,6 +8,12 @@
     display: none;
 }
 
+@keyframes blinker {
+    to {
+        background-color: var(--_init-bg-color);
+    }
+}
+
 .chess {
     &__board {
         --_square-size: 100px;
@@ -113,10 +119,12 @@
         }
 
         &.light-square {
+            --_init-bg-color: var(--chess-light-square-color);
             background-color: var(--chess-light-square-color);
         }
 
         &.dark-square {
+            --_init-bg-color: var(--chess-dark-square-color);
             background-color: var(--chess-dark-square-color);
         }
 
@@ -143,6 +151,22 @@
         &:nth-last-child(1 of .chess__square) {
             border-bottom-right-radius: inherit;
         }
+
+        &.light-square.test {
+            background-color: hsla(75, 100%, 50%, 100%);
+        }
+
+        &.dark-square.test {
+            background-color: hsla(75, 100%, 50%, 65%);
+        }
+
+        &.blinking {
+            --_color-blink-duration: 0.5s;
+            animation: blinker calc(var(--_color-blink-duration) * 2) steps(2, start) infinite;
+            background-color: purple;
+        }
+
+
     }
 
     &__label {

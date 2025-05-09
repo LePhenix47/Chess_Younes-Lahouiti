@@ -248,8 +248,11 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
   test = () => {
     // TODO: Test that the new methods work correctly
-    const king = this.piecesMap.get("e1")! as KingPiece;
+    const king = [...this.piecesMap.values()].find(
+      (p) => p.type === "king" && p.color === this.currentTurn
+    ) as KingPiece;
     const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
+    const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
 
     console.log("Pinned Pieces:", pinned);
 
@@ -258,15 +261,26 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     //   this.piecesMap
     // );
 
-    // this.updateSquareHighlight({
-    //   targetSquares: attacked,
-    //   className: "test",
-    //   mode: "add",
-    // });
+    this.updateSquareHighlight({
+      targetSquares: testSquares,
+      className: "blinking",
+      mode: "add",
+    });
 
     // console.log("Opponent attacked squares:", attacked);
   };
   clearTest = () => {
+    const king = [...this.piecesMap.values()].find(
+      (p) => p.type === "king" && p.color === this.currentTurn
+    ) as KingPiece;
+    const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
+    const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
+
+    this.updateSquareHighlight({
+      targetSquares: testSquares,
+      className: "blinking",
+      mode: "remove",
+    });
     // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
     //   this.currentPlayer,
     //   this.piecesMap
