@@ -1,5 +1,3 @@
-import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
-import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import MovesGenerator, { KingPiece } from "./move-generator.class";
 
@@ -7,8 +5,8 @@ import Piece, { PieceColor, PieceType, IPieceLogic } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 import type { Move, AlgebraicNotation } from "./chess-board.class"; //
-import BaseMovesGenerator from "./base-moves-generator.class";
 import AttacksGenerator from "./attacks-generator.class";
+import RulesEngine from "./rules-engine.class";
 //
 export interface IGameLogic {
   currentTurn: PieceColor;
@@ -242,6 +240,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       this.currentPlayer
     );
 
+    // TODO: Remove this when done testing
     this.test();
 
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
@@ -249,36 +248,34 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
   test = () => {
     // TODO: Test that the new methods work correctly
-    // const result = BaseMovesGenerator.generateKingMoves(
-    //   this.piecesMap.get("e1")! as KingPiece,
+    const king = this.piecesMap.get("e1")! as KingPiece;
+    const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
+
+    console.log("Pinned Pieces:", pinned);
+
+    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    //   this.currentPlayer,
     //   this.piecesMap
     // );
-    // console.log("Raw King Moves:", result);
 
-    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-      this.currentPlayer,
-      this.piecesMap
-    );
+    // this.updateSquareHighlight({
+    //   targetSquares: attacked,
+    //   className: "test",
+    //   mode: "add",
+    // });
 
-    this.updateSquareHighlight({
-      targetSquares: attacked,
-      className: "test",
-      mode: "add",
-    });
-
-    console.log("Opponent attacked squares:", attacked);
+    // console.log("Opponent attacked squares:", attacked);
   };
   clearTest = () => {
-    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-      this.currentPlayer,
-      this.piecesMap
-    );
-
-    this.updateSquareHighlight({
-      targetSquares: attacked,
-      className: "test",
-      mode: "remove",
-    });
+    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    //   this.currentPlayer,
+    //   this.piecesMap
+    // );
+    // this.updateSquareHighlight({
+    //   targetSquares: attacked,
+    //   className: "test",
+    //   mode: "remove",
+    // });
   };
 
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
@@ -418,11 +415,11 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       return;
     }
 
-    console.debug(
-      `Updating squares "${squares.join(
-        ", "
-      )}" with attribute "${attrName}", value "${value}", mode "${mode}"`
-    );
+    // console.debug(
+    //   `Updating squares "${squares.join(
+    //     ", "
+    //   )}" with attribute "${attrName}", value "${value}", mode "${mode}"`
+    // );
 
     for (const an of squares) {
       const square = this.squareElementsMap.get(an);

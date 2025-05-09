@@ -121,6 +121,8 @@ class ChessBoard extends BoardController {
   };
 
   private applyMove = (move: Move, noAnimation: boolean): void => {
+    // TODO: Remove this when done testing
+    this.clearTest();
     const { from, to, piece, capturedPiece } = move;
 
     if (capturedPiece) {
