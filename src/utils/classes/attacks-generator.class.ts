@@ -55,6 +55,7 @@ abstract class AttacksGenerator {
     return legalAttacks;
   };
 
+  // ? This method is used to restrict the king moves when in check
   public static getExtendedAttackedSquaresForSlidingPiece = (
     piece: SlidingPiece,
     pieces: Map<AlgebraicNotation, Piece>
@@ -63,51 +64,39 @@ abstract class AttacksGenerator {
     const fileValue = Number(piece.position.fileIndex);
     const rankValue = Number(piece.position.rankIndex);
 
-    for (const [
-      cardinalDirection,
-      [dx, dy],
-    ] of BaseMovesGenerator.directionOffsetsMap) {
+    const directions = BaseMovesGenerator.slidingDirectionsMap.get(piece.type)!;
+
+    for (const dir of directions) {
+      const [dx, dy] = BaseMovesGenerator.directionOffsetsMap.get(dir)!;
+
       let file = fileValue + dx;
       let rank = rankValue + dy;
-      let passedKing = false; // Flag to indicate if we've passed the enemy king
 
       while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-        const square: AlgebraicNotation =
-          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
-        const target: Piece = pieces.get(square);
+        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank
+        );
+        const target = pieces.get(square);
+
+        attackedSquares.push(square); // Always add square as attacked
 
         if (target) {
           if (target.type === "king" && target.color !== piece.color) {
-            // If we hit an enemy king, mark that we've passed the king
-            passedKing = true;
-
-            // Move one square beyond the king and check if it's a valid square
+            // Passed enemy king — keep going one more square
             file += dx;
             rank += dy;
-
-            // If the square is within bounds, add it as an attacked square
             if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-              const nextSquare =
-                BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
-              attackedSquares.push(nextSquare);
+              const beyond = BoardUtils.getAlgebraicNotationFromBoardIndices(
+                file,
+                rank
+              );
+              attackedSquares.push(beyond);
             }
-
-            break; // Stop after processing the square beyond the king
-          } else if (target.color === piece.color) {
-            // If we hit a friendly piece, stop sliding in this direction
-            break;
-          } else {
-            // If we hit an enemy piece (not a king), stop sliding
-            break;
           }
+          break; // Stop after hitting any piece
         }
 
-        // If we haven't passed the king yet, add this square to the attack list
-        if (!passedKing) {
-          attackedSquares.push(square);
-        }
-
-        // Continue sliding in the current direction
         file += dx;
         rank += dy;
       }
@@ -123,6 +112,15 @@ abstract class AttacksGenerator {
     const detailed = AttacksGenerator.getAttackedSquaresByOpponentDetailed(
       player,
       pieces
+    );
+    console.log(
+      detailed.flatMap((entry) => {
+        return {
+          piece: entry.piece,
+          from: entry.from,
+          attacks: entry.attacks,
+        };
+      })
     );
 
     const attackedSquares = detailed.flatMap((entry) => entry.attacks);
