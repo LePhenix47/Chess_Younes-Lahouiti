@@ -8,10 +8,21 @@ import MovesGenerator, {
   SlidingPiece,
   SlidingPieceType,
 } from "./move-generator.class";
-import Piece, { IPieceLogic } from "./piece.class";
+import Piece, { IPieceLogic, PieceColor } from "./piece.class";
 import Player from "./player.class";
+import RulesEngine from "./rules-engine.class";
 
 type DetailedMove = { moves: IPieceLogic["position"][]; piece: Piece };
+
+export enum WhiteCastlingTargetSquare {
+  KingSide = "g1",
+  QueenSide = "c1",
+}
+
+export enum BlackCastlingTargetSquare {
+  KingSide = "g8",
+  QueenSide = "c8",
+}
 
 abstract class BaseMovesGenerator {
   public static readonly cardinalDirectionOffsets = {
@@ -197,7 +208,8 @@ abstract class BaseMovesGenerator {
   public static generateKingMoves = (
     piece: KingPiece,
     pieces: Map<AlgebraicNotation, Piece>,
-    options?: { detailed?: boolean }
+    player: Player,
+    options?: Partial<{ detailed: boolean; includeCastling: boolean }>
   ): AlgebraicNotation[] | DetailedMove => {
     const movePositions: AlgebraicNotation[] = [];
     const detailedMovePositions: DetailedMove["moves"] = [];
@@ -212,7 +224,6 @@ abstract class BaseMovesGenerator {
     for (const directionKey of directionKeys) {
       const [dx, dy] =
         BaseMovesGenerator.directionOffsetsMap.get(directionKey)!;
-
       const newFile = file + dx;
       const newRank = rank + dy;
 
@@ -225,10 +236,10 @@ abstract class BaseMovesGenerator {
         newRank
       );
 
-      const targetPiece = pieces.get(targetSquare);
+      const targetPiece: Piece = pieces.get(targetSquare);
+
       const isEmptySquare: boolean = !targetPiece;
 
-      // ? If the square is empty or has a piece of the opposite color → it's a legal move
       if (isEmptySquare || targetPiece.color !== piece.color) {
         BaseMovesGenerator.addMoveToArray(
           targetSquare,
@@ -239,16 +250,41 @@ abstract class BaseMovesGenerator {
       }
     }
 
-    if (options?.detailed) {
-      // Return the piece with its detailed move positions
-      return {
-        piece,
-        moves: detailedMovePositions,
-      };
+    if (!options?.includeCastling) {
+      return options?.detailed
+        ? { piece, moves: detailedMovePositions }
+        : movePositions;
     }
 
-    // Return plain algebraic notation if not detailed
-    return movePositions;
+    // === Include castling moves ===
+    const castlingSquares: { [key: string]: AlgebraicNotation } = {
+      kingSide: player.color === "white" ? "g1" : "g8",
+      queenSide: player.color === "white" ? "c1" : "c8",
+    };
+
+    for (const side of ["kingSide", "queenSide"] as const) {
+      const cannotCastle: boolean = !RulesEngine.canCastle(
+        side,
+        player,
+        pieces
+      );
+      if (cannotCastle) {
+        continue;
+      }
+
+      const castleSquare: AlgebraicNotation = castlingSquares[side];
+
+      BaseMovesGenerator.addMoveToArray(
+        castleSquare,
+        options,
+        movePositions,
+        detailedMovePositions
+      );
+    }
+
+    return options?.detailed
+      ? { piece, moves: detailedMovePositions }
+      : movePositions;
   };
 
   // Private
