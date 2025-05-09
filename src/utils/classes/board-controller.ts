@@ -1,12 +1,14 @@
 import { getInnerCssVariables } from "@utils/functions/helper-functions/dom.functions";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
-import MovesGenerator from "./move-generator.class";
+import MovesGenerator, { KingPiece } from "./move-generator.class";
 
 import Piece, { PieceColor, PieceType, IPieceLogic } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 import type { Move, AlgebraicNotation } from "./chess-board.class"; //
+import BaseMovesGenerator from "./base-moves-generator.class";
+import AttacksGenerator from "./attacks-generator.class";
 //
 export interface IGameLogic {
   currentTurn: PieceColor;
@@ -291,16 +293,75 @@ abstract class BoardController implements IGameLogic, IBoardUI {
    * Abstraction methods for updating the squares
    */
 
+  private setSquareHighlightByAttribute = (
+    square: HTMLElement,
+    attrName: string,
+    value: string,
+    mode: "add" | "remove" | "toggle"
+  ) => {
+    switch (mode) {
+      case "add": {
+        square.setAttribute(attrName, value);
+        break;
+      }
+
+      case "remove": {
+        square.removeAttribute(attrName);
+        break;
+      }
+
+      case "toggle": {
+        if (square.hasAttribute(attrName)) {
+          square.removeAttribute(attrName);
+        } else {
+          square.setAttribute(attrName, value);
+        }
+        break;
+      }
+
+      default:
+        console.warn(`Unknown mode "${mode}" passed to updateSquareHighlight`);
+    }
+  };
+
+  private setSquareHighlightByClassname = (
+    square: HTMLElement,
+    className: string,
+    mode: "add" | "remove" | "toggle"
+  ) => {
+    switch (mode) {
+      case "add": {
+        square.classList.add(className);
+        break;
+      }
+
+      case "remove": {
+        square.classList.add(className);
+        break;
+      }
+
+      case "toggle": {
+        square.classList.toggle(className);
+        break;
+      }
+
+      default:
+        console.warn(`Unknown mode "${mode}" passed to updateSquareHighlight`);
+    }
+  };
+
   protected readonly updateSquareHighlight = ({
     targetSquares,
     type,
     mode = "add",
     value = "true",
+    className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type: "selected" | "can-move" | "occupied";
+    type?: "selected" | "can-move" | "occupied";
     mode?: "add" | "remove" | "toggle";
     value?: string;
+    className?: string;
   }): void => {
     value = mode === "add" ? value : "";
 
@@ -316,7 +377,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     );
 
     const attrName = attrMap.get(type);
-    if (!attrName) {
+    if (!attrName && !className) {
       console.warn(`Unknown highlight type "${type}"`);
       return;
     }
@@ -331,30 +392,10 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       const square = this.squareElementsMap.get(an);
       if (!square) continue;
 
-      switch (mode) {
-        case "add": {
-          square.setAttribute(attrName, value);
-          break;
-        }
-
-        case "remove": {
-          square.removeAttribute(attrName);
-          break;
-        }
-
-        case "toggle": {
-          if (square.hasAttribute(attrName)) {
-            square.removeAttribute(attrName);
-          } else {
-            square.setAttribute(attrName, value);
-          }
-          break;
-        }
-
-        default:
-          console.warn(
-            `Unknown mode "${mode}" passed to updateSquareHighlight`
-          );
+      if (attrName) {
+        this.setSquareHighlightByAttribute(square, attrName, value, mode);
+      } else {
+        this.setSquareHighlightByClassname(square, className, mode);
       }
     }
   };
