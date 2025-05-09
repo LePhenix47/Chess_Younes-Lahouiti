@@ -155,15 +155,6 @@ abstract class AttacksGenerator {
       player,
       pieces
     );
-    console.log(
-      detailed.flatMap((entry) => {
-        return {
-          piece: entry.piece,
-          from: entry.from,
-          attacks: entry.attacks,
-        };
-      })
-    );
 
     const attackedSquares = detailed.flatMap((entry) => entry.attacks);
 
