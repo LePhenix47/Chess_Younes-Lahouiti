@@ -1,7 +1,8 @@
 import AttacksGenerator from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
+import BoardController from "./board-controller";
 import BoardUtils from "./board-utils.class";
-import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
+import { AlgebraicNotation } from "./chess-board.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
 import RulesEngine from "./rules-engine.class";
@@ -127,10 +128,10 @@ abstract class MovesGenerator {
     }
   };
   public static generateLegalMovesForPlayer(
-    chessBoardInstance: ChessBoard
+    chessBoardInstance: BoardController
   ): Map<Piece, AlgebraicNotation[]> {
     const { piecesMap: pieces } = chessBoardInstance;
-    const player = chessBoardInstance.rivalPlayer;
+    const player = chessBoardInstance.currentPlayer;
 
     const legalMoves = new Map<Piece, AlgebraicNotation[]>();
 
