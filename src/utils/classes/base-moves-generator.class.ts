@@ -14,7 +14,7 @@ import Player from "./player.class";
 type DetailedMove = { moves: IPieceLogic["position"][]; piece: Piece };
 
 abstract class BaseMovesGenerator {
-  private static readonly cardinalDirectionOffsets = {
+  public static readonly cardinalDirectionOffsets = {
     /**
      * North direction, x = 0, y = 1
      */
@@ -67,7 +67,7 @@ abstract class BaseMovesGenerator {
     }) as [SlidingPieceType, DirectionKey[]][]
   );
 
-  private static readonly knightOffsets = [
+  public static readonly knightOffsets = [
     [1, 2], // * →↑↑
     [2, 1], // * →→↑
     [2, -1], // * →→↓
