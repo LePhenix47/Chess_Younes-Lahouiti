@@ -233,6 +233,22 @@ abstract class RulesEngine {
 
     return pinnedPieces;
   };
+
+  public static filterMovesDueToPin = (
+    piece: Piece,
+    pinnedData: {
+      pinned: Piece;
+      by: Piece;
+      direction: Offset;
+      moves: AlgebraicNotation[];
+    }[],
+    candidateMoves: AlgebraicNotation[]
+  ): AlgebraicNotation[] => {
+    const pinInfo = pinnedData.find((pin) => pin.pinned === piece);
+    if (!pinInfo) return candidateMoves;
+
+    return candidateMoves.filter((move) => pinInfo.moves.includes(move));
+  };
 }
 
 export default RulesEngine;
