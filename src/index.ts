@@ -184,9 +184,9 @@ chessBoardInstance.addPiece("queen", "white", "c1");
 chessBoardInstance.addPiece("pawn", "white", "h2");
 chessBoardInstance.addPiece("pawn", "black", "g7");
 chessBoardInstance.addPiece("knight", "black", "c7");
-chessBoardInstance.addPiece("rook", "black", "c8");
+chessBoardInstance.addPiece("rook", "black", "a8");
 chessBoardInstance.addPiece("bishop", "black", "d5");
-chessBoardInstance.addPiece("king", "black", "e7");
+chessBoardInstance.addPiece("king", "black", "e8");
 chessBoardInstance.addPiece("king", "white", "e1");
 chessBoardInstance.addPiece("rook", "white", "h1");
 
