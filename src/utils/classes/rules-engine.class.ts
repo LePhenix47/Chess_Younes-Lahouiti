@@ -182,47 +182,52 @@ abstract class RulesEngine {
         );
         const target = pieces.get(square);
 
-        if (target) {
-          const isAlly = target.color === king.color;
-
-          if (isAlly) {
-            // ? First friendly piece might be pinned
-            if (potentialPinned) {
-              break;
-            } // ? Second friendly → no pin
-            potentialPinned = target;
-          } else {
-            // Enemy piece blocks further scanning
-            const isSlidingPiece = Piece.isType(target.type, [
-              "rook",
-              "bishop",
-              "queen",
-            ]);
-            const validDirections = BaseMovesGenerator.slidingDirectionsMap.get(
-              target.type as SlidingPieceType
-            );
-
-            const attacksAlongRay =
-              isSlidingPiece &&
-              validDirections?.includes(dirKey as DirectionKey);
-
-            if (potentialPinned && attacksAlongRay) {
-              pinnedPieces.push({
-                pinned: potentialPinned,
-                by: target,
-                direction: [dx, dy],
-                moves: legalMovesIfPinned,
-              });
-            }
-
-            break; // Whether it pins or not, stop ray
+        if (!target) {
+          if (potentialPinned) {
+            legalMovesIfPinned.push(square);
           }
-        } else if (potentialPinned) {
-          legalMovesIfPinned.push(square);
+          file += dx;
+          rank += dy;
+          continue;
         }
 
-        file += dx;
-        rank += dy;
+        const isAlly = target.color === king.color;
+
+        if (isAlly) {
+          if (potentialPinned) {
+            // Second ally = not pinned
+            break;
+          }
+
+          potentialPinned = target;
+          file += dx;
+          rank += dy;
+          continue;
+        }
+
+        // Now target is enemy
+        const isSliding = Piece.isType(target.type, [
+          "rook",
+          "bishop",
+          "queen",
+        ]);
+        const validDirs = BaseMovesGenerator.slidingDirectionsMap.get(
+          target.type as SlidingPieceType
+        );
+
+        const attacksAlongRay =
+          isSliding && validDirs?.includes(dirKey as DirectionKey);
+
+        if (potentialPinned && attacksAlongRay) {
+          pinnedPieces.push({
+            pinned: potentialPinned,
+            by: target,
+            direction: [dx, dy],
+            moves: legalMovesIfPinned,
+          });
+        }
+
+        break; // Any enemy piece ends the ray
       }
     }
 
