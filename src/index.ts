@@ -189,3 +189,43 @@ chessBoardInstance.addPiece("bishop", "black", "d5");
 chessBoardInstance.addPiece("king", "black", "e7");
 chessBoardInstance.addPiece("king", "white", "e1");
 chessBoardInstance.addPiece("rook", "white", "h1");
+
+/**
+ * 
+// DEFAULT CHESS POSITION
+// White pieces
+ */
+// chessBoardInstance.addPiece("rook", "white", "a1");
+// chessBoardInstance.addPiece("knight", "white", "b1");
+// chessBoardInstance.addPiece("bishop", "white", "c1");
+// chessBoardInstance.addPiece("queen", "white", "d1");
+// chessBoardInstance.addPiece("king", "white", "e1");
+// chessBoardInstance.addPiece("bishop", "white", "f1");
+// chessBoardInstance.addPiece("knight", "white", "g1");
+// chessBoardInstance.addPiece("rook", "white", "h1");
+// chessBoardInstance.addPiece("pawn", "white", "a2");
+// chessBoardInstance.addPiece("pawn", "white", "b2");
+// chessBoardInstance.addPiece("pawn", "white", "c2");
+// chessBoardInstance.addPiece("pawn", "white", "d2");
+// chessBoardInstance.addPiece("pawn", "white", "e2");
+// chessBoardInstance.addPiece("pawn", "white", "f2");
+// chessBoardInstance.addPiece("pawn", "white", "g2");
+// chessBoardInstance.addPiece("pawn", "white", "h2");
+
+// // Black pieces
+// chessBoardInstance.addPiece("rook", "black", "a8");
+// chessBoardInstance.addPiece("knight", "black", "b8");
+// chessBoardInstance.addPiece("bishop", "black", "c8");
+// chessBoardInstance.addPiece("queen", "black", "d8");
+// chessBoardInstance.addPiece("king", "black", "e8");
+// chessBoardInstance.addPiece("bishop", "black", "f8");
+// chessBoardInstance.addPiece("knight", "black", "g8");
+// chessBoardInstance.addPiece("rook", "black", "h8");
+// chessBoardInstance.addPiece("pawn", "black", "a7");
+// chessBoardInstance.addPiece("pawn", "black", "b7");
+// chessBoardInstance.addPiece("pawn", "black", "c7");
+// chessBoardInstance.addPiece("pawn", "black", "d7");
+// chessBoardInstance.addPiece("pawn", "black", "e7");
+// chessBoardInstance.addPiece("pawn", "black", "f7");
+// chessBoardInstance.addPiece("pawn", "black", "g7");
+// chessBoardInstance.addPiece("pawn", "black", "h7");
