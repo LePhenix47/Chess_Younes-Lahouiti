@@ -1,7 +1,7 @@
 import AttacksGenerator from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation } from "./chess-board.class";
+import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
 import RulesEngine from "./rules-engine.class";
@@ -126,11 +126,12 @@ abstract class MovesGenerator {
         return [];
     }
   };
-
   public static generateLegalMovesForPlayer(
-    player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
+    chessBoardInstance: ChessBoard
   ): Map<Piece, AlgebraicNotation[]> {
+    const { piecesMap: pieces } = chessBoardInstance;
+    const player = chessBoardInstance.rivalPlayer;
+
     const legalMoves = new Map<Piece, AlgebraicNotation[]>();
 
     const playerPieces = [...pieces.values()].filter(
@@ -139,19 +140,17 @@ abstract class MovesGenerator {
 
     const king = playerPieces.find((p): p is KingPiece => p.type === "king");
 
-    const attackers = RulesEngine.getKingAttackers(
-      king,
-      pieces,
-      player.getRival() // TODO: Fix
-    );
-    const inCheck = attackers.length > 0;
+    const attackers = RulesEngine.getKingAttackers(king, pieces, player);
+    const inCheck: boolean = attackers.length > 0;
     const pinnedInfo = RulesEngine.getPinnedPieces(king, pieces);
-    const pinnedSet = new Set(pinnedInfo.map((entry) => entry.pinned));
+    const pinnedSet = new Set<Piece>(pinnedInfo.map((entry) => entry.pinned));
 
-    const kingMoves = BaseMovesGenerator.generateKingMoves(king, pieces, {
-      detailed: false,
-    }) as AlgebraicNotation[];
-    const attackedSquares = new Set(
+    const kingMoves = BaseMovesGenerator.generateKingMoves(
+      king,
+      pieces
+    ) as AlgebraicNotation[];
+
+    const attackedSquares = new Set<AlgebraicNotation>(
       AttacksGenerator.getAttackedSquaresByOpponent(player, pieces)
     );
 
@@ -162,10 +161,13 @@ abstract class MovesGenerator {
       legalMoves.set(king, filteredKingMoves);
     }
 
+    // Handle the case of multiple attackers:
     if (attackers.length >= 2) {
-      return legalMoves; // only king moves allowed
+      // TODO: Handle the logic for multiple attackers or a double check where only the king can move
+      return legalMoves; // only king moves allowed in the case of a double check or multiple attackers
     }
 
+    // Handle the case of a single attacker
     const blockingSquares = new Set<AlgebraicNotation>();
     if (attackers.length === 1) {
       const attacker = attackers[0].attacker;
@@ -190,9 +192,11 @@ abstract class MovesGenerator {
         file += fileStep;
         rank += rankStep;
       }
+
       blockingSquares.add(attacker.position.algebraicNotation);
     }
 
+    // Generate legal moves for other pieces
     for (const piece of playerPieces) {
       if (piece === king) continue;
 
@@ -200,7 +204,6 @@ abstract class MovesGenerator {
         piece,
         pieces,
         player
-        // { detailed: false }
       ) as AlgebraicNotation[];
 
       if (pinnedSet.has(piece)) {
