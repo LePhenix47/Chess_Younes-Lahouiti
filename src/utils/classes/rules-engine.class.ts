@@ -3,9 +3,11 @@ import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import { AlgebraicNotation, ChessFile } from "./chess-board.class";
 import MovesGenerator, {
+  DirectionKey,
   KingPiece,
   Offset,
   SlidingPiece,
+  SlidingPieceType,
 } from "./move-generator.class";
 import Piece, { PieceColor } from "./piece.class";
 import Player from "./player.class";
@@ -35,10 +37,6 @@ abstract class RulesEngine {
     pieces: Map<AlgebraicNotation, Piece>,
     rival: Player
   ): { attacker: Piece; from: AlgebraicNotation }[] => {
-    if (king.color === rival.color) {
-      throw new Error("King and rival cannot be of the same color");
-    }
-
     const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
 
     for (const [pos, piece] of pieces) {
@@ -167,76 +165,64 @@ abstract class RulesEngine {
   }[] => {
     const pinnedPieces = [];
 
-    for (const [pos, piece] of pieces) {
-      if (piece.color === king.color) {
-        continue;
-      }
+    const kingFile = Number(king.position.fileIndex);
+    const kingRank = Number(king.position.rankIndex);
 
-      if (!["rook", "bishop", "queen"].includes(piece.type)) {
-        continue;
-      }
+    for (const [dirKey, [dx, dy]] of BaseMovesGenerator.directionOffsetsMap) {
+      let file = kingFile + dx;
+      let rank = kingRank + dy;
 
-      const extendedAttacks =
-        AttacksGenerator.getExtendedAttackedSquaresForSlidingPiece(
-          piece as SlidingPiece,
-          pieces
-        );
+      let potentialPinned: Piece | null = null;
+      const legalMovesIfPinned: AlgebraicNotation[] = [];
 
-      if (!extendedAttacks.includes(king.position.algebraicNotation)) {
-        continue;
-      }
-
-      const kingFile = Number(king.position.fileIndex);
-      const kingRank = Number(king.position.rankIndex);
-
-      // Between piece and king, we must find *exactly one* ally piece
-      const fileStep = Math.sign(
-        Number(kingFile) - Number(piece.position.fileIndex)
-      );
-      const rankStep = Math.sign(
-        Number(kingRank) - Number(piece.position.rankIndex)
-      );
-
-      const pinnedPath: AlgebraicNotation[] = [];
-      let file = Number(piece.position.fileIndex) + fileStep;
-      let rank = Number(piece.position.rankIndex) + rankStep;
-
-      let foundAlly: Piece | null = null;
-
-      while (file !== kingFile || rank !== kingRank) {
+      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
         const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
           file,
           rank
         );
-        const interveningPiece = pieces.get(square);
+        const target = pieces.get(square);
 
-        if (interveningPiece) {
-          if (interveningPiece.color !== king.color) {
-            foundAlly = null;
-            break; // enemy in the way — can't be a pin
+        if (target) {
+          const isAlly = target.color === king.color;
+
+          if (isAlly) {
+            // ? First friendly piece might be pinned
+            if (potentialPinned) {
+              break;
+            } // ? Second friendly → no pin
+            potentialPinned = target;
+          } else {
+            // Enemy piece blocks further scanning
+            const isSlidingPiece = Piece.isType(target.type, [
+              "rook",
+              "bishop",
+              "queen",
+            ]);
+            const validDirections = BaseMovesGenerator.slidingDirectionsMap.get(
+              target.type as SlidingPieceType
+            );
+
+            const attacksAlongRay =
+              isSlidingPiece &&
+              validDirections?.includes(dirKey as DirectionKey);
+
+            if (potentialPinned && attacksAlongRay) {
+              pinnedPieces.push({
+                pinned: potentialPinned,
+                by: target,
+                direction: [dx, dy],
+                moves: legalMovesIfPinned,
+              });
+            }
+
+            break; // Whether it pins or not, stop ray
           }
-
-          if (foundAlly) {
-            foundAlly = null;
-            break; // more than one ally in the way — no pin
-          }
-
-          foundAlly = interveningPiece;
-        } else {
-          pinnedPath.push(square);
+        } else if (potentialPinned) {
+          legalMovesIfPinned.push(square);
         }
 
-        file += fileStep;
-        rank += rankStep;
-      }
-
-      if (foundAlly) {
-        pinnedPieces.push({
-          pinned: foundAlly,
-          by: piece,
-          direction: [fileStep, rankStep],
-          moves: pinnedPath,
-        });
+        file += dx;
+        rank += dy;
       }
     }
 
