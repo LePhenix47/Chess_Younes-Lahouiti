@@ -60,6 +60,13 @@ export interface IPieceUI {
 }
 
 class Piece implements IPieceLogic, IPieceUI {
+  public static isType = (
+    type: PieceType,
+    pieceType: PieceType[]
+  ): type is PieceType => {
+    return pieceType.includes(type);
+  };
+
   public type: PieceType;
   public color: PieceColor;
   public position: IPieceLogic["position"];
@@ -67,13 +74,6 @@ class Piece implements IPieceLogic, IPieceUI {
   public isSlidingPiece: boolean = false;
 
   public element: HTMLElement | null = null;
-
-  public static isType = (
-    type: PieceType,
-    pieceType: PieceType[]
-  ): type is PieceType => {
-    return pieceType.includes(type);
-  };
 
   constructor(
     type: PieceType,
