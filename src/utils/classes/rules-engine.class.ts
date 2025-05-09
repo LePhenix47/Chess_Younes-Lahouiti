@@ -105,7 +105,7 @@ abstract class RulesEngine {
     { piece: KingPiece; position: AlgebraicNotation },
     { piece: SlidingPiece; position: AlgebraicNotation }
   ] => {
-    if (!player.canCastle) {
+    if (!player.canCastle || player.inCheck) {
       return null;
     }
 
