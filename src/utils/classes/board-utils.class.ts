@@ -131,7 +131,7 @@ abstract class BoardUtils {
   ): AlgebraicNotation => {
     const file = BoardUtils.fileMap.get(fileIndex);
     const rank = BoardUtils.rankMap.get(rankIndex);
-    console.log({ fileIndex, rankIndex });
+    // console.log({ fileIndex, rankIndex });
 
     if (!file || !rank) {
       console.error(
