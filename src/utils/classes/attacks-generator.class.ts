@@ -53,7 +53,8 @@ abstract class AttacksGenerator {
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
     const legalAttacks: AlgebraicNotation[] = [];
-    const direction = piece.color === "white" ? -1 : 1; // white moves up, black moves down
+    // ? white moves up, black moves, but due to board coords and CSS-JS coords mismatch on the Y axis → it's inverted
+    const direction = piece.color === "white" ? -1 : 1;
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
@@ -101,6 +102,7 @@ abstract class AttacksGenerator {
     const fileValue = Number(piece.position.fileIndex);
     const rankValue = Number(piece.position.rankIndex);
 
+    // Get the movement directions based on piece type (rook, bishop, queen)
     const directions = BaseMovesGenerator.slidingDirectionsMap.get(piece.type)!;
 
     for (const dir of directions) {
@@ -110,35 +112,42 @@ abstract class AttacksGenerator {
       let rank = rankValue + dy;
 
       while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
-          file,
-          rank
-        );
-
+        const square: AlgebraicNotation =
+          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
         const target: Piece | null = pieces.get(square);
 
-        if (target?.color === piece.color) {
+        // * Always add the square as attacked
+        attackedSquares.push(square);
+
+        // * Stop if we encounter a piece other than a king
+        if (target && target.type !== "king") {
           break;
         }
 
-        attackedSquares.push(square); // Always add square as attacked
+        // * If we encounter a king, extend the attack one square beyond it
+        if (target && target.type === "king") {
+          const beyondFile: number = file + dx;
+          const beyondRank: number = rank + dy;
 
-        if (target) {
-          if (target.type === "king" && target.color !== piece.color) {
-            // Passed enemy king — keep going one more square
-            file += dx;
-            rank += dy;
-            if (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
-              const beyond = BoardUtils.getAlgebraicNotationFromBoardIndices(
-                file,
-                rank
+          // ? Only extend if the square beyond the king is within bounds
+          if (
+            beyondFile >= 0 &&
+            beyondFile < 8 &&
+            beyondRank >= 0 &&
+            beyondRank < 8
+          ) {
+            const beyondSquare: AlgebraicNotation =
+              BoardUtils.getAlgebraicNotationFromBoardIndices(
+                beyondFile,
+                beyondRank
               );
-              attackedSquares.push(beyond);
-            }
+
+            // * Add the square beyond the king as attacked
+            attackedSquares.push(beyondSquare);
           }
-          break; // Stop after hitting any piece
         }
 
+        // Continue to the next square in the current direction
         file += dx;
         rank += dy;
       }
