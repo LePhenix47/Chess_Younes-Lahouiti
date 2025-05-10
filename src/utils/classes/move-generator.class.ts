@@ -65,7 +65,7 @@ abstract class MovesGenerator {
           pieces
         ) as AlgebraicNotation[];
 
-        const pawnAttacks = AttacksGenerator.generatePawnAttackMoves(
+        const pawnAttacks = AttacksGenerator.getLegalPawnCaptures(
           piece as PawnPiece,
           pieces
         );
