@@ -6,6 +6,7 @@ import MovesGenerator, {
   SlidingPiece,
   KnightPiece,
   KingPiece,
+  DirectionKey,
 } from "./move-generator.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
@@ -93,6 +94,36 @@ abstract class AttacksGenerator {
     return legalAttacks;
   };
 
+  public static getKnightAttackingSquares = (
+    knight: KnightPiece
+  ): AlgebraicNotation[] => {
+    const attackedSquares: AlgebraicNotation[] = [];
+
+    const { fileIndex, rankIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(
+        knight.position.algebraicNotation
+      );
+
+    for (const [dx, dy] of BaseMovesGenerator.knightOffsets) {
+      const newFile = Number(fileIndex) + dx;
+      const newRank = Number(rankIndex) + dy;
+
+      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+        continue;
+      }
+
+      const targetSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        newFile,
+        newRank
+      );
+
+      // ? Push regardless of whether a friendly piece is there or not
+      attackedSquares.push(targetSquare);
+    }
+
+    return attackedSquares;
+  };
+
   // ? This method is used to restrict the king moves when in check
   public static getExtendedAttackedSquaresForSlidingPiece = (
     piece: SlidingPiece,
@@ -172,6 +203,41 @@ abstract class AttacksGenerator {
     return [...uniqueAttackedSquares];
   };
 
+  public static getKingAttackingSquares = (
+    king: KingPiece
+  ): AlgebraicNotation[] => {
+    const attackedSquares: AlgebraicNotation[] = [];
+
+    const directionKeys = [
+      ...Object.keys(BaseMovesGenerator.cardinalDirectionOffsets),
+    ] as DirectionKey[];
+
+    const file = Number(king.position.fileIndex);
+    const rank = Number(king.position.rankIndex);
+
+    for (const directionKey of directionKeys) {
+      const [dx, dy] =
+        BaseMovesGenerator.directionOffsetsMap.get(directionKey)!;
+
+      const newFile = file + dx;
+      const newRank = rank + dy;
+
+      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+        continue;
+      }
+
+      const targetSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        newFile,
+        newRank
+      );
+
+      // * Include all squares regardless of what's on them
+      attackedSquares.push(targetSquare);
+    }
+
+    return attackedSquares;
+  };
+
   public static getAttackedSquaresByOpponentDetailed = (
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
@@ -202,9 +268,8 @@ abstract class AttacksGenerator {
         }
 
         case "knight": {
-          attacks = BaseMovesGenerator.generateKnightMoves(
-            piece as KnightPiece,
-            pieces
+          attacks = AttacksGenerator.getKnightAttackingSquares(
+            piece as KnightPiece
           ) as AlgebraicNotation[];
           break;
         }
@@ -220,11 +285,8 @@ abstract class AttacksGenerator {
         }
 
         case "king": {
-          attacks = BaseMovesGenerator.generateKingMoves(
-            piece as KingPiece,
-            pieces,
-            player,
-            { includeCastling: false }
+          attacks = AttacksGenerator.getKingAttackingSquares(
+            piece as KingPiece
           ) as AlgebraicNotation[];
           break;
         }
