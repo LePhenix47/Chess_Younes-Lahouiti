@@ -256,10 +256,16 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
     console.log("Pinned Pieces:", pinned);
 
-    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-    //   this.currentPlayer,
-    //   this.piecesMap
-    // );
+    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+      this.currentPlayer,
+      this.piecesMap
+    );
+
+    this.updateSquareHighlight({
+      targetSquares: attacked,
+      className: "test",
+      mode: "add",
+    });
 
     this.updateSquareHighlight({
       targetSquares: testSquares,
@@ -281,15 +287,15 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       className: "blinking",
       mode: "remove",
     });
-    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-    //   this.currentPlayer,
-    //   this.piecesMap
-    // );
-    // this.updateSquareHighlight({
-    //   targetSquares: attacked,
-    //   className: "test",
-    //   mode: "remove",
-    // });
+    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+      this.currentPlayer,
+      this.piecesMap
+    );
+    this.updateSquareHighlight({
+      targetSquares: attacked,
+      className: "test",
+      mode: "remove",
+    });
   };
 
   public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
