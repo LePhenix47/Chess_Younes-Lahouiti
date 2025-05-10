@@ -10,6 +10,7 @@ import MovesGenerator, {
 } from "./move-generator.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
+import RulesEngine from "./rules-engine.class";
 
 abstract class AttacksGenerator {
   public static generatePawnAttackSquares = (
@@ -108,7 +109,7 @@ abstract class AttacksGenerator {
       const newFile = Number(fileIndex) + dx;
       const newRank = Number(rankIndex) + dy;
 
-      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+      if (!RulesEngine.isWithinBounds(newFile, newRank)) {
         continue;
       }
 
@@ -142,7 +143,7 @@ abstract class AttacksGenerator {
       let file = fileValue + dx;
       let rank = rankValue + dy;
 
-      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+      while (RulesEngine.isWithinBounds(file, rank)) {
         const square: AlgebraicNotation =
           BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
         const target: Piece | null = pieces.get(square);
@@ -161,12 +162,7 @@ abstract class AttacksGenerator {
           const beyondRank: number = rank + dy;
 
           // ? Only extend if the square beyond the king is within bounds
-          if (
-            beyondFile >= 0 &&
-            beyondFile < 8 &&
-            beyondRank >= 0 &&
-            beyondRank < 8
-          ) {
+          if (RulesEngine.isWithinBounds(beyondFile, beyondRank)) {
             const beyondSquare: AlgebraicNotation =
               BoardUtils.getAlgebraicNotationFromBoardIndices(
                 beyondFile,
@@ -222,7 +218,7 @@ abstract class AttacksGenerator {
       const newFile = file + dx;
       const newRank = rank + dy;
 
-      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+      if (!RulesEngine.isWithinBounds(newFile, newRank)) {
         continue;
       }
 

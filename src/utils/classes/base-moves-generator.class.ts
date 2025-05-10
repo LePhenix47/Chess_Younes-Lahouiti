@@ -172,7 +172,7 @@ abstract class BaseMovesGenerator {
       const newFile = Number(fileIndex) + dx;
       const newRank = Number(rankIndex) + dy;
 
-      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+      if (!RulesEngine.isWithinBounds(newFile, newRank)) {
         continue;
       }
 
@@ -227,7 +227,7 @@ abstract class BaseMovesGenerator {
       const newFile = file + dx;
       const newRank = rank + dy;
 
-      if (newFile < 0 || newFile > 7 || newRank < 0 || newRank > 7) {
+      if (!RulesEngine.isWithinBounds(newFile, newRank)) {
         continue;
       }
 
@@ -315,7 +315,7 @@ abstract class BaseMovesGenerator {
         rank += dy;
 
         // Out of bounds
-        if (file < 0 || file > 7 || rank < 0 || rank > 7) {
+        if (!RulesEngine.isWithinBounds(file, rank)) {
           break;
         }
 
