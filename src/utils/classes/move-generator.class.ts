@@ -65,7 +65,7 @@ abstract class MovesGenerator {
           pieces
         ) as AlgebraicNotation[];
 
-        const pawnAttacks = AttacksGenerator.generatePawnAttacks(
+        const pawnAttacks = AttacksGenerator.generatePawnAttackMoves(
           piece as PawnPiece,
           pieces
         );
@@ -106,6 +106,8 @@ abstract class MovesGenerator {
         return [];
     }
   };
+
+  // TODO: Update logic (refatored the code for the other methods now need completely overhaul this method)
   public static generateLegalMovesForPlayer(
     chessBoardInstance: BoardController
   ): Map<Piece, AlgebraicNotation[]> {

@@ -48,7 +48,7 @@ abstract class AttacksGenerator {
     return attackSquares;
   };
 
-  public static generatePawnAttacks = (
+  public static generatePawnAttackMoves = (
     piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>
   ): AlgebraicNotation[] => {
