@@ -249,6 +249,14 @@ abstract class RulesEngine {
 
     return candidateMoves.filter((move) => pinInfo.moves.includes(move));
   };
+
+  // Inside RulesEngine class
+  public static isWithinBounds(file: number, rank: number): boolean {
+    const fileIsWithinBounds: boolean = file >= 0 && file < 8;
+    const rankIsWithinBounds: boolean = rank >= 0 && rank < 8;
+
+    return fileIsWithinBounds && rankIsWithinBounds;
+  }
 }
 
 export default RulesEngine;
