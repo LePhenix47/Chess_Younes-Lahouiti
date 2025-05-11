@@ -19,6 +19,21 @@ export type Move = {
 };
 
 class ChessBoard extends BoardController {
+  public static getPieceFromArray = (
+    pieces: Map<AlgebraicNotation, Piece> | Piece[],
+    type: PieceType,
+    color: PieceColor
+  ): Piece | null => {
+    if (pieces instanceof Map) {
+      pieces = [...pieces.values()];
+    }
+
+    const piece: Piece | null =
+      pieces.find((p) => p.type === type && p.color === color) || null;
+
+    return piece;
+  };
+
   constructor(container: HTMLElement) {
     super(container);
   }
