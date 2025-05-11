@@ -10,7 +10,7 @@ import MovesGenerator, {
 } from "./move-generator.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
-import RulesEngine from "./rules-engine.class";
+import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
 
 abstract class AttacksGenerator {
   public static generatePawnAttackSquares = (
@@ -52,8 +52,20 @@ abstract class AttacksGenerator {
 
   public static getLegalPawnCaptures = (
     piece: PawnPiece,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    pinConstraint: PinnedPieceInfo | undefined
   ): AlgebraicNotation[] => {
+    if (pinConstraint) {
+      const [dx, dy] = pinConstraint.direction;
+
+      // Vertical Pin or Horizontal Pin: No attacks allowed
+      const isHorizontalPin = dx === 0;
+      const isVerticalPin = dy === 0;
+      if (isHorizontalPin || isVerticalPin) {
+        return [];
+      }
+    }
+
     const legalAttacks: AlgebraicNotation[] = [];
     // ? white moves up, black moves, but due to board coords and CSS-JS coords mismatch on the Y axis → it's inverted
     const direction = piece.color === "white" ? -1 : 1;
@@ -62,31 +74,70 @@ abstract class AttacksGenerator {
     const rank = Number(piece.position.rankIndex);
 
     // TODO: Make checks to not call getAlgebraicNotationFromBoardIndices if out of bounds
-    const leftSquare = file - 1;
-    const rightSquare = file + 1;
+    const leftSquareFromFile = file - 1;
+    const rightSquareFromFile = file + 1;
 
-    // * Diagonal left attack
-    const attackLeft: AlgebraicNotation =
-      BoardUtils.getAlgebraicNotationFromBoardIndices(
-        leftSquare, // ? left square
-        rank + direction // ? move up or down by one square
-      );
-    const attackPieceLeft: Piece = pieces.get(attackLeft);
+    const newRank = rank + direction;
 
-    // ? Check if the diagonal left square is within bounds and has an enemy piece
-    if (Boolean(attackPieceLeft) && attackPieceLeft.color !== piece.color) {
-      legalAttacks.push(attackLeft);
+    const canMoveToDiagonal = (
+      targetFile: number,
+      targetRank: number
+    ): boolean => {
+      if (!pinConstraint) {
+        return true; // If no pin, all diagonal attacks are allowed
+      }
+
+      const [dx, dy] = pinConstraint.direction;
+
+      // Compute relative movement to the target square
+      const fileDiff = targetFile - file;
+      const rankDiff = targetRank - rank;
+
+      // Pawn must move diagonally forward by exactly one square
+      if (Math.abs(fileDiff) !== 1 || rankDiff !== direction) {
+        return false;
+      }
+
+      // Check if the pin direction matches the attack direction
+      // Normalize both vectors to unit diagonal (e.g., (1, 1), (-1, -1), etc.)
+      const normFileDiff = Math.sign(fileDiff);
+      const normRankDiff = Math.sign(rankDiff);
+
+      return dx === normFileDiff && dy === normRankDiff;
+    };
+
+    if (
+      RulesEngine.isWithinBounds(leftSquareFromFile, newRank) &&
+      canMoveToDiagonal(leftSquareFromFile, newRank)
+    ) {
+      // * Diagonal left attack
+      const attackLeft: AlgebraicNotation =
+        BoardUtils.getAlgebraicNotationFromBoardIndices(
+          leftSquareFromFile, // ? left square
+          newRank // ? move up or down by one square
+        );
+      const attackPieceLeft: Piece = pieces.get(attackLeft);
+
+      // ? Check if the diagonal left square is within bounds and has an enemy piece
+      if (Boolean(attackPieceLeft) && attackPieceLeft.color !== piece.color) {
+        legalAttacks.push(attackLeft);
+      }
     }
 
-    // * Diagonal right attack
-    const attackRight = BoardUtils.getAlgebraicNotationFromBoardIndices(
-      rightSquare, // ? left square
-      rank + direction // ? move up or down by one square
-    );
-    const attackPieceRight: Piece = pieces.get(attackRight);
-    // ? Check if the diagonal right square is within bounds and has an enemy piece
-    if (Boolean(attackPieceRight) && attackPieceRight.color !== piece.color) {
-      legalAttacks.push(attackRight);
+    if (
+      RulesEngine.isWithinBounds(rightSquareFromFile, newRank) &&
+      canMoveToDiagonal(rightSquareFromFile, newRank)
+    ) {
+      // * Diagonal right attack
+      const attackRight = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        rightSquareFromFile, // ? right square
+        newRank // ? move up or down by one square
+      );
+      const attackPieceRight: Piece = pieces.get(attackRight);
+      // ? Check if the diagonal right square is within bounds and has an enemy piece
+      if (Boolean(attackPieceRight) && attackPieceRight.color !== piece.color) {
+        legalAttacks.push(attackRight);
+      }
     }
 
     // TODO: Implement en passant logic.
