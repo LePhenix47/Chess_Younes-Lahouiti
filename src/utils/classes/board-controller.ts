@@ -280,9 +280,12 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     // console.log("Opponent attacked squares:", attacked);
   };
   clearTest = () => {
-    const king = [...this.piecesMap.values()].find(
-      (p) => p.type === "king" && p.color === this.currentTurn
+    const king = ChessBoard.getPieceFromArray(
+      this.piecesMap,
+      "king",
+      this.currentTurn
     ) as KingPiece;
+
     const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
     const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
 
