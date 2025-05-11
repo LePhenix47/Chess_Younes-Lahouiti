@@ -195,37 +195,33 @@ abstract class AttacksGenerator {
       let rank = rankValue + dy;
 
       while (RulesEngine.isWithinBounds(file, rank)) {
-        const square: AlgebraicNotation =
-          BoardUtils.getAlgebraicNotationFromBoardIndices(file, rank);
-        const target: Piece | null = pieces.get(square);
+        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          file,
+          rank
+        );
+        const target = pieces.get(square);
 
-        // * Always add the square as attacked
         attackedSquares.push(square);
 
-        // * Stop if we encounter a piece other than a king
-        if (target && target.type !== "king") {
-          break;
-        }
+        if (target) {
+          // Stop scanning unless it's an enemy king
+          if (target.type === "king" && target.color !== piece.color) {
+            const beyondFile = file + dx;
+            const beyondRank = rank + dy;
 
-        // * If we encounter a king, extend the attack one square beyond it
-        if (target && target.type === "king") {
-          const beyondFile: number = file + dx;
-          const beyondRank: number = rank + dy;
-
-          // ? Only extend if the square beyond the king is within bounds
-          if (RulesEngine.isWithinBounds(beyondFile, beyondRank)) {
-            const beyondSquare: AlgebraicNotation =
-              BoardUtils.getAlgebraicNotationFromBoardIndices(
-                beyondFile,
-                beyondRank
-              );
-
-            // * Add the square beyond the king as attacked
-            attackedSquares.push(beyondSquare);
+            if (RulesEngine.isWithinBounds(beyondFile, beyondRank)) {
+              const beyondSquare =
+                BoardUtils.getAlgebraicNotationFromBoardIndices(
+                  beyondFile,
+                  beyondRank
+                );
+              attackedSquares.push(beyondSquare);
+            }
           }
+
+          break; // Stop in all cases after encountering any piece
         }
 
-        // Continue to the next square in the current direction
         file += dx;
         rank += dy;
       }
