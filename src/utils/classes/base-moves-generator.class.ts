@@ -27,37 +27,37 @@ export enum BlackCastlingTargetSquare {
 abstract class BaseMovesGenerator {
   public static readonly cardinalDirectionOffsets = {
     /**
-     * North direction, x = 0, y = 1
+     * North direction, VISUAL coords: x = 0, y = 1
      */
-    N: [0, 1],
+    N: [0, -1],
     /**
-     * South direction, x = 0, y = -1
+     * South direction, VISUAL coords: x = 0, y = -1
      */
-    S: [0, -1],
+    S: [0, 1],
     /**
-     * East direction, x = 1, y = 0
+     * East direction, VISUAL coords: x = 1, y = 0
      */
     E: [1, 0],
     /**
-     * West direction, x = -1, y = 0
+     * West direction, VISUAL coords: x = -1, y = 0
      */
     W: [-1, 0],
     /**
-     * NorthEast direction, x = 1, y = 1
+     * NorthEast direction, VISUAL coords: x = 1, y = 1
      */
-    NE: [1, 1],
+    NE: [1, -1],
     /**
-     * NorthWest direction, x = -1, y = 1
+     * NorthWest direction, VISUAL coords: x = -1, y = 1
      */
-    NW: [-1, 1],
+    NW: [-1, -1],
     /**
-     * SouthEast direction, x = 1, y = -1
+     * SouthEast direction, VISUAL coords: x = 1, y = -1
      */
-    SE: [1, -1],
+    SE: [1, 1],
     /**
-     * SouthWest direction, x = -1, y = -1
+     * SouthWest direction, VISUAL coords: x = -1, y = -1
      */
-    SW: [-1, -1],
+    SW: [-1, 1],
   } as const;
 
   public static readonly directionOffsetsMap = new Map<DirectionKey, Offset>(
