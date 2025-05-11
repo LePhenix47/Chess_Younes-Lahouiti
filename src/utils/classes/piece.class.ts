@@ -68,7 +68,11 @@ class Piece implements IPieceLogic, IPieceUI {
   };
 
   public static arePiecesTheSame = (piece1: Piece, piece2: Piece): boolean => {
-    return piece1.type === piece2.type && piece1.color === piece2.color;
+    return (
+      piece1.type === piece2.type &&
+      piece1.color === piece2.color &&
+      piece1.position.algebraicNotation === piece2.position.algebraicNotation
+    );
   };
 
   public type: PieceType;
