@@ -1,7 +1,7 @@
 import AttacksGenerator from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation, ChessFile } from "./chess-board.class";
+import ChessBoard, { AlgebraicNotation, ChessFile } from "./chess-board.class";
 import MovesGenerator, {
   DirectionKey,
   KingPiece,
@@ -12,24 +12,34 @@ import MovesGenerator, {
 import Piece, { PieceColor } from "./piece.class";
 import Player from "./player.class";
 
-type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
+export type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
+
+export type PinnedPieceInfo = {
+  pinned: Piece;
+  by: Piece;
+  direction: Offset;
+  pathToPin: AlgebraicNotation[];
+};
 
 abstract class RulesEngine {
   public static isKingInCheck = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
   ): boolean => {
-    const piecesArray: Piece[] = [...pieces.values()];
-    const king = piecesArray.find((p): p is KingPiece => {
-      return p.type === "king" && p.color === player.color;
-    });
+    const king = ChessBoard.getPieceFromArray(
+      pieces,
+      "king",
+      player.color
+    ) as KingPiece;
 
     const attackedSquares = AttacksGenerator.getAttackedSquaresByOpponent(
       player,
       pieces
     );
 
-    return attackedSquares.includes(king.position.algebraicNotation);
+    const isInCheck = attackedSquares.includes(king.position.algebraicNotation);
+
+    return isInCheck;
   };
 
   public static getKingAttackers = (
@@ -105,7 +115,7 @@ abstract class RulesEngine {
     { piece: KingPiece; position: AlgebraicNotation },
     { piece: SlidingPiece; position: AlgebraicNotation }
   ] => {
-    if (!player.canCastle || player.inCheck) {
+    if (!player.canCastle[side] || player.inCheck) {
       return null;
     }
 
@@ -157,13 +167,8 @@ abstract class RulesEngine {
   public static getPinnedPieces = (
     king: KingPiece,
     pieces: Map<AlgebraicNotation, Piece>
-  ): {
-    pinned: Piece;
-    by: Piece;
-    direction: Offset;
-    moves: AlgebraicNotation[];
-  }[] => {
-    const pinnedPieces = [];
+  ): PinnedPieceInfo[] => {
+    const pinnedPieces: PinnedPieceInfo[] = [];
 
     const kingFile = Number(king.position.fileIndex);
     const kingRank = Number(king.position.rankIndex);
@@ -175,7 +180,7 @@ abstract class RulesEngine {
       let potentialPinned: Piece | null = null;
       const legalMovesIfPinned: AlgebraicNotation[] = [];
 
-      while (file >= 0 && file < 8 && rank >= 0 && rank < 8) {
+      while (RulesEngine.isWithinBounds(file, rank)) {
         const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
           file,
           rank
@@ -223,7 +228,7 @@ abstract class RulesEngine {
             pinned: potentialPinned,
             by: target,
             direction: [dx, dy],
-            moves: legalMovesIfPinned,
+            pathToPin: legalMovesIfPinned,
           });
         }
 
@@ -232,22 +237,6 @@ abstract class RulesEngine {
     }
 
     return pinnedPieces;
-  };
-
-  public static filterMovesDueToPin = (
-    piece: Piece,
-    pinnedData: {
-      pinned: Piece;
-      by: Piece;
-      direction: Offset;
-      moves: AlgebraicNotation[];
-    }[],
-    candidateMoves: AlgebraicNotation[]
-  ): AlgebraicNotation[] => {
-    const pinInfo = pinnedData.find((pin) => pin.pinned === piece);
-    if (!pinInfo) return candidateMoves;
-
-    return candidateMoves.filter((move) => pinInfo.moves.includes(move));
   };
 
   // Inside RulesEngine class
