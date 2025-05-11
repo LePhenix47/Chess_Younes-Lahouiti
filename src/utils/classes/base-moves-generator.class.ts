@@ -10,7 +10,7 @@ import MovesGenerator, {
 } from "./move-generator.class";
 import Piece, { IPieceLogic, PieceColor } from "./piece.class";
 import Player from "./player.class";
-import RulesEngine from "./rules-engine.class";
+import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
 
 type DetailedMove = { moves: IPieceLogic["position"][]; piece: Piece };
 
@@ -92,6 +92,7 @@ abstract class BaseMovesGenerator {
   public static generatePawnMoves = (
     piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>,
+    pinConstraint: PinnedPieceInfo | undefined,
     options?: { detailed?: boolean }
   ): AlgebraicNotation[] | DetailedMove => {
     const movePositions: AlgebraicNotation[] = [];
@@ -101,6 +102,15 @@ abstract class BaseMovesGenerator {
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
+
+    // Handle pin logic — restrict all movement unless the pin is vertical
+    if (pinConstraint) {
+      const [dx, dy] = pinConstraint.direction;
+      const isNotVerticalPin: boolean = dx !== 0;
+      if (isNotVerticalPin) {
+        return options?.detailed ? { piece, moves: [] } : [];
+      }
+    }
 
     const oneStepForward = BoardUtils.getAlgebraicNotationFromBoardIndices(
       file,
@@ -144,14 +154,12 @@ abstract class BaseMovesGenerator {
     }
 
     if (options?.detailed) {
-      // Return the piece with its detailed move positions
       return {
         piece,
         moves: detailedMovePositions,
       };
     }
 
-    // Return plain algebraic notation if not detailed
     return movePositions;
   };
 
