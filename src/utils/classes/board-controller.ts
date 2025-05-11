@@ -7,6 +7,7 @@ import Player, { CastlingRights } from "./player.class";
 import type { Move, AlgebraicNotation } from "./chess-board.class"; //
 import AttacksGenerator from "./attacks-generator.class";
 import RulesEngine from "./rules-engine.class";
+import ChessBoard from "./chess-board.class";
 //
 export interface IGameLogic {
   currentTurn: PieceColor;
@@ -248,9 +249,12 @@ abstract class BoardController implements IGameLogic, IBoardUI {
 
   test = () => {
     // TODO: Test that the new methods work correctly
-    const king = [...this.piecesMap.values()].find(
-      (p) => p.type === "king" && p.color === this.currentTurn
+    const king = ChessBoard.getPieceFromArray(
+      this.piecesMap,
+      "king",
+      this.currentTurn
     ) as KingPiece;
+
     const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
     const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
 
