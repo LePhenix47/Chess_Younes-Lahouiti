@@ -255,10 +255,14 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       this.currentTurn
     ) as KingPiece;
 
-    const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
-    const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
-
-    console.log("Pinned Pieces:", pinned);
+    // const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
+    // const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
+    // this.updateSquareHighlight({
+    //   targetSquares: testSquares,
+    //   className: "blinking",
+    //   mode: "add",
+    // });
+    // console.log("Pinned Pieces:", pinned);
 
     const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
       this.currentPlayer,
@@ -271,12 +275,6 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       mode: "add",
     });
 
-    this.updateSquareHighlight({
-      targetSquares: testSquares,
-      className: "blinking",
-      mode: "add",
-    });
-
     // console.log("Opponent attacked squares:", attacked);
   };
   clearTest = () => {
@@ -286,14 +284,14 @@ abstract class BoardController implements IGameLogic, IBoardUI {
       this.currentTurn
     ) as KingPiece;
 
-    const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
-    const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
+    // const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
+    // const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
+    // this.updateSquareHighlight({
+    //   targetSquares: testSquares,
+    //   className: "blinking",
+    //   mode: "remove",
+    // });
 
-    this.updateSquareHighlight({
-      targetSquares: testSquares,
-      className: "blinking",
-      mode: "remove",
-    });
     const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
       this.currentPlayer,
       this.piecesMap
