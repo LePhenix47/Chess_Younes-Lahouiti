@@ -131,8 +131,8 @@ abstract class MovesGenerator {
       case "queen": {
         const slidingMoves = BaseMovesGenerator.generateSlidingMoves(
           piece as SlidingPiece,
-          pieces
-          // potentialPinConstraint
+          pieces,
+          potentialPinConstraint
         ) as AlgebraicNotation[];
         return slidingMoves;
       }

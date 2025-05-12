@@ -305,6 +305,8 @@ abstract class BaseMovesGenerator {
   public static generateSlidingMoves = (
     piece: SlidingPiece,
     pieces: Map<AlgebraicNotation, Piece>,
+    pinConstraint: PinnedPieceInfo | undefined,
+
     options?: { detailed?: boolean }
   ): AlgebraicNotation[] | DetailedMove => {
     const directionKeys = BaseMovesGenerator.slidingDirectionsMap.get(
@@ -317,9 +319,21 @@ abstract class BaseMovesGenerator {
     const movePositions: AlgebraicNotation[] = [];
     const detailedMovePositions: DetailedMove["moves"] = [];
 
+    const [pinDx, pinDy] = pinConstraint?.direction || [];
+
+    const isNotPinnedDirectionForSlidingPiece = (dx: number, dy: number) => {
+      return pinDx !== dx || pinDy !== dy;
+    };
+
     for (const directionKey of directionKeys) {
       const [dx, dy] =
         BaseMovesGenerator.directionOffsetsMap.get(directionKey)!;
+
+      const cannotMoveTowardsDirection: boolean =
+        pinConstraint && isNotPinnedDirectionForSlidingPiece(dx, dy);
+      if (cannotMoveTowardsDirection) {
+        continue;
+      }
 
       let file = Number(piece.position.fileIndex);
       let rank = Number(piece.position.rankIndex);
