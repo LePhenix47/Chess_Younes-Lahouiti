@@ -180,10 +180,12 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 
 chessBoardInstance.generateBoard();
 
-chessBoardInstance.addPiece("queen", "white", "c1");
-chessBoardInstance.addPiece("pawn", "white", "e2");
-chessBoardInstance.addPiece("king", "white", "e1");
+chessBoardInstance.addPiece("bishop", "white", "e4");
+chessBoardInstance.addPiece("queen", "white", "e1");
+// chessBoardInstance.addPiece("pawn", "white", "e2");
+chessBoardInstance.addPiece("king", "white", "g1");
 chessBoardInstance.addPiece("rook", "white", "h1");
+
 chessBoardInstance.addPiece("pawn", "black", "g7");
 chessBoardInstance.addPiece("knight", "black", "c7");
 chessBoardInstance.addPiece("rook", "black", "a8");
