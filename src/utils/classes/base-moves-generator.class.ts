@@ -321,8 +321,19 @@ abstract class BaseMovesGenerator {
 
     const [pinDx, pinDy] = pinConstraint?.direction || [];
 
-    const isNotPinnedDirectionForSlidingPiece = (dx: number, dy: number) => {
-      return pinDx !== dx || pinDy !== dy;
+    /**
+     * Returns true if the direction (dx, dy) is not aligned with the pin direction (pinDx, pinDy).
+     *
+     * The mathematical check for colinearity is:
+     *   `dx / pinDx === dy / pinDy`
+     * To avoid division (especially division by zero), we use the equivalent cross-multiplication form:
+     *   `dx * pinDy === dy * pinDx`
+     * If this condition fails, the directions are not colinear.
+     */
+    const isNotAlignedWithPin = (dx: number, dy: number): boolean => {
+      const isNotColinear: boolean = dx * pinDy !== dy * pinDx;
+
+      return isNotColinear;
     };
 
     for (const directionKey of directionKeys) {
@@ -330,7 +341,7 @@ abstract class BaseMovesGenerator {
         BaseMovesGenerator.directionOffsetsMap.get(directionKey)!;
 
       const cannotMoveTowardsDirection: boolean =
-        pinConstraint && isNotPinnedDirectionForSlidingPiece(dx, dy);
+        pinConstraint && isNotAlignedWithPin(dx, dy);
       if (cannotMoveTowardsDirection) {
         continue;
       }
