@@ -120,8 +120,8 @@ abstract class MovesGenerator {
       case "knight": {
         const knightMoves = BaseMovesGenerator.generateKnightMoves(
           piece as KnightPiece,
-          pieces
-          // potentialPinConstraint
+          pieces,
+          potentialPinConstraint
         ) as AlgebraicNotation[];
         return knightMoves;
       }

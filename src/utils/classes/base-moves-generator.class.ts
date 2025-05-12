@@ -166,6 +166,7 @@ abstract class BaseMovesGenerator {
   public static generateKnightMoves = (
     piece: Piece,
     pieces: Map<AlgebraicNotation, Piece>,
+    pinConstraint: PinnedPieceInfo | undefined,
     options?: { detailed?: boolean }
   ): AlgebraicNotation[] | DetailedMove => {
     const movePositions: AlgebraicNotation[] = [];
@@ -175,6 +176,11 @@ abstract class BaseMovesGenerator {
       BoardUtils.getBoardIndicesFromAlgebraicNotation(
         piece.position.algebraicNotation
       );
+
+    if (pinConstraint) {
+      const noMovesArray = options?.detailed ? { piece, moves: [] } : [];
+      return noMovesArray;
+    }
 
     for (const [dx, dy] of BaseMovesGenerator.knightOffsets) {
       const newFile = Number(fileIndex) + dx;
