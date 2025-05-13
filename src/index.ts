@@ -182,7 +182,7 @@ chessBoardInstance.generateBoard();
 
 chessBoardInstance.addPiece("bishop", "white", "e4");
 chessBoardInstance.addPiece("queen", "white", "e1");
-// chessBoardInstance.addPiece("pawn", "white", "e2");
+chessBoardInstance.addPiece("pawn", "white", "e2");
 chessBoardInstance.addPiece("king", "white", "g1");
 chessBoardInstance.addPiece("rook", "white", "h1");
 
