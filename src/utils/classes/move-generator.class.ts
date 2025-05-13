@@ -85,9 +85,14 @@ abstract class MovesGenerator {
     /**
  // ! Temporary code: ↓
 */
+    const king = ChessBoard.getPieceFromArray(
+      pieces,
+      "king",
+      player.color
+    ) as KingPiece;
 
     const pinnedPieces: PinnedPieceInfo[] = RulesEngine.getPinnedPieces(
-      ChessBoard.getPieceFromArray(pieces, "king", player.color) as KingPiece,
+      king,
       pieces
     );
 
@@ -138,12 +143,19 @@ abstract class MovesGenerator {
       }
 
       case "king": {
-        const normalMoves = BaseMovesGenerator.generateKingMoves(
+        let normalMoves = BaseMovesGenerator.generateKingMoves(
           piece as KingPiece,
           pieces,
           player,
           { includeCastling: true }
         ) as AlgebraicNotation[];
+
+        const enemyAttackingSquares =
+          AttacksGenerator.getAttackedSquaresByOpponent(player, pieces);
+
+        normalMoves = normalMoves.filter(
+          (move) => !enemyAttackingSquares.includes(move)
+        );
 
         return normalMoves;
       }
