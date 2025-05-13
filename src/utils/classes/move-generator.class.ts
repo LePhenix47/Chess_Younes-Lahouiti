@@ -49,6 +49,9 @@ abstract class MovesGenerator {
       pieces
     );
 
+    const opponentAttackingSquares =
+      AttacksGenerator.getAttackedSquaresByOpponent(player, pieces);
+
     for (const piece of pieces.values()) {
       if (piece.color !== player.color) {
         continue;
@@ -65,6 +68,7 @@ abstract class MovesGenerator {
         piece,
         pieces,
         player,
+        opponentAttackingSquares,
         potentialPinConstraint
       );
 
@@ -80,43 +84,21 @@ abstract class MovesGenerator {
     piece: Piece,
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player,
+    opponentAttackingSquares: AlgebraicNotation[],
     pinConstraint?: PinnedPieceInfo
   ): AlgebraicNotation[] => {
-    /**
- // ! Temporary code: ↓
-*/
-    const king = ChessBoard.getPieceFromArray(
-      pieces,
-      "king",
-      player.color
-    ) as KingPiece;
-
-    const pinnedPieces: PinnedPieceInfo[] = RulesEngine.getPinnedPieces(
-      king,
-      pieces
-    );
-
-    const potentialPinConstraint: PinnedPieceInfo | undefined =
-      pinnedPieces.find((pinnedInfo) => {
-        return Piece.arePiecesTheSame(pinnedInfo.pinned, piece);
-      });
-
-    /**
- // ! Temporary code: ↑
-*/
-
     switch (piece.type) {
       case "pawn": {
         const pawnMoves = BaseMovesGenerator.generatePawnMoves(
           piece as PawnPiece,
           pieces,
-          potentialPinConstraint
+          pinConstraint
         ) as AlgebraicNotation[];
 
         const pawnAttacks = AttacksGenerator.getLegalPawnCaptures(
           piece as PawnPiece,
           pieces,
-          potentialPinConstraint
+          pinConstraint
         );
 
         return [...pawnMoves, ...pawnAttacks];
@@ -126,7 +108,7 @@ abstract class MovesGenerator {
         const knightMoves = BaseMovesGenerator.generateKnightMoves(
           piece as KnightPiece,
           pieces,
-          potentialPinConstraint
+          pinConstraint
         ) as AlgebraicNotation[];
         return knightMoves;
       }
@@ -137,27 +119,25 @@ abstract class MovesGenerator {
         const slidingMoves = BaseMovesGenerator.generateSlidingMoves(
           piece as SlidingPiece,
           pieces,
-          potentialPinConstraint
+          pinConstraint
         ) as AlgebraicNotation[];
         return slidingMoves;
       }
 
       case "king": {
-        let normalMoves = BaseMovesGenerator.generateKingMoves(
+        let kingMoves = BaseMovesGenerator.generateKingMoves(
           piece as KingPiece,
           pieces,
           player,
           { includeCastling: true }
         ) as AlgebraicNotation[];
 
-        const enemyAttackingSquares =
-          AttacksGenerator.getAttackedSquaresByOpponent(player, pieces);
-
-        normalMoves = normalMoves.filter(
-          (move) => !enemyAttackingSquares.includes(move)
+        kingMoves = RulesEngine.filterIllegalKingMoves(
+          kingMoves,
+          opponentAttackingSquares
         );
 
-        return normalMoves;
+        return kingMoves;
       }
 
       default:

@@ -2,7 +2,7 @@ import AttacksGenerator from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import ChessBoard, { AlgebraicNotation, ChessFile } from "./chess-board.class";
-import MovesGenerator, {
+import {
   DirectionKey,
   KingPiece,
   Offset,
@@ -42,31 +42,42 @@ abstract class RulesEngine {
     return isInCheck;
   };
 
-  public static getKingAttackers = (
-    king: KingPiece,
-    pieces: Map<AlgebraicNotation, Piece>,
-    rival: Player
-  ): { attacker: Piece; from: AlgebraicNotation }[] => {
-    const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
+  public static filterIllegalKingMoves = (
+    possibleKingMoves: AlgebraicNotation[],
+    enemyAttackingSquares: AlgebraicNotation[]
+  ): AlgebraicNotation[] => {
+    const kingLegalMoves: AlgebraicNotation[] = possibleKingMoves.filter(
+      (move) => !enemyAttackingSquares.includes(move)
+    );
 
-    for (const [pos, piece] of pieces) {
-      if (piece.color === king.color) {
-        continue;
-      }
-
-      const attacks: AlgebraicNotation[] = MovesGenerator.generateMoveForPiece(
-        piece,
-        pieces,
-        rival
-      );
-
-      if (attacks.includes(king.position.algebraicNotation)) {
-        attackers.push({ attacker: piece, from: pos });
-      }
-    }
-
-    return attackers;
+    return kingLegalMoves;
   };
+
+  // public static getKingAttackers = (
+  //   king: KingPiece,
+  //   pieces: Map<AlgebraicNotation, Piece>,
+  //   rival: Player
+  // ): { attacker: Piece; from: AlgebraicNotation }[] => {
+  //   const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
+
+  //   for (const [pos, piece] of pieces) {
+  //     if (piece.color === king.color) {
+  //       continue;
+  //     }
+
+  //     const attacks: AlgebraicNotation[] = MovesGenerator.generateMoveForPiece(
+  //       piece,
+  //       pieces,
+  //       rival
+  //     );
+
+  //     if (attacks.includes(king.position.algebraicNotation)) {
+  //       attackers.push({ attacker: piece, from: pos });
+  //     }
+  //   }
+
+  //   return attackers;
+  // };
 
   private static getCastleFileRank = (
     side: "kingSide" | "queenSide",
