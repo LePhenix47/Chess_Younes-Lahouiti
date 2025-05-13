@@ -39,7 +39,7 @@ export interface IBoardUI {
 }
 // Or re-define if needed
 
-abstract class BoardController implements IGameLogic, IBoardUI {
+abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public container: HTMLElement;
 
   public readonly initialFen =
@@ -236,6 +236,7 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     this.highlightSelectedSquare(algebraicNotation, "add");
 
     this.legalMovesForSelectedPiece = MovesGenerator.generateMoveForPiece(
+      // TODO: update logic →
       this.selectedPiece,
       this.piecesMap,
       this.currentPlayer
@@ -500,4 +501,4 @@ abstract class BoardController implements IGameLogic, IBoardUI {
     });
   };
 }
-export default BoardController;
+export default ChessBoardController;

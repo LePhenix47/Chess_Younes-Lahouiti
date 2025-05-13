@@ -1,6 +1,6 @@
 import AttacksGenerator from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
-import BoardController from "./board-controller";
+import ChessBoardController from "./chess-board-controller";
 import BoardUtils from "./board-utils.class";
 import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import Piece from "./piece.class";

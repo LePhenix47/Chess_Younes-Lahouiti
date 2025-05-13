@@ -1,7 +1,7 @@
 import Piece, { PieceColor, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
-import BoardController from "./board-controller";
+import ChessBoardController from "./chess-board-controller";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -18,7 +18,7 @@ export type Move = {
   // fenAfter: string;
 };
 
-class ChessBoard extends BoardController {
+class ChessBoard extends ChessBoardController {
   public static getPieceFromArray = (
     pieces: Map<AlgebraicNotation, Piece> | Piece[],
     type: PieceType,
