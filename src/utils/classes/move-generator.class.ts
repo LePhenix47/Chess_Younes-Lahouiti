@@ -153,6 +153,25 @@ abstract class MovesGenerator {
     }
   };
 
+  /**
+   * Returns true if the first direction (dx1, dy1) is aligned with the second direction (dx2, dy2).
+   *
+   * The mathematical check for colinearity is:
+   *   `dx1 / dx2 === dy1 / dy2`
+   *
+   * To avoid division (especially division by zero), we use the equivalent cross-multiplication form:
+   *   `dx1 * dy2 === dy1 * dx2`
+   * If this condition fails, the directions are not colinear.
+   */
+  public static areColinear = (
+    dx1: number,
+    dy1: number,
+    dx2: number,
+    dy2: number
+  ) => {
+    return dx1 * dy2 === dy1 * dx2;
+  };
+
   /*
    * Miscellaneous methods
    */
