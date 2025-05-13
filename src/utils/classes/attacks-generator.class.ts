@@ -56,11 +56,11 @@ abstract class AttacksGenerator {
     pinConstraint: PinnedPieceInfo | undefined
   ): AlgebraicNotation[] => {
     if (pinConstraint) {
-      const [dx, dy] = pinConstraint.direction;
+      const [pinDx, pinDy] = pinConstraint.direction;
 
       // Vertical Pin or Horizontal Pin: No attacks allowed
-      const isHorizontalPin = dx === 0;
-      const isVerticalPin = dy === 0;
+      const isHorizontalPin = pinDx === 0;
+      const isVerticalPin = pinDy === 0;
       if (isHorizontalPin || isVerticalPin) {
         return [];
       }
@@ -68,48 +68,29 @@ abstract class AttacksGenerator {
 
     const legalAttacks: AlgebraicNotation[] = [];
     // ? white moves up, black moves, but due to board coords and CSS-JS coords mismatch on the Y axis → it's inverted
-    const direction = piece.color === "white" ? -1 : 1;
+    const newDy = piece.color === "white" ? -1 : 1;
 
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
 
-    // TODO: Make checks to not call getAlgebraicNotationFromBoardIndices if out of bounds
-    const leftSquareFromFile = file - 1;
-    const rightSquareFromFile = file + 1;
+    const leftDx: number = -1;
+    const rightDx: number = 1;
 
-    const newRank = rank + direction;
+    const leftSquareFromFile = file + leftDx;
+    const rightSquareFromFile = file + rightDx;
 
-    const canMoveToDiagonal = (
-      targetFile: number,
-      targetRank: number
-    ): boolean => {
-      if (!pinConstraint) {
-        return true; // If no pin, all diagonal attacks are allowed
-      }
+    const [pinDx, pinDy] = pinConstraint?.direction || [];
 
-      const [dx, dy] = pinConstraint.direction;
+    const newRank = rank + newDy;
 
-      // Compute relative movement to the target square
-      const fileDiff = targetFile - file;
-      const rankDiff = targetRank - rank;
-
-      // Pawn must move diagonally forward by exactly one square
-      if (Math.abs(fileDiff) !== 1 || rankDiff !== direction) {
-        return false;
-      }
-
-      // Check if the pin direction matches the attack direction
-      // Normalize both vectors to unit diagonal (e.g., (1, 1), (-1, -1), etc.)
-      const normFileDiff = Math.sign(fileDiff);
-      const normRankDiff = Math.sign(rankDiff);
-
-      return dx === normFileDiff && dy === normRankDiff;
-    };
-
-    if (
+    const canAttackLeft: boolean =
       RulesEngine.isWithinBounds(leftSquareFromFile, newRank) &&
-      canMoveToDiagonal(leftSquareFromFile, newRank)
-    ) {
+      // ? If there's no pin OR the direction of the pin is colinear with the left square → can attack
+      (!pinConstraint ||
+        (pinConstraint &&
+          MovesGenerator.areColinear(leftDx, newDy, pinDx, pinDy)));
+
+    if (canAttackLeft) {
       // * Diagonal left attack
       const attackLeft: AlgebraicNotation =
         BoardUtils.getAlgebraicNotationFromBoardIndices(
@@ -124,10 +105,14 @@ abstract class AttacksGenerator {
       }
     }
 
-    if (
+    const canAttackRight: boolean =
       RulesEngine.isWithinBounds(rightSquareFromFile, newRank) &&
-      canMoveToDiagonal(rightSquareFromFile, newRank)
-    ) {
+      // ? If there's no pin OR the direction of the pin is colinear with the right square → can attack
+      (!pinConstraint ||
+        (pinConstraint &&
+          MovesGenerator.areColinear(rightDx, newDy, pinDx, pinDy)));
+
+    if (canAttackRight) {
       // * Diagonal right attack
       const attackRight = BoardUtils.getAlgebraicNotationFromBoardIndices(
         rightSquareFromFile, // ? right square
