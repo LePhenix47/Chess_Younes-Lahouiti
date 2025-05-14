@@ -192,6 +192,7 @@ chessBoardInstance.addPiece("rook", "black", "a8");
 chessBoardInstance.addPiece("bishop", "black", "d5");
 chessBoardInstance.addPiece("king", "black", "e8");
 chessBoardInstance.addPiece("queen", "black", "b8");
+chessBoardInstance.updateAllLegalMovesForCurrentPlayer();
 
 /**
  * 
