@@ -18,6 +18,12 @@ type DetailedAttackResult = {
   attacks: AlgebraicNotation[]; // List of attacked squares in that direction
 };
 
+type OpponentAttackDetail = {
+  piece: Piece;
+  from: AlgebraicNotation;
+  directions: DetailedAttackResult[]; // <--- Keep all info here
+};
+
 abstract class AttacksGenerator {
   public static generatePawnAttackSquares = (
     piece: PawnPiece,
@@ -263,22 +269,6 @@ abstract class AttacksGenerator {
     return options?.detailed ? detailedAttacks : simpleAttacks;
   };
 
-  public static getAttackedSquaresByOpponent = (
-    player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
-    const detailed = AttacksGenerator.getAttackedSquaresByOpponentDetailed(
-      player,
-      pieces
-    );
-
-    const attackedSquares = detailed.flatMap((entry) => entry.attacks);
-
-    const uniqueAttackedSquares = new Set(attackedSquares);
-
-    return [...uniqueAttackedSquares];
-  };
-
   public static getKingAttackingSquares = (
     king: KingPiece
   ): AlgebraicNotation[] => {
@@ -314,61 +304,76 @@ abstract class AttacksGenerator {
     return attackedSquares;
   };
 
+  public static getAttackedSquaresByOpponent = (
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): AlgebraicNotation[] => {
+    const detailed = AttacksGenerator.getAttackedSquaresByOpponentDetailed(
+      player,
+      pieces
+    );
+    const squares: AlgebraicNotation[] = detailed.flatMap((entry) =>
+      entry.directions.flatMap((dir) => dir.attacks)
+    );
+
+    return [...new Set(squares)];
+  };
+
   public static getAttackedSquaresByOpponentDetailed = (
     player: Player,
     pieces: Map<AlgebraicNotation, Piece>
-  ): {
-    piece: Piece;
-    from: AlgebraicNotation;
-    attacks: AlgebraicNotation[];
-  }[] => {
-    const results: {
-      piece: Piece;
-      from: AlgebraicNotation;
-      attacks: AlgebraicNotation[];
-    }[] = [];
+  ): OpponentAttackDetail[] => {
+    const results: OpponentAttackDetail[] = [];
 
     for (const [pos, piece] of pieces) {
       if (piece.color === player.color) {
         continue;
       }
 
-      let attacks: AlgebraicNotation[] = [];
+      let directions: DetailedAttackResult[] = [];
 
       switch (piece.type) {
         case "pawn": {
-          attacks = AttacksGenerator.generatePawnAttackSquares(
-            piece as PawnPiece
-          ) as AlgebraicNotation[];
+          directions = AttacksGenerator.generatePawnAttackSquares(
+            piece as PawnPiece,
+            { detailed: true }
+          ) as DetailedAttackResult[];
           break;
         }
 
         case "knight": {
-          attacks = AttacksGenerator.getKnightAttackingSquares(
-            piece as KnightPiece
-          ) as AlgebraicNotation[];
+          directions = AttacksGenerator.getKnightAttackingSquares(
+            piece as KnightPiece,
+            { detailed: true }
+          ) as DetailedAttackResult[];
           break;
         }
 
         case "bishop":
         case "rook":
         case "queen": {
-          attacks = AttacksGenerator.getExtendedAttackedSquaresForSlidingPiece(
-            piece as SlidingPiece,
-            pieces
-          ) as AlgebraicNotation[];
+          directions =
+            AttacksGenerator.getExtendedAttackedSquaresForSlidingPiece(
+              piece as SlidingPiece,
+              pieces,
+              { detailed: true }
+            ) as DetailedAttackResult[];
           break;
         }
 
         case "king": {
-          attacks = AttacksGenerator.getKingAttackingSquares(
+          const attacks = AttacksGenerator.getKingAttackingSquares(
             piece as KingPiece
           ) as AlgebraicNotation[];
+          directions = attacks.map((square) => ({
+            direction: [0, 0], // You can refine this if needed
+            attacks: [square],
+          }));
           break;
         }
       }
 
-      results.push({ piece, from: pos, attacks });
+      results.push({ piece, from: pos, directions });
     }
 
     return results;
