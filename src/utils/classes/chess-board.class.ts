@@ -14,22 +14,32 @@ export type Move = {
   piece: Piece;
   capturedPiece?: Piece;
   promotion?: PieceType;
-  // fenBefore: string;
-  // fenAfter: string;
 };
 
 class ChessBoard extends ChessBoardController {
   public static getPieceFromArray = (
     pieces: Map<AlgebraicNotation, Piece> | Piece[],
     type: PieceType,
-    color: PieceColor
+    color: PieceColor,
+    algebraicNotation?: AlgebraicNotation
   ): Piece | null => {
     if (pieces instanceof Map) {
       pieces = [...pieces.values()];
     }
 
     const piece: Piece | null =
-      pieces.find((p) => p.type === type && p.color === color) || null;
+      pieces.find((p) => {
+        const isSamePieceType = p.type === type && p.color === color;
+
+        if (algebraicNotation) {
+          return (
+            isSamePieceType &&
+            p.position.algebraicNotation === algebraicNotation
+          );
+        }
+
+        return isSamePieceType;
+      }) || null;
 
     return piece;
   };
@@ -144,19 +154,43 @@ class ChessBoard extends ChessBoardController {
       this.capturePiece(capturedPiece, noAnimation);
     }
 
+    this.movePiece(piece, to, noAnimation);
+
+    this.updateGameState(from, to, piece);
+
+    const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
+    this.highlightLegalMoves(selectedPieceLegalMoves, "remove");
+
+    this.recordMove(move);
+
+    this.switchTurnTo();
+  };
+
+  private movePiece = (
+    piece: Piece,
+    to: AlgebraicNotation,
+    noAnimation: boolean
+  ): void => {
     const newPosition = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
     piece.moveTo(newPosition, noAnimation);
+  };
 
+  private updateGameState = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation,
+    piece: Piece
+  ): void => {
+    // * Remove the piece from the old position
     this.piecesMap.delete(from);
     this.clearOccupiedSquare(from);
 
+    // * Set the piece at the new position
     this.piecesMap.set(to, piece);
     this.setOccupiedSquare(to, piece);
+  };
 
-    this.highlightLegalMoves(this.legalMovesForSelectedPiece || [], "remove");
-    this.playedMoves.push(move);
-
-    this.switchTurnTo();
+  private recordMove = (move: Move): void => {
+    this.playedMoves = [...this.playedMoves, move];
   };
 
   /**
