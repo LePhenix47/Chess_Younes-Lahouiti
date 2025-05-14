@@ -7,16 +7,24 @@ import MovesGenerator, {
   KnightPiece,
   KingPiece,
   DirectionKey,
+  Offset,
 } from "./move-generator.class";
 import Piece from "./piece.class";
 import Player from "./player.class";
 import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
 
+type DetailedAttackResult = {
+  direction: Offset; // The direction tuple (dx, dy)
+  attacks: AlgebraicNotation[]; // List of attacked squares in that direction
+};
+
 abstract class AttacksGenerator {
   public static generatePawnAttackSquares = (
-    piece: PawnPiece
-  ): AlgebraicNotation[] => {
+    piece: PawnPiece,
+    options?: Partial<{ detailed: boolean }>
+  ): AlgebraicNotation[] | DetailedAttackResult[] => {
     const attackSquares: AlgebraicNotation[] = [];
+    const attackSquaresDetailed: DetailedAttackResult[] = [];
 
     const newDy = piece.color === "white" ? -1 : 1; // Up for white, down for black
     const file = Number(piece.position.fileIndex);
@@ -33,25 +41,39 @@ abstract class AttacksGenerator {
 
     // Top-left diagonal (relative to pawn perspective)
     if (RulesEngine.isWithinBounds(leftSquareFromFile, newRank)) {
-      attackSquares.push(
+      const attackSquare: AlgebraicNotation =
         BoardUtils.getAlgebraicNotationFromBoardIndices(
           leftSquareFromFile,
-          rank + newDy
-        )
-      );
+          newRank
+        );
+      if (options?.detailed) {
+        attackSquaresDetailed.push({
+          direction: [leftDx, newDy],
+          attacks: [attackSquare],
+        });
+      } else {
+        attackSquares.push(attackSquare);
+      }
     }
 
     // Top-right diagonal (relative to pawn perspective)
     if (RulesEngine.isWithinBounds(rightSquareFromFile, newRank)) {
-      attackSquares.push(
+      const attackSquare: AlgebraicNotation =
         BoardUtils.getAlgebraicNotationFromBoardIndices(
           rightSquareFromFile,
-          rank + newDy
-        )
-      );
+          newRank
+        );
+      if (options?.detailed) {
+        attackSquaresDetailed.push({
+          direction: [rightDx, newDy],
+          attacks: [attackSquare],
+        });
+      } else {
+        attackSquares.push(attackSquare);
+      }
     }
 
-    return attackSquares;
+    return options?.detailed ? attackSquaresDetailed : attackSquares;
   };
 
   public static getLegalPawnCaptures = (
@@ -295,7 +317,7 @@ abstract class AttacksGenerator {
         case "pawn": {
           attacks = AttacksGenerator.generatePawnAttackSquares(
             piece as PawnPiece
-          );
+          ) as AlgebraicNotation[];
           break;
         }
 
