@@ -218,6 +218,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     piece.drag(offsetX, offsetY);
   };
+
   public elementIsChessPiece = (element: HTMLElement): boolean => {
     if (!element) {
       return false;
@@ -251,16 +252,21 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const { algebraicNotation } = piece.position;
     this.highlightSelectedSquare(algebraicNotation, "add");
 
-    const selectedMoves = this.allLegalMovesForCurrentPlayer.find(
-      ({ piece: p }) => Piece.arePiecesTheSame(p, piece)
-    );
-
-    this.legalMovesForSelectedPiece = selectedMoves?.moves || [];
+    this.legalMovesForSelectedPiece = this.getLegalMovesForSelectedPiece(piece);
 
     // TODO: Remove this when done testing
     this.test();
 
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
+  };
+
+  private getLegalMovesForSelectedPiece = (
+    piece: Piece
+  ): AlgebraicNotation[] => {
+    const selectedMoves = this.allLegalMovesForCurrentPlayer.find(
+      ({ piece: p }) => Piece.arePiecesTheSame(p, piece)
+    );
+    return selectedMoves?.moves || [];
   };
 
   test = () => {
@@ -356,10 +362,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public switchTurnTo = (color?: PieceColor): void => {
     if (color) {
       this.currentTurn = color;
-      return;
+    } else {
+      this.currentTurn = this.currentTurn === "white" ? "black" : "white";
     }
-
-    this.currentTurn = this.currentTurn === "white" ? "black" : "white";
 
     this.updateAllLegalMovesForCurrentPlayer();
   };
