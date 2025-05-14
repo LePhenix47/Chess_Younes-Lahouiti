@@ -199,13 +199,15 @@ abstract class AttacksGenerator {
   // ? This method is used to restrict the king moves when in check
   public static getExtendedAttackedSquaresForSlidingPiece = (
     piece: SlidingPiece,
-    pieces: Map<AlgebraicNotation, Piece>
-  ): AlgebraicNotation[] => {
-    const attackedSquares: AlgebraicNotation[] = [];
+    pieces: Map<AlgebraicNotation, Piece>,
+    options?: { detailed?: boolean }
+  ): AlgebraicNotation[] | DetailedAttackResult[] => {
+    const simpleAttacks: AlgebraicNotation[] = [];
+    const detailedAttacks: DetailedAttackResult[] = [];
+
     const fileValue = Number(piece.position.fileIndex);
     const rankValue = Number(piece.position.rankIndex);
 
-    // Get the movement directions based on piece type (rook, bishop, queen)
     const directions = BaseMovesGenerator.slidingDirectionsMap.get(piece.type)!;
 
     for (const dir of directions) {
@@ -214,6 +216,8 @@ abstract class AttacksGenerator {
       let file = fileValue + dx;
       let rank = rankValue + dy;
 
+      const directionSquares: AlgebraicNotation[] = [];
+
       while (RulesEngine.isWithinBounds(file, rank)) {
         const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
           file,
@@ -221,10 +225,9 @@ abstract class AttacksGenerator {
         );
         const target = pieces.get(square);
 
-        attackedSquares.push(square);
+        directionSquares.push(square);
 
         if (target) {
-          // Stop scanning unless it's an enemy king
           if (target.type === "king" && target.color !== piece.color) {
             const beyondFile = file + dx;
             const beyondRank = rank + dy;
@@ -235,19 +238,29 @@ abstract class AttacksGenerator {
                   beyondFile,
                   beyondRank
                 );
-              attackedSquares.push(beyondSquare);
+              directionSquares.push(beyondSquare);
             }
           }
-
-          break; // Stop in all cases after encountering any piece
+          break; // Stop scanning after hitting any piece
         }
 
         file += dx;
         rank += dy;
       }
+
+      if (options?.detailed) {
+        if (directionSquares.length) {
+          detailedAttacks.push({
+            direction: [dx, dy],
+            attacks: directionSquares,
+          });
+        }
+      } else {
+        simpleAttacks.push(...directionSquares);
+      }
     }
 
-    return attackedSquares;
+    return options?.detailed ? detailedAttacks : simpleAttacks;
   };
 
   public static getAttackedSquaresByOpponent = (
@@ -343,7 +356,7 @@ abstract class AttacksGenerator {
           attacks = AttacksGenerator.getExtendedAttackedSquaresForSlidingPiece(
             piece as SlidingPiece,
             pieces
-          );
+          ) as AlgebraicNotation[];
           break;
         }
 
