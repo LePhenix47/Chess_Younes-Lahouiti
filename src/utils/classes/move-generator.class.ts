@@ -32,10 +32,10 @@ abstract class MovesGenerator {
   /*
    * Move generation methods
    */
-  public static generatePseudoLegalMoves(
+  public static generatePseudoLegalMoves = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
-  ): { moves: AlgebraicNotation[]; piece: Piece }[] {
+  ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
     const result: { moves: AlgebraicNotation[]; piece: Piece }[] = [];
 
     const king = ChessBoard.getPieceFromArray(
@@ -78,7 +78,7 @@ abstract class MovesGenerator {
     }
 
     return result;
-  }
+  };
 
   public static generateMoveForPiece = (
     piece: Piece,
