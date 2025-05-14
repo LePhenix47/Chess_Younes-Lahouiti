@@ -18,31 +18,35 @@ abstract class AttacksGenerator {
   ): AlgebraicNotation[] => {
     const attackSquares: AlgebraicNotation[] = [];
 
-    const direction = piece.color === "white" ? -1 : 1; // Up for white, down for black
+    const newDy = piece.color === "white" ? -1 : 1; // Up for white, down for black
     const file = Number(piece.position.fileIndex);
     const rank = Number(piece.position.rankIndex);
 
+    const leftDx: number = -1;
+    const rightDx: number = 1;
+
+    const newRank = rank + newDy;
+
     // Define bounds for attack checks
-    const isFileInBoundsLeft = file - 1 >= 0;
-    const isFileInBoundsRight = file + 1 < 8;
-    const isRankInBounds = rank + direction >= 0 && rank + direction < 8;
+    const leftSquareFromFile = file + leftDx;
+    const rightSquareFromFile = file + rightDx;
 
     // Top-left diagonal (relative to pawn perspective)
-    if (isFileInBoundsLeft && isRankInBounds) {
+    if (RulesEngine.isWithinBounds(leftSquareFromFile, newRank)) {
       attackSquares.push(
         BoardUtils.getAlgebraicNotationFromBoardIndices(
-          file - 1,
-          rank + direction
+          leftSquareFromFile,
+          rank + newDy
         )
       );
     }
 
     // Top-right diagonal (relative to pawn perspective)
-    if (isFileInBoundsRight && isRankInBounds) {
+    if (RulesEngine.isWithinBounds(rightSquareFromFile, newRank)) {
       attackSquares.push(
         BoardUtils.getAlgebraicNotationFromBoardIndices(
-          file + 1,
-          rank + direction
+          rightSquareFromFile,
+          rank + newDy
         )
       );
     }
