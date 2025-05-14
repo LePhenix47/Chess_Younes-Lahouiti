@@ -210,6 +210,10 @@ class Piece implements IPieceLogic, IPieceUI {
       this.animateMove();
     }
 
+    this.updatePositionState(newPos);
+  };
+
+  private updatePositionState = (newPos: IPieceLogic["position"]): void => {
     this.position = newPos;
 
     if (this.hasMoved) {
@@ -252,7 +256,9 @@ class Piece implements IPieceLogic, IPieceUI {
     return this.color === "white" ? char.toUpperCase() : char;
   };
 
-  public removePiece = ({ animate = false }: { animate?: boolean } = {}): void => {
+  public removePiece = ({
+    animate = false,
+  }: { animate?: boolean } = {}): void => {
     if (!this.element) {
       return;
     }
@@ -268,8 +274,7 @@ class Piece implements IPieceLogic, IPieceUI {
         this.element.removeEventListener("transitionend", callback);
       }
 
-      this.element.remove();
-      this.element = null;
+      this.removeElementFromDOM();
     };
 
     if (!animate) {
@@ -279,6 +284,15 @@ class Piece implements IPieceLogic, IPieceUI {
 
     this.element.classList.add("captured");
     this.element.addEventListener("transitionend", callback);
+  };
+
+  private removeElementFromDOM = (): void => {
+    if (!this.element) {
+      return;
+    }
+
+    this.element.remove();
+    this.element = null;
   };
 }
 
