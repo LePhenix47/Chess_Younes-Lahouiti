@@ -139,7 +139,7 @@ class ChessBoard extends ChessBoardController {
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
     const animate: boolean = !noAnimation;
-    targetPiece.delete({ animate }); // Remove from DOM
+    targetPiece.removePiece({ animate }); // Remove from DOM
     this.piecesMap.delete(
       targetPiece.position.algebraicNotation as AlgebraicNotation
     ); // Remove from internal map

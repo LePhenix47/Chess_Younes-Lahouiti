@@ -56,7 +56,7 @@ export interface IPieceLogic {
 export interface IPieceUI {
   attachToBoard(boardElement: HTMLElement): void;
   drag(offsetX: number, offsetY: number): void;
-  delete(options?: { animate?: boolean }): void;
+  removePiece(options?: { animate?: boolean }): void;
 }
 
 class Piece implements IPieceLogic, IPieceUI {
@@ -252,7 +252,7 @@ class Piece implements IPieceLogic, IPieceUI {
     return this.color === "white" ? char.toUpperCase() : char;
   };
 
-  public delete = ({ animate = false }: { animate?: boolean } = {}): void => {
+  public removePiece = ({ animate = false }: { animate?: boolean } = {}): void => {
     if (!this.element) {
       return;
     }
