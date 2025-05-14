@@ -51,7 +51,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     HTMLElement
   >();
 
-  public readonly playedMoves: Move[] = [];
+  public playedMoves: Move[] = [];
 
   protected allLegalMovesForCurrentPlayer: {
     piece: Piece;
