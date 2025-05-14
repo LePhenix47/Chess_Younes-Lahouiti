@@ -53,6 +53,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public readonly playedMoves: Move[] = [];
 
+  protected allLegalMovesForCurrentPlayer: {
+    piece: Piece;
+    moves: AlgebraicNotation[];
+  }[] = [];
+
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
   public boardPerspective: PieceColor = "white";
@@ -163,6 +168,17 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     return squareSize;
   }
 
+  public updateAllLegalMovesForCurrentPlayer = (): void => {
+    // Get all the legal moves for the current player
+    const allLegalMoves = MovesGenerator.generatePseudoLegalMoves(
+      this.piecesMap,
+      this.currentPlayer
+    );
+
+    // Store it in the new property
+    this.allLegalMovesForCurrentPlayer = allLegalMoves;
+  };
+
   public addPiece = (
     type: PieceType,
     color: PieceColor,
@@ -235,12 +251,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const { algebraicNotation } = piece.position;
     this.highlightSelectedSquare(algebraicNotation, "add");
 
-    this.legalMovesForSelectedPiece = MovesGenerator.generateMoveForPiece(
-      // TODO: update logic →
-      this.selectedPiece,
-      this.piecesMap,
-      this.currentPlayer
+    const selectedMoves = this.allLegalMovesForCurrentPlayer.find(
+      ({ piece: p }) => Piece.arePiecesTheSame(p, piece)
     );
+
+    this.legalMovesForSelectedPiece = selectedMoves?.moves || [];
 
     // TODO: Remove this when done testing
     this.test();
@@ -345,6 +360,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     }
 
     this.currentTurn = this.currentTurn === "white" ? "black" : "white";
+
+    this.updateAllLegalMovesForCurrentPlayer();
   };
 
   // All helper methods for highlighting, setting square state, etc., go here
