@@ -158,9 +158,11 @@ abstract class AttacksGenerator {
   };
 
   public static getKnightAttackingSquares = (
-    knight: KnightPiece
-  ): AlgebraicNotation[] => {
-    const attackedSquares: AlgebraicNotation[] = [];
+    knight: KnightPiece,
+    options?: Partial<{ detailed: boolean }>
+  ): AlgebraicNotation[] | DetailedAttackResult[] => {
+    const simpleAttacks: AlgebraicNotation[] = [];
+    const detailedAttacks: DetailedAttackResult[] = [];
 
     const { fileIndex, rankIndex } =
       BoardUtils.getBoardIndicesFromAlgebraicNotation(
@@ -181,10 +183,17 @@ abstract class AttacksGenerator {
       );
 
       // ? Push regardless of whether a friendly piece is there or not
-      attackedSquares.push(targetSquare);
+      if (options?.detailed) {
+        detailedAttacks.push({
+          direction: [dx, dy],
+          attacks: [targetSquare],
+        });
+      } else {
+        simpleAttacks.push(targetSquare);
+      }
     }
 
-    return attackedSquares;
+    return options?.detailed ? detailedAttacks : simpleAttacks;
   };
 
   // ? This method is used to restrict the king moves when in check
