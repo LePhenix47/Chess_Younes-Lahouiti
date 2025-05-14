@@ -2,6 +2,7 @@ import Piece, { PieceColor, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import ChessBoardController from "./chess-board-controller";
+import RulesEngine from "./rules-engine.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -71,7 +72,7 @@ class ChessBoard extends ChessBoardController {
       return;
     }
 
-    if (!this.isMoveLegal(piece, to)) {
+    if (!RulesEngine.isMoveLegal(this, piece, to)) {
       this.rejectMove(piece, noAnimation);
       return;
     }
@@ -92,29 +93,6 @@ class ChessBoard extends ChessBoardController {
     const rank = BoardUtils.rankMap.get(clampedRank)!;
 
     return `${file}${rank}` as AlgebraicNotation;
-  };
-
-  private isMoveLegal = (piece: Piece, to: AlgebraicNotation): boolean => {
-    if (piece.color !== this.currentTurn) {
-      console.error("Not your turn! Cannot move piece.");
-      return false;
-    }
-
-    const target: Piece = this.piecesMap.get(to);
-    const isFriendlyFire: boolean = target?.color === piece.color;
-    if (isFriendlyFire) {
-      console.warn("Square occupied by friendly piece.");
-      return false;
-    }
-
-    const isPseudoIllegalMove: boolean =
-      !this.legalMovesForSelectedPiece?.includes(to);
-    if (isPseudoIllegalMove) {
-      console.warn("Illegal pseudo-move!");
-      return false;
-    }
-
-    return true;
   };
 
   private rejectMove = (piece: Piece, noAnimation: boolean): void => {

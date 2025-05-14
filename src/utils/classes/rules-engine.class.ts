@@ -22,6 +22,33 @@ export type PinnedPieceInfo = {
 };
 
 abstract class RulesEngine {
+  public static isMoveLegal = (
+    board: ChessBoard,
+    piece: Piece,
+    to: AlgebraicNotation
+  ): boolean => {
+    if (piece.color !== board.currentTurn) {
+      console.error("Not your turn! Cannot move piece.");
+      return false;
+    }
+
+    const target: Piece = board.piecesMap.get(to);
+    const isFriendlyFire: boolean = target?.color === piece.color;
+    if (isFriendlyFire) {
+      console.warn("Square occupied by friendly piece.");
+      return false;
+    }
+
+    const isPseudoIllegalMove: boolean =
+      !board.legalMovesForSelectedPiece?.includes(to);
+    if (isPseudoIllegalMove) {
+      console.warn("Illegal pseudo-move!");
+      return false;
+    }
+
+    return true;
+  };
+
   public static isKingInCheck = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player
@@ -52,6 +79,11 @@ abstract class RulesEngine {
 
     return kingLegalMoves;
   };
+
+  public static getAttackingPiecesAndPathToKing(
+    pieces: Map<AlgebraicNotation, Piece>,
+    player: Player
+  ): { attackingPiece: Piece; pathToKing: AlgebraicNotation[] }[];
 
   // public static getKingAttackers = (
   //   king: KingPiece,
