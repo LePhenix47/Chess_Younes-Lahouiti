@@ -80,10 +80,47 @@ abstract class RulesEngine {
     return kingLegalMoves;
   };
 
-  public static getAttackingPiecesAndPathToKing(
-    pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
-  ): { attackingPiece: Piece; pathToKing: AlgebraicNotation[] }[];
+  public static getAttackingPiecesAndPathToKing = (
+    king: KingPiece,
+    player: Player,
+    pieces: Map<AlgebraicNotation, Piece>
+  ): { attackingPiece: Piece; pathToKing: AlgebraicNotation[] }[] => {
+    if (king.color !== player.color) {
+      throw new Error("King must be of the player's color");
+    }
+
+    const kingSquare = king.position.algebraicNotation;
+    const opponentAttacksDetailed =
+      AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, pieces);
+
+    const results: {
+      attackingPiece: Piece;
+      pathToKing: AlgebraicNotation[];
+    }[] = [];
+
+    for (const attackDetail of opponentAttacksDetailed) {
+      for (const direction of attackDetail.directions) {
+        const index: number = direction.attacks.indexOf(kingSquare);
+
+        if (index === -1) {
+          continue;
+        }
+
+        /*
+        ? We found a direction that reaches the king
+        ? Get path from attacker up to (but not including) the king
+        */
+        const path: AlgebraicNotation[] = direction.attacks.slice(0, index);
+
+        results.push({
+          attackingPiece: attackDetail.piece,
+          pathToKing: path,
+        });
+      }
+    }
+
+    return results;
+  };
 
   // public static getKingAttackers = (
   //   king: KingPiece,
