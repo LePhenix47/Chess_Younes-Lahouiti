@@ -286,16 +286,21 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     // });
     // console.log("Pinned Pieces:", pinned);
 
-    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    const a = RulesEngine.getAttackingPiecesAndPathToKing(
+      king,
       this.currentPlayer,
       this.piecesMap
-    );
-
+    ).flatMap((p) => p.pathToKing);
     this.updateSquareHighlight({
-      targetSquares: attacked,
+      targetSquares: a,
       className: "test",
       mode: "add",
     });
+
+    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    //   this.currentPlayer,
+    //   this.piecesMap
+    // );
 
     // console.log("Opponent attacked squares:", attacked);
   };
@@ -314,12 +319,19 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     //   mode: "remove",
     // });
 
-    const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
+    //   this.currentPlayer,
+    //   this.piecesMap
+    // );
+
+    const a = RulesEngine.getAttackingPiecesAndPathToKing(
+      king,
       this.currentPlayer,
       this.piecesMap
-    );
+    ).flatMap((p) => p.pathToKing);
+
     this.updateSquareHighlight({
-      targetSquares: attacked,
+      targetSquares: a,
       className: "test",
       mode: "remove",
     });
