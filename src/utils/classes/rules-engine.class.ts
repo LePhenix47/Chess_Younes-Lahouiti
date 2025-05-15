@@ -110,7 +110,11 @@ abstract class RulesEngine {
         ? We found a direction that reaches the king
         ? Get path from attacker up to (but not including) the king
         */
-        const path: AlgebraicNotation[] = direction.attacks.slice(0, index);
+        const directionOnTheAttacker = direction.attacks.slice(0, index);
+        const path: AlgebraicNotation[] = [
+          attackDetail.from,
+          ...directionOnTheAttacker,
+        ];
 
         results.push({
           attackingPiece: attackDetail.piece,
