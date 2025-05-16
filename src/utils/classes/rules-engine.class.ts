@@ -1,4 +1,6 @@
-import AttacksGenerator from "./attacks-generator.class";
+import AttacksGenerator, {
+  OpponentAttackDetail,
+} from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import ChessBoard, { AlgebraicNotation, ChessFile } from "./chess-board.class";
@@ -51,7 +53,8 @@ abstract class RulesEngine {
 
   public static isKingInCheck = (
     pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
+    player: Player,
+    opponentAttacksDetailed?: OpponentAttackDetail[]
   ): boolean => {
     const king = ChessBoard.getPieceFromArray(
       pieces,
@@ -59,12 +62,17 @@ abstract class RulesEngine {
       player.color
     ) as KingPiece;
 
-    const attackedSquares = AttacksGenerator.getAttackedSquaresByOpponent(
-      player,
-      pieces
+    const opponentAttackingSquaresDetailed: OpponentAttackDetail[] =
+      opponentAttacksDetailed ??
+      AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, pieces);
+
+    const opponentAttackingSquares = opponentAttackingSquaresDetailed.flatMap(
+      (x) => x.directions.flatMap((dir) => dir.attacks)
     );
 
-    const isInCheck = attackedSquares.includes(king.position.algebraicNotation);
+    const isInCheck = opponentAttackingSquares.includes(
+      king.position.algebraicNotation
+    );
 
     return isInCheck;
   };
@@ -83,14 +91,16 @@ abstract class RulesEngine {
   public static getAttackingPiecesAndPathToKing = (
     king: KingPiece,
     player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    opponentAttacksDetailed?: OpponentAttackDetail[]
   ): { attackingPiece: Piece; pathToKing: AlgebraicNotation[] }[] => {
     if (king.color !== player.color) {
       throw new Error("King must be of the player's color");
     }
 
     const kingSquare = king.position.algebraicNotation;
-    const opponentAttacksDetailed =
+    const detailedAttacks =
+      opponentAttacksDetailed ??
       AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, pieces);
 
     const results: {
@@ -98,7 +108,7 @@ abstract class RulesEngine {
       pathToKing: AlgebraicNotation[];
     }[] = [];
 
-    for (const attackDetail of opponentAttacksDetailed) {
+    for (const attackDetail of detailedAttacks) {
       for (const direction of attackDetail.directions) {
         const index: number = direction.attacks.indexOf(kingSquare);
 

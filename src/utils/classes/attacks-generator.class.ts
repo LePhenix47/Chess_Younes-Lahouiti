@@ -13,12 +13,12 @@ import Piece from "./piece.class";
 import Player from "./player.class";
 import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
 
-type DetailedAttackResult = {
+export type DetailedAttackResult = {
   direction: Offset; // The direction tuple (dx, dy)
   attacks: AlgebraicNotation[]; // List of attacked squares in that direction
 };
 
-type OpponentAttackDetail = {
+export type OpponentAttackDetail = {
   piece: Piece;
   from: AlgebraicNotation;
   directions: DetailedAttackResult[]; // <--- Keep all info here
