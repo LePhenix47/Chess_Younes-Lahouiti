@@ -1,4 +1,6 @@
-import AttacksGenerator from "./attacks-generator.class";
+import AttacksGenerator, {
+  OpponentAttackDetail,
+} from "./attacks-generator.class";
 import BaseMovesGenerator from "./base-moves-generator.class";
 import ChessBoardController from "./chess-board-controller";
 import BoardUtils from "./board-utils.class";
@@ -34,7 +36,8 @@ abstract class MovesGenerator {
    */
   public static generatePseudoLegalMoves = (
     pieces: Map<AlgebraicNotation, Piece>,
-    player: Player
+    player: Player,
+    opponentAttacksDetailed?: OpponentAttackDetail[]
   ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
     const result: { moves: AlgebraicNotation[]; piece: Piece }[] = [];
 

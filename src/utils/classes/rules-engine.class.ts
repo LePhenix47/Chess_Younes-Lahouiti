@@ -181,7 +181,8 @@ abstract class RulesEngine {
   public static canCastle = (
     side: "kingSide" | "queenSide",
     player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    opponentAttacksDetailed?: OpponentAttackDetail[]
   ): [
     { piece: KingPiece; position: AlgebraicNotation },
     { piece: SlidingPiece; position: AlgebraicNotation }
@@ -238,7 +239,8 @@ abstract class RulesEngine {
 
     const attackedSquares = AttacksGenerator.getAttackedSquaresByOpponent(
       player,
-      pieces
+      pieces,
+      opponentAttacksDetailed
     );
 
     // 1. Check for attacking danger

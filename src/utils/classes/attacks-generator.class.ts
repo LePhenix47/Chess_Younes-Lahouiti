@@ -306,12 +306,12 @@ abstract class AttacksGenerator {
 
   public static getAttackedSquaresByOpponent = (
     player: Player,
-    pieces: Map<AlgebraicNotation, Piece>
+    pieces: Map<AlgebraicNotation, Piece>,
+    opponentAttacksDetailed?: OpponentAttackDetail[]
   ): AlgebraicNotation[] => {
-    const detailed = AttacksGenerator.getAttackedSquaresByOpponentDetailed(
-      player,
-      pieces
-    );
+    const detailed =
+      opponentAttacksDetailed ??
+      AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, pieces);
     const squares: AlgebraicNotation[] = detailed.flatMap((entry) =>
       entry.directions.flatMap((dir) => dir.attacks)
     );
