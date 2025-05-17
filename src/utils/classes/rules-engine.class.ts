@@ -136,32 +136,6 @@ abstract class RulesEngine {
     return results;
   };
 
-  // public static getKingAttackers = (
-  //   king: KingPiece,
-  //   pieces: Map<AlgebraicNotation, Piece>,
-  //   rival: Player
-  // ): { attacker: Piece; from: AlgebraicNotation }[] => {
-  //   const attackers: { attacker: Piece; from: AlgebraicNotation }[] = [];
-
-  //   for (const [pos, piece] of pieces) {
-  //     if (piece.color === king.color) {
-  //       continue;
-  //     }
-
-  //     const attacks: AlgebraicNotation[] = MovesGenerator.generateMoveForPiece(
-  //       piece,
-  //       pieces,
-  //       rival
-  //     );
-
-  //     if (attacks.includes(king.position.algebraicNotation)) {
-  //       attackers.push({ attacker: piece, from: pos });
-  //     }
-  //   }
-
-  //   return attackers;
-  // };
-
   private static getCastleFileRank = (
     side: "kingSide" | "queenSide",
     color: PieceColor,
