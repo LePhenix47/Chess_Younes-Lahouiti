@@ -28,9 +28,7 @@ class Player {
   }
 
   // Setter methods for properties
-  public setCanCastle = (
-    rights: Partial<Record<"kingSide" | "queenSide", boolean>>
-  ): this => {
+  public setCanCastle = (rights: Partial<CastlingRights>): this => {
     for (const [key, value] of Object.entries(rights)) {
       this.canCastle.set(key as "kingSide" | "queenSide", value);
     }
