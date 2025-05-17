@@ -179,6 +179,18 @@ class ChessBoard extends ChessBoardController {
   private updateCheckStateFor = (player: Player): void => {
     const isInCheck = RulesEngine.isKingInCheck(this.piecesMap, player);
 
+    const king = ChessBoard.getPieceFromArray(
+      this.piecesMap,
+      "king",
+      player.color
+    );
+
+    if (isInCheck) {
+      this.highlightCheck(king.position.algebraicNotation);
+    } else {
+      this.clearCheckHighlightSquare();
+    }
+
     this.updatePlayerState(player, isInCheck, {
       kingSide: player.canCastle.get("kingSide"),
       queenSide: player.canCastle.get("queenSide"),
