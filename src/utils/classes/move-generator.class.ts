@@ -30,7 +30,86 @@ export type KingPiece = Piece & {
 export type DirectionKey = "N" | "S" | "E" | "W" | "NE" | "NW" | "SE" | "SW";
 export type Offset = readonly [number, number];
 
+type GenerateLegalMovesParams = {
+  piecesMap: Map<AlgebraicNotation, Piece>;
+  player: Player;
+  enPassantSquare?: AlgebraicNotation | null;
+  opponentAttacksDetailed?: OpponentAttackDetail[];
+};
+
 abstract class MovesGenerator {
+  public static generateLegalMoves = ({
+    piecesMap,
+    player,
+    enPassantSquare = null,
+    opponentAttacksDetailed,
+  }: GenerateLegalMovesParams): {
+    piece: Piece;
+    moves: AlgebraicNotation[];
+  }[] => {
+    const king = ChessBoard.getPieceFromArray(
+      piecesMap,
+      "king",
+      player.color
+    ) as KingPiece;
+
+    const attacks =
+      opponentAttacksDetailed ??
+      AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, piecesMap);
+
+    const pseudoLegalMoves = MovesGenerator.generatePseudoLegalMoves(
+      piecesMap,
+      player,
+      attacks
+    );
+
+    if (!player.inCheck) {
+      // ? Not in check → All pseudo-legal moves are valid
+      return pseudoLegalMoves;
+    }
+
+    const attackingPieces = RulesEngine.getAttackingPiecesAndPathToKing(
+      king,
+      player,
+      piecesMap,
+      attacks
+    );
+
+    // ? Double or triple check → only king can move
+    const moreThanOnePieceAttackingKing: boolean = attackingPieces.length > 1;
+    if (moreThanOnePieceAttackingKing) {
+      console.log("One piece attacking", attackingPieces);
+
+      const kingOnlyMoves = pseudoLegalMoves.filter(
+        ({ piece }) => piece.type === "king"
+      );
+
+      return kingOnlyMoves;
+    }
+
+    const { pathToKing, attackingPiece: attacker } = attackingPieces[0];
+    const blockingSquares = new Set(pathToKing);
+
+    console.log("Multiple pieces attacking", attackingPieces);
+
+    // ? Only allow moves that capture attacker or block check
+    return pseudoLegalMoves
+      .map(({ piece, moves }) => {
+        if (piece.type === "king") {
+          return { piece, moves };
+        }
+
+        const filteredMoves = moves.filter(
+          (move) =>
+            move === attacker.position.algebraicNotation ||
+            blockingSquares.has(move)
+        );
+
+        return { piece, moves: filteredMoves };
+      })
+      .filter(({ moves }) => moves.length > 0); // Remove pieces with no valid moves
+  };
+
   /*
    * Move generation methods
    */
@@ -53,7 +132,11 @@ abstract class MovesGenerator {
     );
 
     const opponentAttackingSquares =
-      AttacksGenerator.getAttackedSquaresByOpponent(player, pieces);
+      AttacksGenerator.getAttackedSquaresByOpponent(
+        player,
+        pieces,
+        opponentAttacksDetailed
+      );
 
     for (const piece of pieces.values()) {
       if (piece.color !== player.color) {
