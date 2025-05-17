@@ -3,6 +3,8 @@ import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import ChessBoardController from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
+import { KingPiece } from "./move-generator.class";
+import Player from "./player.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -141,6 +143,9 @@ class ChessBoard extends ChessBoardController {
 
     this.recordMove(move);
 
+    this.updateCheckStateFor(this.currentPlayer);
+    this.updateCheckStateFor(this.rivalPlayer);
+
     this.switchTurnTo();
   };
 
@@ -169,6 +174,15 @@ class ChessBoard extends ChessBoardController {
 
   private recordMove = (move: Move): void => {
     this.playedMoves = [...this.playedMoves, move];
+  };
+
+  private updateCheckStateFor = (player: Player): void => {
+    const isInCheck = RulesEngine.isKingInCheck(this.piecesMap, player);
+
+    this.updatePlayerState(player, isInCheck, {
+      kingSide: player.canCastle.get("kingSide"),
+      queenSide: player.canCastle.get("queenSide"),
+    });
   };
 
   /**
