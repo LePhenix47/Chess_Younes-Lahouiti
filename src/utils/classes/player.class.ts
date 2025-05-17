@@ -7,8 +7,8 @@ class Player {
   public color: PieceColor;
 
   private readonly castlingRights = {
-    kingSide: false,
-    queenSide: false,
+    kingSide: true,
+    queenSide: true,
   } as const;
 
   public canCastle: CastlingRightsMap = new Map<

@@ -214,15 +214,16 @@ class Piece implements IPieceLogic, IPieceUI {
   };
 
   private updatePositionState = (newPos: IPieceLogic["position"]): void => {
-    this.position = newPos;
+    // ? Only mark the piece as having moved if it *actually* left its original square
+    const hasActuallyMoved =
+      newPos.algebraicNotation !== this.position.algebraicNotation;
 
-    if (this.hasMoved) {
-      return;
+    if (!this.hasMoved && hasActuallyMoved) {
+      this.hasMoved = true;
+      console.log(this.color, this.type, { hasMoved: this.hasMoved });
     }
 
-    const hasMoved: boolean =
-      newPos.algebraicNotation !== this.position.algebraicNotation;
-    this.hasMoved = hasMoved;
+    this.position = newPos;
   };
 
   public promotePawn = (newType: Omit<PieceType, "pawn" | "king">): void => {
