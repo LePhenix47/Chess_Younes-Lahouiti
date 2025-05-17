@@ -181,17 +181,16 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 chessBoardInstance.generateBoard();
 
 chessBoardInstance.addPiece("bishop", "white", "e4");
-chessBoardInstance.addPiece("queen", "white", "e1");
+chessBoardInstance.addPiece("king", "white", "e1");
 // chessBoardInstance.addPiece("pawn", "white", "e2");
-chessBoardInstance.addPiece("king", "white", "g1");
 chessBoardInstance.addPiece("rook", "white", "h1");
 
 chessBoardInstance.addPiece("pawn", "black", "g7");
 chessBoardInstance.addPiece("knight", "black", "c7");
 chessBoardInstance.addPiece("rook", "black", "a8");
-chessBoardInstance.addPiece("bishop", "black", "d5");
+// chessBoardInstance.addPiece("bishop", "black", "d5");
 chessBoardInstance.addPiece("king", "black", "e8");
-chessBoardInstance.addPiece("queen", "black", "b8");
+// chessBoardInstance.addPiece("queen", "black", "b8");
 chessBoardInstance.updateAllLegalMovesForCurrentPlayer();
 
 /**
