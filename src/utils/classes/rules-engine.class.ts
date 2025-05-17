@@ -191,8 +191,12 @@ abstract class RulesEngine {
     }
 
     const { color } = player;
-    let kingStart;
-    let rookStart;
+    let kingStart: WhiteCastlingStart.King | BlackCastlingStart.King;
+    let rookStart:
+      | WhiteCastlingStart.QueenSideRook
+      | WhiteCastlingStart.KingSideRook
+      | BlackCastlingStart.QueenSideRook
+      | BlackCastlingStart.KingSideRook;
 
     if (color === "white") {
       kingStart = WhiteCastlingStart.King;
