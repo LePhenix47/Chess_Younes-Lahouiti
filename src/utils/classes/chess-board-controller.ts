@@ -66,6 +66,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public currentTurn: PieceColor = "white";
   public whitePlayer: Player;
   public blackPlayer: Player;
+  public enPassantSquare: AlgebraicNotation | null = null;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -170,11 +171,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public updateAllLegalMovesForCurrentPlayer = (): void => {
     // Get all the legal moves for the current player
-    const allLegalMoves = MovesGenerator.generatePseudoLegalMoves(
-      this.piecesMap,
-      this.currentPlayer
-    );
-
+    const allLegalMoves = MovesGenerator.generateLegalMoves({
+      piecesMap: this.piecesMap,
+      player: this.currentPlayer,
+      enPassantSquare: this.enPassantSquare,
+    });
     // Store it in the new property
     this.allLegalMovesForCurrentPlayer = allLegalMoves;
   };
@@ -443,6 +444,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     }
   };
 
+  // TODO: Improve types for the param, RN I'm manually adding the possible values for the type parameter
   protected readonly updateSquareHighlight = ({
     targetSquares,
     type,
@@ -451,7 +453,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type?: "selected" | "can-move" | "occupied";
+    type?: "selected" | "can-move" | "occupied" | "checked";
     mode?: "add" | "remove" | "toggle";
     value?: string;
     className?: string;
@@ -466,6 +468,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
         selected: "data-selected-square",
         "can-move": "data-available-move",
         occupied: "data-occupied-by",
+        checked: "data-checked",
       })
     );
 
@@ -491,6 +494,30 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
         this.setSquareHighlightByClassname(square, className, mode);
       }
     }
+  };
+
+  protected readonly highlightCheck = (square: AlgebraicNotation) => {
+    this.updateSquareHighlight({
+      targetSquares: square,
+      mode: "add",
+      type: "checked",
+    });
+  };
+
+  protected readonly clearCheckHighlightSquare = () => {
+    const checkedSquare =
+      this.container.querySelector<HTMLDivElement>("[data-checked]");
+    if (!checkedSquare) {
+      return;
+    }
+
+    const square = checkedSquare.dataset.algebraicNotation as AlgebraicNotation;
+
+    this.updateSquareHighlight({
+      targetSquares: square,
+      mode: "remove",
+      type: "checked",
+    });
   };
 
   protected readonly highlightSelectedSquare = (
