@@ -93,21 +93,31 @@ abstract class MovesGenerator {
     console.log("Multiple pieces attacking", attackingPieces);
 
     // ? Only allow moves that capture attacker or block check
-    return pseudoLegalMoves
-      .map(({ piece, moves }) => {
-        if (piece.type === "king") {
-          return { piece, moves };
+    const legalMoves: { piece: Piece; moves: AlgebraicNotation[] }[] = [];
+
+    for (const { piece, moves } of pseudoLegalMoves) {
+      if (piece.type === "king") {
+        legalMoves.push({ piece, moves });
+        continue;
+      }
+
+      const filteredMoves: AlgebraicNotation[] = [];
+
+      for (const move of moves) {
+        const isCapture: boolean = move === attacker.position.algebraicNotation;
+        const isBlock: boolean = blockingSquares.has(move);
+
+        if (isCapture || isBlock) {
+          filteredMoves.push(move);
         }
+      }
 
-        const filteredMoves = moves.filter(
-          (move) =>
-            move === attacker.position.algebraicNotation ||
-            blockingSquares.has(move)
-        );
+      if (filteredMoves.length > 0) {
+        legalMoves.push({ piece, moves: filteredMoves });
+      }
+    }
 
-        return { piece, moves: filteredMoves };
-      })
-      .filter(({ moves }) => moves.length > 0); // Remove pieces with no valid moves
+    return legalMoves;
   };
 
   /*
