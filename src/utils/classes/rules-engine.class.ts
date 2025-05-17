@@ -1,7 +1,10 @@
 import AttacksGenerator, {
   OpponentAttackDetail,
 } from "./attacks-generator.class";
-import BaseMovesGenerator from "./base-moves-generator.class";
+import BaseMovesGenerator, {
+  BlackCastlingStart,
+  WhiteCastlingStart,
+} from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import ChessBoard, { AlgebraicNotation, ChessFile } from "./chess-board.class";
 import {
@@ -188,15 +191,30 @@ abstract class RulesEngine {
     }
 
     const { color } = player;
-    const rank = color === "white" ? "1" : "8"; // Rank is based on color
-    const kingStart = `e${rank}` as AlgebraicNotation;
-    const rookStart: AlgebraicNotation =
-      side === "queenSide" ? `a${rank}` : `h${rank}`;
+    let kingStart;
+    let rookStart;
+
+    if (color === "white") {
+      kingStart = WhiteCastlingStart.King;
+
+      rookStart =
+        side === "queenSide"
+          ? WhiteCastlingStart.QueenSideRook
+          : WhiteCastlingStart.KingSideRook;
+    } else {
+      kingStart = BlackCastlingStart.King;
+
+      rookStart =
+        side === "queenSide"
+          ? BlackCastlingStart.QueenSideRook
+          : BlackCastlingStart.KingSideRook;
+    }
 
     const king = pieces.get(kingStart) as KingPiece;
     const rook = pieces.get(rookStart) as SlidingPiece;
 
     if (
+      // ? If any of the pieces are missing or are the wrong type
       !Boolean(king) ||
       !Boolean(rook) ||
       king.type !== "king" ||

@@ -14,12 +14,24 @@ import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
 
 type DetailedMove = { moves: IPieceLogic["position"][]; piece: Piece };
 
-export enum WhiteCastlingTargetSquare {
+export enum WhiteCastlingStart {
+  King = "e1",
+  QueenSideRook = "a1",
+  KingSideRook = "h1",
+}
+
+export enum BlackCastlingStart {
+  King = "e8",
+  QueenSideRook = "a8",
+  KingSideRook = "h8",
+}
+
+export enum WhiteCastlingEnd {
   KingSide = "g1",
   QueenSide = "c1",
 }
 
-export enum BlackCastlingTargetSquare {
+export enum BlackCastlingEnd {
   KingSide = "g8",
   QueenSide = "c8",
 }
