@@ -190,6 +190,7 @@ class Piece implements IPieceLogic, IPieceUI {
 
   private instantMove = (): void => {
     this.element.classList.remove("dragging");
+    this.element.classList.add("no-transition", "z-index");
 
     setTimeout(() => {
       this.element?.classList.remove("no-transition", "z-index");

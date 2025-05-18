@@ -135,8 +135,9 @@ class ChessBoard extends ChessBoardController {
     }
 
     this.movePiece(piece, to, noAnimation);
-
     this.updateGameState(from, to, piece);
+
+    this.handleCastlingIfNeeded(move, noAnimation);
 
     const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
     this.highlightLegalMoves(selectedPieceLegalMoves, "remove");
@@ -147,6 +148,46 @@ class ChessBoard extends ChessBoardController {
     this.updateCheckStateFor(this.rivalPlayer);
 
     this.switchTurnTo();
+  };
+
+  private handleCastlingIfNeeded = (move: Move, noAnimation: boolean): void => {
+    const { piece, from, to } = move;
+
+    if (piece.type !== "king") {
+      return;
+    }
+
+    const { fileIndex: fromFileStr, rankIndex: fromRankStr } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(from);
+    const { fileIndex: toFileStr } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+
+    const fromFile = Number(fromFileStr);
+    const toFile = Number(toFileStr);
+
+    const fileDiff = toFile - fromFile;
+    if (Math.abs(fileDiff) !== 2) {
+      return;
+    } // Not a castling move
+
+    const [file, rank] = from;
+    const isKingSide: boolean = fileDiff > 0;
+
+    const rookFrom: AlgebraicNotation = (
+      isKingSide ? `h${rank}` : `a${rank}`
+    ) as AlgebraicNotation;
+    const rookTo: AlgebraicNotation = (
+      isKingSide ? `f${rank}` : `d${rank}`
+    ) as AlgebraicNotation;
+
+    const rook = this.piecesMap.get(rookFrom);
+    if (!rook) {
+      console.warn(`Rook not found at expected castling position: ${rookFrom}`);
+      return;
+    }
+
+    this.movePiece(rook, rookTo, noAnimation);
+    this.updateGameState(rookFrom, rookTo, rook);
   };
 
   private movePiece = (
