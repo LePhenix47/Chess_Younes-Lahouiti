@@ -164,8 +164,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     const squareSize = square.offsetWidth;
 
-    console.log(squareSize);
-
     return squareSize;
   }
 

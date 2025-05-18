@@ -114,7 +114,6 @@ class Piece implements IPieceLogic, IPieceUI {
       <svg>
         <use href="#${this.color}-${this.type}"></use>
       </svg>
-      <p class="piece-debug" data-element="piece-debug">${this.position.fileIndex}-${this.position.rankIndex}</p>
     `;
     span.style.setProperty("--_index-x", this.position.rankIndex);
     span.style.setProperty("--_index-y", this.position.fileIndex);
@@ -221,7 +220,6 @@ class Piece implements IPieceLogic, IPieceUI {
 
     if (!this.hasMoved && hasActuallyMoved) {
       this.hasMoved = true;
-      console.log(this.color, this.type, { hasMoved: this.hasMoved });
     }
 
     this.position = newPos;

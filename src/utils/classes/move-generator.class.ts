@@ -78,8 +78,6 @@ abstract class MovesGenerator {
     // ? Double or triple check → only king can move
     const moreThanOnePieceAttackingKing: boolean = attackingPieces.length > 1;
     if (moreThanOnePieceAttackingKing) {
-      console.log("One piece attacking", attackingPieces);
-
       const kingOnlyMoves = pseudoLegalMoves.filter(
         ({ piece }) => piece.type === "king"
       );
@@ -89,8 +87,6 @@ abstract class MovesGenerator {
 
     const { pathToKing, attackingPiece: attacker } = attackingPieces[0];
     const blockingSquares = new Set(pathToKing);
-
-    console.log("Multiple pieces attacking", attackingPieces);
 
     // ? Only allow moves that capture attacker or block check
     const legalMoves: { piece: Piece; moves: AlgebraicNotation[] }[] = [];
@@ -157,8 +153,6 @@ abstract class MovesGenerator {
         pinnedPieces.find((pinnedInfo) => {
           return Piece.arePiecesTheSame(pinnedInfo.pinned, piece);
         });
-
-      console.log(potentialPinConstraint, piece);
 
       const moves = MovesGenerator.generateMoveForPiece(
         piece,
