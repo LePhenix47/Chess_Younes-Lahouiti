@@ -331,6 +331,63 @@ abstract class RulesEngine {
     return pinnedPieces;
   };
 
+  public static isIllegalEnPassantDiscoveredCheck = (
+    king: Piece,
+    capturedPawnSquare: AlgebraicNotation,
+    piecesMap: Map<AlgebraicNotation, Piece>
+  ): boolean => {
+    const kingPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(
+      king.position.algebraicNotation
+    );
+    const capturedPos =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(capturedPawnSquare);
+
+    if (kingPos.rankIndex !== capturedPos.rankIndex) {
+      return false;
+    }
+
+    const rank = Number(kingPos.rankIndex);
+    const kingFile = Number(kingPos.fileIndex);
+    const capturedFile = Number(capturedPos.fileIndex);
+    const direction = capturedFile > kingFile ? 1 : -1;
+
+    let file = kingFile + direction;
+    let ownPawnsCount = 0;
+    let rookOrQueenFound = false;
+
+    while (RulesEngine.isWithinBounds(file, rank)) {
+      const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        file,
+        rank
+      );
+      const piece = piecesMap.get(square);
+
+      if (square === capturedPawnSquare) {
+        // We skip the pawn that will be captured en passant
+        file += direction;
+        continue;
+      }
+
+      if (piece) {
+        if (Piece.isType(piece.type, ["pawn"])) {
+          ownPawnsCount++;
+        } else if (
+          Piece.isType(piece.type, ["rook", "queen"]) &&
+          piece.color !== king.color
+        ) {
+          rookOrQueenFound = true;
+          break;
+        } else {
+          break; // Any other piece blocks the check
+        }
+      }
+
+      file += direction;
+    }
+
+    return ownPawnsCount === 1 && rookOrQueenFound;
+  };
+
   // Inside RulesEngine class
   public static isWithinBounds(file: number, rank: number): boolean {
     const fileIsWithinBounds: boolean = file >= 0 && file < 8;
