@@ -1,3 +1,4 @@
+import BoardUtils from "./board-utils.class";
 import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import { SlidingPiece } from "./move-generator.class";
 
@@ -233,6 +234,25 @@ class Piece implements IPieceLogic, IPieceUI {
     // TODO: Add logic to promote the pawn
 
     this.checkSlidingPiece();
+  };
+
+  public isCastlingMove = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ): boolean => {
+    const fromFileIndex = Number(
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(from).fileIndex
+    );
+    const toFileIndex = Number(
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(to).fileIndex
+    );
+
+    const isKing: boolean = this.type === "king";
+
+    const hasMovedTwoSquares: boolean =
+      Math.abs(toFileIndex - fromFileIndex) === 2;
+
+    return isKing && hasMovedTwoSquares;
   };
 
   public toFEN = (): string => {

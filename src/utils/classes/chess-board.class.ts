@@ -137,7 +137,9 @@ class ChessBoard extends ChessBoardController {
     this.movePiece(piece, to, noAnimation);
     this.updateGameState(from, to, piece);
 
-    this.handleCastlingIfNeeded(move, noAnimation);
+    if (piece.isCastlingMove(from, to)) {
+      this.handleCastling(move, noAnimation);
+    }
 
     const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
     this.highlightLegalMoves(selectedPieceLegalMoves, "remove");
@@ -150,12 +152,8 @@ class ChessBoard extends ChessBoardController {
     this.switchTurnTo();
   };
 
-  private handleCastlingIfNeeded = (move: Move, noAnimation: boolean): void => {
+  private handleCastling = (move: Move, noAnimation: boolean): void => {
     const { piece, from, to } = move;
-
-    if (piece.type !== "king") {
-      return;
-    }
 
     const { fileIndex: fromFileStr, rankIndex: fromRankStr } =
       BoardUtils.getBoardIndicesFromAlgebraicNotation(from);
@@ -165,10 +163,7 @@ class ChessBoard extends ChessBoardController {
     const fromFile = Number(fromFileStr);
     const toFile = Number(toFileStr);
 
-    const fileDiff = toFile - fromFile;
-    if (Math.abs(fileDiff) !== 2) {
-      return;
-    } // Not a castling move
+    const fileDiff: number = toFile - fromFile;
 
     const [file, rank] = from;
     const isKingSide: boolean = fileDiff > 0;
