@@ -63,7 +63,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public boardPerspective: PieceColor = "white";
   public legalMovesForSelectedPiece: AlgebraicNotation[] | null = null;
 
-  public currentTurn: PieceColor = "white";
+  public currentTurn: PieceColor = "black";
   public whitePlayer: Player;
   public blackPlayer: Player;
   public enPassantSquare: AlgebraicNotation | null = null;

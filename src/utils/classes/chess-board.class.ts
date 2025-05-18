@@ -80,6 +80,8 @@ class ChessBoard extends ChessBoardController {
     }
 
     const move: Move = this.createMove(piece, from, to);
+    console.log({ move });
+
     this.applyMove(move, noAnimation);
     this.clearSelectedPiece(from);
   };
@@ -123,7 +125,7 @@ class ChessBoard extends ChessBoardController {
     const fileIndex = Number(toPos.fileIndex);
     const rankIndex = Number(toPos.rankIndex);
 
-    const captureRank = color === "white" ? rankIndex - 1 : rankIndex + 1;
+    const captureRank = color === "white" ? rankIndex + 1 : rankIndex - 1;
 
     return BoardUtils.getAlgebraicNotationFromBoardIndices(
       fileIndex,
@@ -141,10 +143,14 @@ class ChessBoard extends ChessBoardController {
         to,
         piece.color
       );
+      console.log("en passant,capturedSquare", capturedSquare);
+
       const captured: Piece = this.piecesMap.get(capturedSquare);
 
       const isValidEnPassantTarget: boolean =
         captured?.type === "pawn" && captured.color !== piece.color;
+
+      console.log("en passant,captured", captured, isValidEnPassantTarget);
 
       return {
         from,
@@ -168,10 +174,14 @@ class ChessBoard extends ChessBoardController {
 
   private capturePiece = (targetPiece: Piece, noAnimation: boolean): void => {
     const animate: boolean = !noAnimation;
+
     targetPiece.removePiece({ animate }); // Remove from DOM
-    this.piecesMap.delete(
-      targetPiece.position.algebraicNotation as AlgebraicNotation
-    ); // Remove from internal map
+
+    const { algebraicNotation } = targetPiece.position;
+
+    this.piecesMap.delete(algebraicNotation as AlgebraicNotation);
+
+    this.clearOccupiedSquare(algebraicNotation);
   };
 
   private applyMove = (move: Move, noAnimation: boolean): void => {
