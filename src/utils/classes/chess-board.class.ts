@@ -207,6 +207,7 @@ class ChessBoard extends ChessBoardController {
     this.updateCheckStateFor(this.rivalPlayer);
 
     this.switchTurnTo();
+    this.updateAllLegalMovesForCurrentPlayer();
 
     console.log(this.enPassantSquare);
   };

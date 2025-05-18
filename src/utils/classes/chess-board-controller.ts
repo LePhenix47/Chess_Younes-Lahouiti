@@ -376,8 +376,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     } else {
       this.currentTurn = this.currentTurn === "white" ? "black" : "white";
     }
-
-    this.updateAllLegalMovesForCurrentPlayer();
   };
 
   // All helper methods for highlighting, setting square state, etc., go here
