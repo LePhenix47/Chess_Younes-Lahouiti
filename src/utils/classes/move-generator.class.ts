@@ -60,7 +60,8 @@ abstract class MovesGenerator {
     const pseudoLegalMoves = MovesGenerator.generatePseudoLegalMoves(
       piecesMap,
       player,
-      attacks
+      attacks,
+      enPassantSquare
     );
 
     if (!player.inCheck) {
@@ -122,7 +123,8 @@ abstract class MovesGenerator {
   public static generatePseudoLegalMoves = (
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player,
-    opponentAttacksDetailed?: OpponentAttackDetail[]
+    opponentAttacksDetailed?: OpponentAttackDetail[],
+    enPassantSquare?: AlgebraicNotation | null
   ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
     const result: { moves: AlgebraicNotation[]; piece: Piece }[] = [];
 
@@ -159,7 +161,8 @@ abstract class MovesGenerator {
         pieces,
         player,
         opponentAttackingSquares,
-        potentialPinConstraint
+        potentialPinConstraint,
+        enPassantSquare
       );
 
       if (moves.length > 0) {
@@ -175,7 +178,8 @@ abstract class MovesGenerator {
     pieces: Map<AlgebraicNotation, Piece>,
     player: Player,
     opponentAttackingSquares: AlgebraicNotation[],
-    pinConstraint?: PinnedPieceInfo
+    pinConstraint?: PinnedPieceInfo,
+    enPassantSquare?: AlgebraicNotation
   ): AlgebraicNotation[] => {
     switch (piece.type) {
       case "pawn": {
@@ -188,7 +192,8 @@ abstract class MovesGenerator {
         const pawnAttacks = AttacksGenerator.getLegalPawnCaptures(
           piece as PawnPiece,
           pieces,
-          pinConstraint
+          pinConstraint,
+          enPassantSquare
         );
 
         return [...pawnMoves, ...pawnAttacks];

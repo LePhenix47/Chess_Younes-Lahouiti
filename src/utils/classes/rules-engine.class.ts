@@ -333,22 +333,43 @@ abstract class RulesEngine {
 
   public static isIllegalEnPassantDiscoveredCheck = (
     king: Piece,
-    capturedPawnSquare: AlgebraicNotation,
+    enPassantSquare: AlgebraicNotation | undefined,
     piecesMap: Map<AlgebraicNotation, Piece>
   ): boolean => {
-    const kingPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(
-      king.position.algebraicNotation
-    );
-    const capturedPos =
-      BoardUtils.getBoardIndicesFromAlgebraicNotation(capturedPawnSquare);
-
-    if (kingPos.rankIndex !== capturedPos.rankIndex) {
+    if (!enPassantSquare) {
       return false;
     }
 
-    const rank = Number(kingPos.rankIndex);
+    // Infer captured pawn square based on enPassantSquare and playerColor
+    const epPos =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(enPassantSquare);
+    const capturedPawnRank =
+      king.color === "white"
+        ? Number(epPos.rankIndex) + 1
+        : Number(epPos.rankIndex) - 1;
+
+    console.log(epPos);
+
+    const capturedPawnFile = Number(epPos.fileIndex);
+
+    const capturedPawnSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+      capturedPawnFile,
+      capturedPawnRank
+    );
+
+    const kingPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(
+      king.position.algebraicNotation
+    );
+
+    const kingRank = Number(kingPos.rankIndex);
+
+    if (kingRank !== capturedPawnRank) {
+      return false;
+    }
+
+    const rank = capturedPawnRank;
     const kingFile = Number(kingPos.fileIndex);
-    const capturedFile = Number(capturedPos.fileIndex);
+    const capturedFile = capturedPawnFile;
     const direction = capturedFile > kingFile ? 1 : -1;
 
     let file = kingFile + direction;
@@ -363,7 +384,7 @@ abstract class RulesEngine {
       const piece = piecesMap.get(square);
 
       if (square === capturedPawnSquare || !piece) {
-        // We skip the pawn that will be captured en passant
+        // Skip captured pawn and empty squares
         file += direction;
         continue;
       }

@@ -1,6 +1,6 @@
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation } from "./chess-board.class";
+import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
 import MovesGenerator, {
   PawnPiece,
   SlidingPiece,
@@ -85,7 +85,8 @@ abstract class AttacksGenerator {
   public static getLegalPawnCaptures = (
     piece: PawnPiece,
     pieces: Map<AlgebraicNotation, Piece>,
-    pinConstraint: PinnedPieceInfo | undefined
+    pinConstraint: PinnedPieceInfo | undefined,
+    enPassantSquare: AlgebraicNotation | undefined
   ): AlgebraicNotation[] => {
     if (pinConstraint) {
       const [pinDx, pinDy] = pinConstraint.direction;
@@ -157,9 +158,36 @@ abstract class AttacksGenerator {
       }
     }
 
-    // TODO: Implement en passant logic.
-    // TODO: Requires access to last move and move history to verify if an adjacent enemy pawn just moved two squares.
+    console.log({ enPassantSquare });
 
+    const king = ChessBoard.getPieceFromArray(
+      pieces,
+      "king",
+      piece.color
+    ) as KingPiece;
+
+    const illegalEnPassant = RulesEngine.isIllegalEnPassantDiscoveredCheck(
+      king,
+      enPassantSquare,
+      pieces
+    );
+
+    if (enPassantSquare && !illegalEnPassant) {
+      const epPos =
+        BoardUtils.getBoardIndicesFromAlgebraicNotation(enPassantSquare);
+      const dx = Number(epPos.fileIndex) - file;
+      const dy = Number(epPos.rankIndex) - rank;
+
+      const isDiagonal = Math.abs(dx) === 1 && dy === newDy;
+      const isColinearWithPin =
+        !pinConstraint || MovesGenerator.areColinear(dx, dy, pinDx, pinDy);
+
+      console.log({ isDiagonal, isColinearWithPin });
+
+      if (isDiagonal && isColinearWithPin) {
+        legalAttacks.push(enPassantSquare);
+      }
+    }
     return legalAttacks;
   };
 
