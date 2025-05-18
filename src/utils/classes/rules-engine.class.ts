@@ -362,24 +362,22 @@ abstract class RulesEngine {
       );
       const piece = piecesMap.get(square);
 
-      if (square === capturedPawnSquare) {
+      if (square === capturedPawnSquare || !piece) {
         // We skip the pawn that will be captured en passant
         file += direction;
         continue;
       }
 
-      if (piece) {
-        if (Piece.isType(piece.type, ["pawn"])) {
+      switch (piece.type) {
+        case "pawn":
           ownPawnsCount++;
-        } else if (
-          Piece.isType(piece.type, ["rook", "queen"]) &&
-          piece.color !== king.color
-        ) {
+          break;
+        case "rook":
+        case "queen":
           rookOrQueenFound = true;
           break;
-        } else {
-          break; // Any other piece blocks the check
-        }
+        default:
+          break;
       }
 
       file += direction;
