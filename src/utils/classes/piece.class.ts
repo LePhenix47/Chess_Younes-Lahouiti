@@ -255,6 +255,24 @@ class Piece implements IPieceLogic, IPieceUI {
     return isKing && hasMovedTwoSquares;
   };
 
+  public isPawnDoubleAdvance = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ): boolean => {
+    if (this.type !== "pawn") {
+      return false;
+    }
+
+    const fromPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(from);
+    const toPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+
+    const rankDiff = Math.abs(
+      Number(toPos.rankIndex) - Number(fromPos.rankIndex)
+    );
+
+    return rankDiff === 2;
+  };
+
   public toFEN = (): string => {
     const map = new Map<string, string>(
       Object.entries({
