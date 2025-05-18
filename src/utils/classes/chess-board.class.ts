@@ -102,17 +102,66 @@ class ChessBoard extends ChessBoardController {
     piece.moveTo(piece.position, noAnimation);
   };
 
+  private isEnPassantCapture = (
+    piece: Piece,
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ): boolean => {
+    const isPawn: boolean = piece.type === "pawn";
+    const isDiagonalMove: boolean = from.charAt(0) !== to.charAt(0);
+    const isToSquareEmpty: boolean = !this.piecesMap.has(to);
+    const isEnPassantSquare: boolean = this.enPassantSquare === to;
+
+    return isPawn && isDiagonalMove && isToSquareEmpty && isEnPassantSquare;
+  };
+
+  private getEnPassantCapturedSquare = (
+    to: AlgebraicNotation,
+    color: "white" | "black"
+  ): AlgebraicNotation => {
+    const toPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+    const fileIndex = Number(toPos.fileIndex);
+    const rankIndex = Number(toPos.rankIndex);
+
+    const captureRank = color === "white" ? rankIndex - 1 : rankIndex + 1;
+
+    return BoardUtils.getAlgebraicNotationFromBoardIndices(
+      fileIndex,
+      captureRank
+    );
+  };
+
   private createMove = (
     piece: Piece,
     from: AlgebraicNotation,
     to: AlgebraicNotation
   ): Move => {
+    if (this.isEnPassantCapture(piece, from, to)) {
+      const capturedSquare: AlgebraicNotation = this.getEnPassantCapturedSquare(
+        to,
+        piece.color
+      );
+      const captured: Piece = this.piecesMap.get(capturedSquare);
+
+      const isValidEnPassantTarget: boolean =
+        captured?.type === "pawn" && captured.color !== piece.color;
+
+      return {
+        from,
+        to,
+        piece,
+        capturedPiece: isValidEnPassantTarget ? captured : undefined,
+        promotion: undefined,
+      };
+    }
+
     const captured = this.piecesMap.get(to);
+
     return {
       from,
       to,
       piece,
-      capturedPiece: captured,
+      capturedPiece: captured ?? undefined,
       promotion: undefined,
     };
   };
@@ -137,8 +186,16 @@ class ChessBoard extends ChessBoardController {
     this.movePiece(piece, to, noAnimation);
     this.updateGameState(from, to, piece);
 
+    // * ♔♖ Castling
     if (piece.isCastlingMove(from, to)) {
       this.handleCastling(move, noAnimation);
+    }
+
+    // * ♙♟ En passant (en croissant 🥐 🇫🇷)
+    if (piece.isPawnDoubleAdvance(from, to)) {
+      this.handleEnPassantMarking(to);
+    } else {
+      this.clearEnPassantMarking();
     }
 
     const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
@@ -150,6 +207,8 @@ class ChessBoard extends ChessBoardController {
     this.updateCheckStateFor(this.rivalPlayer);
 
     this.switchTurnTo();
+
+    console.log(this.enPassantSquare);
   };
 
   private handleCastling = (move: Move, noAnimation: boolean): void => {
@@ -183,6 +242,60 @@ class ChessBoard extends ChessBoardController {
 
     this.movePiece(rook, rookTo, noAnimation);
     this.updateGameState(rookFrom, rookTo, rook);
+  };
+
+  private handleEnPassantMarking = (to: AlgebraicNotation): void => {
+    const pos = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+    const file = Number(pos.fileIndex);
+    const rank = Number(pos.rankIndex);
+
+    // ? Only check adjacent pawns on the pawn's current rank
+    const hasNotLandedAdjacentToEnemyPawn: boolean =
+      !this.hasAdjacentOpponentPawn(file, rank, this.currentPlayer.color);
+    if (hasNotLandedAdjacentToEnemyPawn) {
+      this.enPassantSquare = null;
+      return;
+    }
+
+    // ? + 1 ↓, - 1 ↑
+    const enPassantRank =
+      this.currentPlayer.color === "white" ? rank + 1 : rank - 1;
+
+    this.enPassantSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+      file,
+      enPassantRank
+    );
+  };
+
+  private hasAdjacentOpponentPawn = (
+    file: number,
+    rank: number,
+    playerColor: "white" | "black"
+  ): boolean => {
+    const adjacentFiles = [file - 1, file + 1];
+
+    for (const adjFile of adjacentFiles) {
+      if (!RulesEngine.isWithinBounds(adjFile, rank)) {
+        // * skip out-of-board files
+        continue;
+      }
+
+      const adjSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
+        adjFile,
+        rank
+      );
+      const piece = this.piecesMap.get(adjSquare);
+
+      if (piece?.type === "pawn" && piece.color !== playerColor) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  private clearEnPassantMarking = (): void => {
+    this.enPassantSquare = null;
   };
 
   private movePiece = (
