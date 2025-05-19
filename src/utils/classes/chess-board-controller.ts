@@ -184,24 +184,46 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     square: AlgebraicNotation,
     color: "white" | "black"
   ) => {
-    if (this.promotionDialogContainer) {
-      this.promotionDialogContainer.remove();
-      this.promotionDialogContainer = null;
+    this.clearPromotionDialog();
+
+    const { left, top } = this.getDialogCoordinates(square);
+    const html = this.renderPromotionDialogHTML(left, top, color);
+
+    this.injectPromotionDialog(html);
+  };
+
+  private clearPromotionDialog = () => {
+    if (!this.promotionDialogContainer) {
+      return;
     }
 
+    this.promotionDialogContainer.remove();
+    this.promotionDialogContainer = null;
+  };
+
+  private getDialogCoordinates = (square: AlgebraicNotation) => {
     const { fileIndex, rankIndex } =
       BoardUtils.getBoardIndicesFromAlgebraicNotation(square);
 
-    const left = Number(fileIndex) * this.squareSize;
-    const top = Number(rankIndex) * this.squareSize;
+    return {
+      left: Number(fileIndex) * this.squareSize,
+      top: Number(rankIndex) * this.squareSize,
+    };
+  };
 
-    const html = /* html */ `
-      <div class="promotion-backdrop"></div>
+  private renderPromotionDialogHTML = (
+    left: number,
+    top: number,
+    color: PieceColor
+  ): string => {
+    const promotionPiecesArray = ["queen", "rook", "bishop", "knight"] as const;
+    return /* html */ `
+      <div class="chess__promotion-popup-backdrop"></div>
       <dialog class="chess__promotion-popup" style="--left: ${left}px; --top: ${top}px;">
         <ul class="promotion-list">
-          ${["queen", "rook", "bishop", "knight"]
+          ${promotionPiecesArray
             .map(
-              (piece) => /* html */ `
+              (piece: (typeof promotionPiecesArray)[number]) => /* html */ `
               <li class="promotion-piece" data-piece="${piece}">
                 <span>
                   <svg>
@@ -212,9 +234,12 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
             )
             .join("")}
         </ul>
+        <!-- TODO: Add button to close the dialog if you don't actually want to promote -->
       </dialog>
     `;
+  };
 
+  private injectPromotionDialog = (html: string) => {
     const container = document.createElement("div");
     container.classList.add("promotion-container");
     container.innerHTML = html;
@@ -223,7 +248,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.promotionDialogContainer = container;
 
     const dialog = container.querySelector<HTMLDialogElement>("dialog");
-    dialog.show();
+    dialog?.show();
   };
 
   public addPiece = (
