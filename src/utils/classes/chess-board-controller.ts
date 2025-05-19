@@ -53,6 +53,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public playedMoves: Move[] = [];
 
+  private promotionDialogContainer: HTMLElement | null = null;
+
   protected allLegalMovesForCurrentPlayer: {
     piece: Piece;
     moves: AlgebraicNotation[];
@@ -176,6 +178,52 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     });
     // Store it in the new property
     this.allLegalMovesForCurrentPlayer = allLegalMoves;
+  };
+
+  protected showPromotionDialog = (
+    square: AlgebraicNotation,
+    color: "white" | "black"
+  ) => {
+    if (this.promotionDialogContainer) {
+      this.promotionDialogContainer.remove();
+      this.promotionDialogContainer = null;
+    }
+
+    const { fileIndex, rankIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(square);
+
+    const left = Number(fileIndex) * this.squareSize;
+    const top = Number(rankIndex) * this.squareSize;
+
+    const html = /* html */ `
+      <div class="promotion-backdrop"></div>
+      <dialog class="chess__promotion-popup" style="--left: ${left}px; --top: ${top}px;">
+        <ul class="promotion-list">
+          ${["queen", "rook", "bishop", "knight"]
+            .map(
+              (piece) => /* html */ `
+              <li class="promotion-piece" data-piece="${piece}">
+                <span>
+                  <svg>
+                    <use href="#${color}-${piece}"></use>
+                  </svg>
+                </span>
+              </li>`
+            )
+            .join("")}
+        </ul>
+      </dialog>
+    `;
+
+    const container = document.createElement("div");
+    container.classList.add("promotion-container");
+    container.innerHTML = html;
+    document.body.appendChild(container);
+
+    this.promotionDialogContainer = container;
+
+    const dialog = container.querySelector<HTMLDialogElement>("dialog");
+    dialog.show();
   };
 
   public addPiece = (
