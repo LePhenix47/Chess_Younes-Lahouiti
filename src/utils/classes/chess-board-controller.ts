@@ -219,17 +219,17 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const promotionPiecesArray = ["queen", "rook", "bishop", "knight"] as const;
     return /* html */ `
       <div class="chess__promotion-popup-backdrop"></div>
-      <dialog class="chess__promotion-popup" style="--left: ${left}px; --top: ${top}px;">
-        <ul class="promotion-list">
+      <dialog class="chess__promotion-popup" style="--_left: ${left}px; --_top: ${top}px;">
+        <ul class="chess__promotion-list">
           ${promotionPiecesArray
             .map(
               (piece: (typeof promotionPiecesArray)[number]) => /* html */ `
-              <li class="promotion-piece" data-piece="${piece}">
-                <span>
+              <li class="chess__promotion-item" data-promotion-piece="${piece}">
+                <button type="button" class="chess__promotion-piece">
                   <svg>
                     <use href="#${color}-${piece}"></use>
                   </svg>
-                </span>
+                </button>
               </li>`
             )
             .join("")}
@@ -241,9 +241,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   private injectPromotionDialog = (html: string) => {
     const container = document.createElement("div");
-    container.classList.add("promotion-container");
+    container.classList.add("chess__promotion-container");
     container.innerHTML = html;
-    document.body.appendChild(container);
+    this.container.appendChild(container);
 
     this.promotionDialogContainer = container;
 
