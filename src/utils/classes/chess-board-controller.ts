@@ -197,6 +197,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       return;
     }
 
+    this.promotionDialogContainer.removeEventListener(
+      "click",
+      this.handlePromotionDialogEventsByDelegation
+    );
+
     this.promotionDialogContainer.remove();
     this.promotionDialogContainer = null;
   };
@@ -224,18 +229,21 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const promotionPiecesArray = ["queen", "rook", "bishop", "knight"] as const;
 
     const dialogHTML = /* html */ `
-      <div class="chess__promotion-popup-backdrop"></div>
-      <dialog class="chess__promotion-popup ${
+      <div class="chess__promotion-popup-backdrop" data-element="promotion-dialog-backdrop"></div>
+      <dialog
+      aria-modal="true"
+      aria-label="Promote your pawn to another piece"
+      class="chess__promotion-popup ${
         this.boardPerspective === color
           ? ""
           : "chess__promotion-popup--opponent-view"
-      }" style="--_left: ${left}px; --_top: ${top}px;">
+      }" style="--_left: ${left}px; --_top: ${top}px;" data-element="promotion-dialog">
         <ul class="chess__promotion-list">
           ${promotionPiecesArray
             .map(
               (piece: (typeof promotionPiecesArray)[number]) => /* html */ `
               <li class="chess__promotion-item" data-promotion-piece="${piece}">
-                <button type="button" class="chess__promotion-piece">
+                <button type="button" class="chess__promotion-piece" aria-label="${piece} piece">
                   <svg>
                     <use href="#${color}-${piece}"></use>
                   </svg>
@@ -245,8 +253,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
               </li>`
             )
             .join("")}
-            <li class="chess__promotion-item chess__promotion-item--cancel">
-              <button type="button" class="chess__promotion-cancel-button">×</button>
+            <li class="chess__promotion-item chess__promotion-item--cancel" aria-label="Cancel promotion">
+              <button type="button" class="chess__promotion-cancel-button" data-element="promotion-cancel">×</button>
             </li>
         </ul>
       </dialog>
@@ -267,6 +275,52 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     const dialog = container.querySelector<HTMLDialogElement>("dialog");
     dialog?.show();
+
+    container.addEventListener(
+      "click",
+      this.handlePromotionDialogEventsByDelegation
+    );
+  };
+
+  private handlePromotionDialogEventsByDelegation = (event: PointerEvent) => {
+    const target = event.target as HTMLElement;
+
+    if (!this.promotionDialogContainer) {
+      return;
+    }
+
+    // Handle piece selection
+    const pieceButton = target.closest<HTMLButtonElement>(
+      ".chess__promotion-piece"
+    );
+    if (pieceButton) {
+      const piece = pieceButton
+        .closest("[data-promotion-piece]")
+        ?.getAttribute("data-promotion-piece");
+
+      if (piece) {
+        console.log({ piece });
+
+        this.clearPromotionDialog();
+      }
+
+      return;
+    }
+
+    // Handle cancel
+    const cancelButton = target.closest("[data-element=promotion-cancel]");
+    if (cancelButton) {
+      this.clearPromotionDialog();
+      return;
+    }
+
+    // Optional: close dialog when clicking on backdrop
+    const isBackdrop = target.closest(
+      "[data-element=promotion-dialog-backdrop]"
+    );
+    if (isBackdrop) {
+      this.clearPromotionDialog();
+    }
   };
 
   public addPiece = (
