@@ -277,12 +277,16 @@
     }
 
 
-    &__promotion-container {}
+    &__promotion-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+    }
 
     &__promotion-popup-backdrop {}
 
     &__promotion-popup {
-        position: absolute;
+        position: fixed;
 
         left: var(--_left);
         top: var(--_top);
@@ -294,6 +298,25 @@
         border: none;
 
         border-radius: 5px;
+
+        &--opponent-view {
+            translate: 0 calc(-100% + var(--_square-size));
+
+            &>.chess__promotion-list {
+                flex-direction: column-reverse;
+
+            }
+        }
+
+        @include mobile-only {
+            top: auto;
+            bottom: 0;
+            left: 0;
+
+            width: 100%;
+
+            translate: 0 0;
+        }
     }
 
     &__promotion-popup-backdrop {
@@ -306,12 +329,37 @@
         height: 100%;
     }
 
-    &__promotion-item {
+    &__promotion-list {
         display: flex;
+        flex-direction: column;
+
+
+
+        @include mobile-only {
+            flex-direction: column-reverse !important;
+
+        }
+    }
+
+    &__promotion-item {
+        @include center-flex;
+
+        overflow: hidden;
+    }
+
+    &__promotion-cancel-button {
+        font-size: 16px;
+        width: 100%;
+
+        display: inline-block;
+
+        color: white;
     }
 
     &__promotion-piece {
         display: inline-flex;
+        align-items: center;
+
         width: var(--_square-size);
         height: var(--_square-size);
 
@@ -320,8 +368,44 @@
 
         background-color: rgba(255, 255, 255, 0.25);
 
-        &:is(:focus, :focus-visible) {
-            background-color: red;
+        transition: scale 150ms ease-in-out;
+
+        &:hover {
+            scale: 110%;
+            background-color: grey;
+        }
+
+        @include mobile-only {
+            width: 100%;
+            height: auto;
+
+            &>svg {
+                width: 75px;
+                height: 75px;
+            }
+
+            column-gap: 10px;
+
+            &:hover {
+                scale: 100%;
+            }
+        }
+    }
+
+    &__promotion-piece-name {
+        display: none;
+
+        color: white;
+
+        @include mobile-only {
+            // ?Not using display: flex because it doesn't work with the ::first-letter pseudo element
+            display: block;
+
+            font-size: 24px;
+
+            &::first-letter {
+                text-transform: uppercase;
+            }
         }
     }
 }

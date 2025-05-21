@@ -192,7 +192,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.injectPromotionDialog(html);
   };
 
-  private clearPromotionDialog = () => {
+  protected clearPromotionDialog = () => {
     if (!this.promotionDialogContainer) {
       return;
     }
@@ -222,7 +222,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     color: PieceColor
   ): string => {
     const promotionPiecesArray = ["queen", "rook", "bishop", "knight"] as const;
-    return /* html */ `
+
+    const dialogHTML = /* html */ `
       <div class="chess__promotion-popup-backdrop"></div>
       <dialog class="chess__promotion-popup ${
         this.boardPerspective === color
@@ -238,6 +239,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
                   <svg>
                     <use href="#${color}-${piece}"></use>
                   </svg>
+
+                  <span class="chess__promotion-piece-name">${piece}</span>
                 </button>
               </li>`
             )
@@ -248,6 +251,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
         </ul>
       </dialog>
     `;
+
+    return dialogHTML;
   };
 
   private injectPromotionDialog = (html: string) => {
