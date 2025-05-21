@@ -201,14 +201,19 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.promotionDialogContainer = null;
   };
 
-  private getDialogCoordinates = (square: AlgebraicNotation) => {
+  private getDialogCoordinates = (
+    square: AlgebraicNotation
+  ): { left: number; top: number } => {
     const { fileIndex, rankIndex } =
       BoardUtils.getBoardIndicesFromAlgebraicNotation(square);
 
-    return {
-      left: Number(fileIndex) * this.squareSize,
-      top: Number(rankIndex) * this.squareSize,
-    };
+    const boardRect: DOMRect = this.container.getBoundingClientRect();
+    const squareSize: number = this.squareSize;
+
+    const left: number = Number(fileIndex) * squareSize + boardRect.left;
+    const top: number = Number(rankIndex) * squareSize + boardRect.top;
+
+    return { left, top };
   };
 
   private renderPromotionDialogHTML = (
@@ -219,7 +224,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const promotionPiecesArray = ["queen", "rook", "bishop", "knight"] as const;
     return /* html */ `
       <div class="chess__promotion-popup-backdrop"></div>
-      <dialog class="chess__promotion-popup" style="--_left: ${left}px; --_top: ${top}px;">
+      <dialog class="chess__promotion-popup ${
+        this.boardPerspective === color
+          ? ""
+          : "chess__promotion-popup--opponent-view"
+      }" style="--_left: ${left}px; --_top: ${top}px;">
         <ul class="chess__promotion-list">
           ${promotionPiecesArray
             .map(
@@ -233,8 +242,10 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
               </li>`
             )
             .join("")}
+            <li class="chess__promotion-item chess__promotion-item--cancel">
+              <button type="button" class="chess__promotion-cancel-button">×</button>
+            </li>
         </ul>
-        <!-- TODO: Add button to close the dialog if you don't actually want to promote -->
       </dialog>
     `;
   };
@@ -243,7 +254,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const container = document.createElement("div");
     container.classList.add("chess__promotion-container");
     container.innerHTML = html;
-    this.container.appendChild(container);
+
+    const main = document.querySelector<HTMLElement>("[data-element=index]");
+    main.appendChild(container);
 
     this.promotionDialogContainer = container;
 
