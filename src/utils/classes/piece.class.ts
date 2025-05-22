@@ -11,6 +11,8 @@ export type PieceType =
   | "queen"
   | "king";
 
+export type PromotedPiece = Exclude<PieceType, "pawn" | "king">;
+
 /**
  * Represents the core logical attributes of a chess piece used for move generation and game logic.
  */
@@ -50,7 +52,7 @@ export interface IPieceLogic {
   hasMoved: boolean;
   isSlidingPiece: boolean;
   moveTo(position: IPieceLogic["position"], noAnimation?: boolean): void;
-  promotePawn(newType: Exclude<PieceType, "pawn" | "king">): void;
+  promotePawn(newType: PromotedPiece): void;
   toFEN(): string;
 }
 
@@ -115,6 +117,7 @@ class Piece implements IPieceLogic, IPieceUI {
       <svg>
         <use href="#${this.color}-${this.type}"></use>
       </svg>
+      <!-- <p data-element="piece-debug">${this.position.fileIndex}${this.position.rankIndex}</p> -->
     `;
     span.style.setProperty("--_index-x", this.position.rankIndex);
     span.style.setProperty("--_index-y", this.position.fileIndex);
@@ -226,14 +229,25 @@ class Piece implements IPieceLogic, IPieceUI {
     this.position = newPos;
   };
 
-  public promotePawn = (newType: Omit<PieceType, "pawn" | "king">): void => {
+  public promotePawn = (newType: PromotedPiece): void => {
     if (this.type !== "pawn") {
       return;
     }
 
-    // TODO: Add logic to promote the pawn
+    this.promotePawnState(newType);
+    this.updatePromotionVisuals();
+  };
 
+  private promotePawnState = (newType: PromotedPiece): void => {
+    this.type = newType;
     this.checkSlidingPiece();
+  };
+
+  private updatePromotionVisuals = (): void => {
+    this.element.dataset.piece = this.type;
+
+    const use = this.element.querySelector<SVGUseElement>("use");
+    use.setAttribute("href", `#${this.color}-${this.type}`);
   };
 
   public isCastlingMove = (
