@@ -89,7 +89,7 @@ abstract class RulesEngine {
     return isInCheck;
   };
 
-  static shouldPromotePawn = (piece: Piece, to: AlgebraicNotation): boolean => {
+  static canPromotePawn = (piece: Piece, to: AlgebraicNotation): boolean => {
     if (piece.type !== "pawn") {
       return false;
     }
