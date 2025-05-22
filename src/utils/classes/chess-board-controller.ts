@@ -1,7 +1,12 @@
 import BoardUtils from "./board-utils.class";
 import MovesGenerator, { KingPiece } from "./move-generator.class";
 
-import Piece, { PieceColor, PieceType, IPieceLogic } from "./piece.class";
+import Piece, {
+  PieceColor,
+  PieceType,
+  IPieceLogic,
+  PromotedPiece,
+} from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 import type { Move, AlgebraicNotation } from "./chess-board.class"; //
@@ -183,13 +188,15 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   protected showPromotionDialog = (
     square: AlgebraicNotation,
     color: "white" | "black"
-  ) => {
+  ): Promise<PromotedPiece> => {
     this.clearPromotionDialog();
 
     const { left, top } = this.getDialogCoordinates(square);
     const html = this.renderPromotionDialogHTML(left, top, color);
 
-    this.injectPromotionDialog(html);
+    return new Promise((resolve) => {
+      this.injectPromotionDialog(html, resolve);
+    });
   };
 
   protected clearPromotionDialog = () => {
@@ -263,7 +270,10 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     return dialogHTML;
   };
 
-  private injectPromotionDialog = (html: string) => {
+  private injectPromotionDialog = (
+    html: string,
+    onChoice: (piece: PromotedPiece | null) => void
+  ) => {
     const container = document.createElement("div");
     container.classList.add("chess__promotion-container");
     container.innerHTML = html;
@@ -276,10 +286,49 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const dialog = container.querySelector<HTMLDialogElement>("dialog");
     dialog?.show();
 
-    container.addEventListener(
-      "click",
-      this.handlePromotionDialogEventsByDelegation
-    );
+    // Wrap event handler to forward user choice
+    const handler = (event: PointerEvent) => {
+      const target = event.target as HTMLElement;
+
+      // Piece selected
+      const pieceButton = target.closest<HTMLButtonElement>(
+        ".chess__promotion-piece"
+      );
+      if (pieceButton) {
+        const piece = pieceButton
+          .closest("[data-promotion-piece]")
+          ?.getAttribute("data-promotion-piece") as PromotedPiece | null;
+        if (piece) {
+          cleanup();
+          onChoice(piece);
+        }
+        return;
+      }
+
+      // Cancel pressed
+      const cancelButton = target.closest("[data-element=promotion-cancel]");
+      if (cancelButton) {
+        cleanup();
+        onChoice(null);
+        return;
+      }
+
+      // Click outside on backdrop
+      const isBackdrop = target.closest(
+        "[data-element=promotion-dialog-backdrop]"
+      );
+      if (isBackdrop) {
+        cleanup();
+        onChoice(null);
+      }
+    };
+
+    const cleanup = () => {
+      container.removeEventListener("click", handler);
+      this.clearPromotionDialog();
+    };
+
+    container.addEventListener("click", handler);
   };
 
   private handlePromotionDialogEventsByDelegation = (event: PointerEvent) => {
