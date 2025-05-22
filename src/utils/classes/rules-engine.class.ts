@@ -6,7 +6,11 @@ import BaseMovesGenerator, {
   WhiteCastlingStart,
 } from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
-import ChessBoard, { AlgebraicNotation, ChessFile } from "./chess-board.class";
+import ChessBoard, {
+  AlgebraicNotation,
+  ChessFile,
+  ChessRank,
+} from "./chess-board.class";
 import {
   DirectionKey,
   KingPiece,
@@ -25,6 +29,11 @@ export type PinnedPieceInfo = {
   direction: Offset;
   pathToPin: AlgebraicNotation[];
 };
+
+export enum PawnPromotionRank {
+  Black = 7,
+  White = 0,
+}
 
 abstract class RulesEngine {
   public static isMoveLegal = (
@@ -78,6 +87,26 @@ abstract class RulesEngine {
     );
 
     return isInCheck;
+  };
+
+  static shouldPromotePawn = (piece: Piece, to: AlgebraicNotation): boolean => {
+    if (piece.type !== "pawn") {
+      return false;
+    }
+
+    const [file, rank] = to;
+
+    const rankIndex = BoardUtils.reverseRankMap.get(rank as ChessRank);
+
+    console.log({ rankIndex });
+
+    const whiteCanPromote: boolean =
+      piece.color === "white" && rankIndex === PawnPromotionRank.White;
+
+    const blackCanPromote: boolean =
+      piece.color === "black" && rankIndex === PawnPromotionRank.Black;
+
+    return whiteCanPromote || blackCanPromote;
   };
 
   public static filterIllegalKingMoves = (

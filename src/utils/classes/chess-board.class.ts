@@ -81,7 +81,7 @@ class ChessBoard extends ChessBoardController {
 
     const move: Move = this.createMove(piece, from, to);
 
-    if (RulesEngine.shouldPromotePawn(piece, to)) {
+    if (RulesEngine.canPromotePawn(piece, to)) {
       console.log("Pawn promotion available");
       const chosen = await this.showPromotionDialog(to, piece.color);
       if (!chosen) {
