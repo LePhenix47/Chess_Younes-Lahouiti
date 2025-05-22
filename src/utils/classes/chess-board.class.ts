@@ -55,12 +55,12 @@ class ChessBoard extends ChessBoardController {
    * Methods for handling pieces
    */
   // TODO: not finished yet
-  public updatePiecePosition = (
+  public updatePiecePosition = async (
     piece: Piece,
     rankIndex: number,
     fileIndex: number,
     noAnimation: boolean = false
-  ): void => {
+  ): Promise<void> => {
     const to: AlgebraicNotation = this.resolveTargetSquare(
       rankIndex,
       fileIndex
@@ -80,7 +80,20 @@ class ChessBoard extends ChessBoardController {
     }
 
     const move: Move = this.createMove(piece, from, to);
-    console.log({ move });
+
+    if (RulesEngine.shouldPromotePawn(piece, to)) {
+      console.log("Pawn promotion available");
+      const chosen = await this.showPromotionDialog(to, piece.color);
+      if (!chosen) {
+        console.log("Promotion cancelled");
+        this.rejectMove(piece, noAnimation);
+        return;
+      } else {
+        piece.promotePawn(chosen);
+      }
+
+      move.promotion = chosen;
+    }
 
     this.applyMove(move, noAnimation);
     this.clearSelectedPiece(from);
