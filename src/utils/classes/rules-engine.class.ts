@@ -12,6 +12,7 @@ import ChessBoard, {
   ChessFile,
   ChessRank,
   Move,
+  PlayerMaterialCount,
 } from "./chess-board.class";
 import {
   DirectionKey,
@@ -37,6 +38,12 @@ export enum PawnPromotionRank {
   White = 0,
 }
 
+export type InsufficientMaterialType =
+  | "king-only"
+  | "king-and-one-knight"
+  | "king-and-same-color-bishops"
+  | null;
+
 abstract class RulesEngine {
   public static isCheckmate = ({
     legalMoves,
@@ -58,6 +65,105 @@ abstract class RulesEngine {
   }): boolean => {
     // ? No other moves are available BUT king is NOT in check → Stalemate
     return !currentPlayer.inCheck && legalMoves.length === 0;
+  };
+
+  static isInsufficientMaterialDraw = (
+    piecesMap: Map<AlgebraicNotation, Piece>
+  ): boolean => {
+    const whiteMaterial = ChessBoard.getPlayerMaterial(piecesMap, "white");
+    const blackMaterial = ChessBoard.getPlayerMaterial(piecesMap, "black");
+
+    const whiteInsufficient =
+      RulesEngine.hasInsufficientMaterialForPlayer(whiteMaterial);
+    const blackInsufficient =
+      RulesEngine.hasInsufficientMaterialForPlayer(blackMaterial);
+
+    if (!whiteInsufficient || !blackInsufficient) {
+      return false; // One side can mate
+    }
+
+    const insufficiencyTypes = [whiteInsufficient, blackInsufficient];
+
+    // * King vs King
+    if (insufficiencyTypes.every((t) => t === "king-only")) {
+      return true;
+    }
+
+    // * King + 1 or n Bishops vs King + 1 or n Bishops
+    // * AND both opposing bishops are the same square type
+    if (insufficiencyTypes.every((t) => t === "king-and-same-color-bishops")) {
+      const whiteBishopColor = Array.from(whiteMaterial.bishopColors)[0];
+      const blackBishopColor = Array.from(blackMaterial.bishopColors)[0];
+
+      const allBishopsAreTheSameColor: boolean =
+        whiteBishopColor === blackBishopColor;
+
+      return allBishopsAreTheSameColor;
+    }
+
+    // * King vs King + 1 Bishop
+    if (
+      insufficiencyTypes.includes("king-only") &&
+      insufficiencyTypes.includes("king-and-same-color-bishops")
+    ) {
+      return true;
+    }
+
+    // * King vs King + 1 Knight
+    if (
+      insufficiencyTypes.includes("king-only") &&
+      insufficiencyTypes.includes("king-and-one-knight")
+    ) {
+      return true;
+    }
+
+    return false;
+  };
+
+  static hasInsufficientMaterialForPlayer = (
+    material: PlayerMaterialCount
+  ): InsufficientMaterialType => {
+    // ? These pieces are enough for checkmate: pawns, rooks, queens
+    const hasHeavyPieces: boolean = [
+      material.pawns,
+      material.rooks,
+      material.queens,
+    ].some((heavyPieceCount) => heavyPieceCount > 0);
+    if (hasHeavyPieces) {
+      return null;
+    }
+
+    // ? 🐴 Juan count over 1
+    const hasMoreThanOneHorsey: boolean = material.knights > 1;
+    if (hasMoreThanOneHorsey) {
+      return null;
+    }
+
+    // ? King only → cannot checkmate
+    const isKingOnly: boolean =
+      material.kings === 1 && material.bishops === 0 && material.knights === 0;
+    if (isKingOnly) {
+      return "king-only";
+    }
+
+    // ? King + 1 Knight
+    const isKingWithOneKnight: boolean =
+      material.kings === 1 && material.knights === 1 && material.bishops === 0;
+    if (isKingWithOneKnight) {
+      return "king-and-one-knight";
+    }
+
+    // ? King + 1 or n Bishop(s), ALL on same color
+    const isKingWithSameColorBishops: boolean =
+      material.kings === 1 &&
+      material.knights === 0 &&
+      material.bishops > 0 &&
+      material.bishopColors.size === 1;
+    if (isKingWithSameColorBishops) {
+      return "king-and-same-color-bishops";
+    }
+
+    return null;
   };
 
   public static isMoveLegal = (
