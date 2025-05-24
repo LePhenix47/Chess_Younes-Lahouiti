@@ -91,10 +91,12 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const square = document.createElement("div");
     square.classList.add("chess__square");
 
-    const algebraicNotation = `${BoardUtils.fileMap.get(
-      file
-    )}${BoardUtils.rankMap.get(visualRank)}`;
-    const isDark = (file + rank) % 2 === 0;
+    const algebraicNotation = BoardUtils.getAlgebraicNotationFromBoardIndices(
+      file,
+      visualRank
+    );
+
+    const isDark = BoardUtils.isSquareOfType(algebraicNotation, "dark");
 
     square.dataset.file = file.toString();
     square.dataset.rank = rank.toString();
