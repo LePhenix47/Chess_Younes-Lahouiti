@@ -244,6 +244,9 @@
 
             left: calc(var(--_drag-x));
             top: calc(var(--_drag-y));
+
+            will-change: left, top;
+            transform: translateZ(0);
         }
 
         &.no-transition {
