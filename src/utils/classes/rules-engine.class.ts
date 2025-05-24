@@ -6,10 +6,12 @@ import BaseMovesGenerator, {
   WhiteCastlingStart,
 } from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
+import { LegalMoves } from "./chess-board-controller";
 import ChessBoard, {
   AlgebraicNotation,
   ChessFile,
   ChessRank,
+  Move,
 } from "./chess-board.class";
 import {
   DirectionKey,
@@ -36,6 +38,28 @@ export enum PawnPromotionRank {
 }
 
 abstract class RulesEngine {
+  public static isCheckmate = ({
+    legalMoves,
+    currentPlayer,
+  }: {
+    legalMoves: LegalMoves;
+    currentPlayer: Player;
+  }): boolean => {
+    // ? No other moves are available AND king is in check → Checkmate
+    return currentPlayer.inCheck && legalMoves.length === 0;
+  };
+
+  public static isStalemate = ({
+    legalMoves,
+    currentPlayer,
+  }: {
+    legalMoves: LegalMoves;
+    currentPlayer: Player;
+  }): boolean => {
+    // ? No other moves are available BUT king is NOT in check → Stalemate
+    return !currentPlayer.inCheck && legalMoves.length === 0;
+  };
+
   public static isMoveLegal = (
     board: ChessBoard,
     piece: Piece,

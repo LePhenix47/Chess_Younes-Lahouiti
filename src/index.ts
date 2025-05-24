@@ -23,6 +23,10 @@ const chessBoardInstance = new ChessBoard(chessBoardElement);
 const userPointer = new UserPointer(chessBoardElement);
 
 userPointer.on("custom:pointer-drag-start", (e) => {
+  if (chessBoardInstance.isGameOver) {
+    return;
+  }
+
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
@@ -40,6 +44,10 @@ userPointer.on("custom:pointer-drag-start", (e) => {
 });
 
 userPointer.on("custom:pointer-drag-click", (e) => {
+  if (chessBoardInstance.isGameOver) {
+    return;
+  }
+
   const { clickedElement } = e.detail;
 
   clickedElement.classList.remove("dragging");
@@ -99,6 +107,10 @@ userPointer.on("custom:pointer-drag-click", (e) => {
 
 // TODO: Refactor all of this to make a simple method call
 userPointer.on("custom:pointer-drag-move", (e) => {
+  if (chessBoardInstance.isGameOver) {
+    return;
+  }
+
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
@@ -126,6 +138,10 @@ userPointer.on("custom:pointer-drag-move", (e) => {
 });
 
 userPointer.on("custom:pointer-drag-end", (e) => {
+  if (chessBoardInstance.isGameOver) {
+    return;
+  }
+
   const isPiece = chessBoardInstance.elementIsChessPiece(
     userPointer.pressedElement
   );
@@ -182,13 +198,15 @@ chessBoardInstance.generateBoard();
 
 function enPassantTestPosition() {
   chessBoardInstance.addPiece("bishop", "black", "g7");
-  chessBoardInstance.addPiece("king", "black", "a4");
-  chessBoardInstance.addPiece("pawn", "black", "c4");
+  chessBoardInstance.addPiece("king", "black", "g6");
+  chessBoardInstance.addPiece("pawn", "black", "c2");
+  chessBoardInstance.addPiece("pawn", "black", "a7");
   chessBoardInstance.addPiece("rook", "white", "h4");
-  chessBoardInstance.addPiece("pawn", "white", "d2");
-  chessBoardInstance.addPiece("king", "white", "d1");
+  chessBoardInstance.addPiece("pawn", "white", "d7");
+  chessBoardInstance.addPiece("pawn", "white", "e2");
+  chessBoardInstance.addPiece("king", "white", "h1");
+  chessBoardInstance.addPiece("bishop", "white", "b1");
 
-  // chessBoardInstance.addPiece("bishop", "white", "e4");
   // chessBoardInstance.addPiece("king", "white", "a5");
   // chessBoardInstance.addPiece("pawn", "white", "c5");
   // chessBoardInstance.addPiece("rook", "black", "h5");

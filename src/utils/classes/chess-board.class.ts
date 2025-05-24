@@ -1,7 +1,7 @@
 import Piece, { PieceColor, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
-import ChessBoardController from "./chess-board-controller";
+import ChessBoardController, { LegalMoves } from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
 import { KingPiece } from "./move-generator.class";
 import Player from "./player.class";
@@ -18,6 +18,15 @@ export type Move = {
   capturedPiece?: Piece;
   promotion?: PieceType;
 };
+
+export type WinLossResult = "checkmate" | "resign" | "timeout";
+export type DrawResult =
+  | "draw-agreement"
+  | "threefold-repetition"
+  | "50-move-rule"
+  | "stalemate"
+  | "insufficient-checkmating-material"
+  | "timeout-vs-insufficient-material";
 
 class ChessBoard extends ChessBoardController {
   public static getPieceFromArray = (
@@ -47,9 +56,15 @@ class ChessBoard extends ChessBoardController {
     return piece;
   };
 
+  public isGameOver = false;
+
   constructor(container: HTMLElement) {
     super(container);
   }
+
+  public isPlayerInCheck = (player: Player): boolean => {
+    return player.inCheck;
+  };
 
   /*
    * Methods for handling pieces
@@ -232,6 +247,8 @@ class ChessBoard extends ChessBoardController {
     this.switchTurnTo();
     this.updateAllLegalMovesForCurrentPlayer();
 
+    this.checkGameEndConditions();
+
     console.log(this.enPassantSquare);
   };
 
@@ -368,6 +385,44 @@ class ChessBoard extends ChessBoardController {
       kingSide: player.canCastle.get("kingSide"),
       queenSide: player.canCastle.get("queenSide"),
     });
+  };
+
+  private checkGameEndConditions = (): void => {
+    const currentPlayer: Player = this.currentPlayer;
+    const legalMoves: LegalMoves = this.allLegalMovesForCurrentPlayer;
+
+    if (RulesEngine.isCheckmate({ legalMoves, currentPlayer })) {
+      const rivalPlayer: PieceColor = this.rivalPlayer.color;
+      this.endGame({ winner: rivalPlayer, reason: "checkmate" });
+    }
+
+    // We'll handle stalemate, etc., later.
+  };
+
+  private endGame = ({
+    winner,
+    reason,
+  }: {
+    winner: PieceColor | null;
+    reason: WinLossResult | DrawResult;
+  }): void => {
+    this.isGameOver = true;
+
+    if (winner) {
+      console.log(
+        `%c${winner} wins by checkmate !!!`,
+        `background: ${winner}; color: ${
+          winner === "white" ? "black" : "white"
+        }; padding: 5px;`
+      );
+    } else {
+      console.log(
+        `%cDraw by ${reason}`,
+        "background: grey; color: black; padding: 5px;"
+      );
+    }
+
+    // TODO: Disable interaction, show modal, highlight king, etc.
   };
 
   /**

@@ -42,7 +42,11 @@ export interface IBoardUI {
   ): void;
   dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
 }
-// Or re-define if needed
+
+export type LegalMoves = {
+  piece: Piece;
+  moves: AlgebraicNotation[];
+}[];
 
 abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public container: HTMLElement;
@@ -60,10 +64,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   private promotionDialogContainer: HTMLElement | null = null;
 
-  protected allLegalMovesForCurrentPlayer: {
-    piece: Piece;
-    moves: AlgebraicNotation[];
-  }[] = [];
+  protected allLegalMovesForCurrentPlayer: LegalMoves = [];
 
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
