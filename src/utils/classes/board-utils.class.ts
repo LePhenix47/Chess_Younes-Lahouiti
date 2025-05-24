@@ -143,6 +143,22 @@ abstract class BoardUtils {
 
     return `${file}${rank}` as AlgebraicNotation;
   };
+
+  public static isSquareOfType = (
+    square: AlgebraicNotation,
+    type: "light" | "dark"
+  ): boolean => {
+    const { fileIndex, rankIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(square);
+
+    const file = Number(fileIndex);
+    const rank = Number(rankIndex);
+
+    const isLightType: boolean = type === "light";
+    const isLightSquare: boolean = (file + rank) % 2 === 0;
+
+    return isLightType ? isLightSquare : !isLightSquare;
+  };
 }
 
 export default BoardUtils;
