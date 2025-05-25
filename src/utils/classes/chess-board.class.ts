@@ -5,6 +5,7 @@ import ChessBoardController, { LegalMoves } from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
 import { KingPiece } from "./move-generator.class";
 import Player from "./player.class";
+import ZobristHasher from "./zobrist-hasher.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -296,7 +297,9 @@ class ChessBoard extends ChessBoardController {
     const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
     this.highlightLegalMoves(selectedPieceLegalMoves, "remove");
 
-    this.recordMove(move);
+    this.recordMove();
+    this.incrementHalfMoveClock(move);
+    this.incrementFullMoveNumber();
 
     this.updateCheckStateFor(this.currentPlayer);
     this.updateCheckStateFor(this.rivalPlayer);
@@ -305,8 +308,6 @@ class ChessBoard extends ChessBoardController {
     this.updateAllLegalMovesForCurrentPlayer();
 
     this.checkGameEndConditions();
-
-    console.log(this.enPassantSquare);
   };
 
   private handleCastling = (move: Move, noAnimation: boolean): void => {
@@ -419,8 +420,28 @@ class ChessBoard extends ChessBoardController {
     this.setOccupiedSquare(to, piece);
   };
 
-  private recordMove = (move: Move): void => {
-    this.playedMoves = [...this.playedMoves, move];
+  private recordMove = (): void => {
+    this.positionRepetitionMap;
+  };
+
+  public incrementHalfMoveClock = (move: Move): void => {
+    const isPawnMove: boolean =
+      move.piece.type === "pawn" || Boolean(move.promotion);
+    const isCapture: boolean = !!move.capturedPiece;
+
+    if (isPawnMove || isCapture) {
+      this.halfMoveClock = 0;
+    } else {
+      this.halfMoveClock++;
+    }
+  };
+
+  public incrementFullMoveNumber = (): void => {
+    if (this.currentPlayer.color === "white") {
+      return;
+    }
+
+    this.fullMoveNumber++;
   };
 
   private updateCheckStateFor = (player: Player): void => {
@@ -452,8 +473,9 @@ class ChessBoard extends ChessBoardController {
       const rivalPlayer: PieceColor = this.rivalPlayer.color;
       this.endGame({ winner: rivalPlayer, reason: "checkmate" });
     }
+    // TODO for much later: Win-Loss by timeout or resign
 
-    // We'll handle stalemate, etc., later.
+    // TODO for now: Draw by: Stalemate, Insufficient material, 50 moves rule and threefold repetition
   };
 
   private endGame = ({
