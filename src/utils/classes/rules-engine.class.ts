@@ -67,7 +67,7 @@ abstract class RulesEngine {
     return !currentPlayer.inCheck && legalMoves.length === 0;
   };
 
-  static isInsufficientMaterialDraw = (
+  public static isInsufficientMaterialDraw = (
     piecesMap: Map<AlgebraicNotation, Piece>
   ): boolean => {
     const whiteMaterial = ChessBoard.getPlayerMaterial(piecesMap, "white");
@@ -120,7 +120,7 @@ abstract class RulesEngine {
     return false;
   };
 
-  static hasInsufficientMaterialForPlayer = (
+  public static hasInsufficientMaterialForPlayer = (
     material: PlayerMaterialCount
   ): InsufficientMaterialType => {
     // ? These pieces are enough for checkmate: pawns, rooks, queens
@@ -219,7 +219,10 @@ abstract class RulesEngine {
     return isInCheck;
   };
 
-  static canPromotePawn = (piece: Piece, to: AlgebraicNotation): boolean => {
+  public static canPromotePawn = (
+    piece: Piece,
+    to: AlgebraicNotation
+  ): boolean => {
     if (piece.type !== "pawn") {
       return false;
     }
