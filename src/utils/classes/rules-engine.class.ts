@@ -67,6 +67,12 @@ abstract class RulesEngine {
     return !currentPlayer.inCheck && legalMoves.length === 0;
   };
 
+  public static isFiftyMoveRuleDraw = (halfMoveClock: number): boolean => {
+    const MAX_HALF_MOVES: number = 100;
+
+    return halfMoveClock >= MAX_HALF_MOVES;
+  };
+
   public static isInsufficientMaterialDraw = (
     piecesMap: Map<AlgebraicNotation, Piece>
   ): boolean => {
