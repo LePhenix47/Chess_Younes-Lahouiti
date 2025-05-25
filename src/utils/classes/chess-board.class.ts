@@ -39,7 +39,7 @@ export type PlayerMaterialCount = {
 };
 
 class ChessBoard extends ChessBoardController {
-  static getPlayerMaterial = (
+  public static getPlayerMaterial = (
     piecesMap: Map<AlgebraicNotation, Piece>,
     playerColor: "white" | "black"
   ): PlayerMaterialCount => {
@@ -124,10 +124,6 @@ class ChessBoard extends ChessBoardController {
     super(container);
   }
 
-  public isPlayerInCheck = (player: Player): boolean => {
-    return player.inCheck;
-  };
-
   /*
    * Methods for handling pieces
    */
@@ -165,10 +161,9 @@ class ChessBoard extends ChessBoardController {
         console.log("Promotion cancelled");
         this.rejectMove(piece, noAnimation);
         return;
-      } else {
-        piece.promotePawn(chosen);
       }
 
+      piece.promotePawn(chosen);
       move.promotion = chosen;
     }
 
