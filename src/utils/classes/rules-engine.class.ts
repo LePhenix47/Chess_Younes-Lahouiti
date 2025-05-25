@@ -67,6 +67,17 @@ abstract class RulesEngine {
     return !currentPlayer.inCheck && legalMoves.length === 0;
   };
 
+  public static isThreefoldRepetitionDraw = (
+    positionRepetitionMap: Map<bigint, number>
+  ): boolean => {
+    for (const count of positionRepetitionMap.values()) {
+      if (count >= 3) {
+        return true;
+      }
+    }
+    return false;
+  };
+
   public static isFiftyMoveRuleDraw = (halfMoveClock: number): boolean => {
     const MAX_HALF_MOVES: number = 100;
 

@@ -297,7 +297,8 @@ class ChessBoard extends ChessBoardController {
     const selectedPieceLegalMoves = this.legalMovesForSelectedPiece || [];
     this.highlightLegalMoves(selectedPieceLegalMoves, "remove");
 
-    this.recordMove();
+    this.recordMoveAsHash();
+
     this.incrementHalfMoveClock(move);
     this.incrementFullMoveNumber();
 
@@ -420,8 +421,15 @@ class ChessBoard extends ChessBoardController {
     this.setOccupiedSquare(to, piece);
   };
 
-  private recordMove = (): void => {
-    this.positionRepetitionMap;
+  private recordMoveAsHash = (): void => {
+    const hash = ZobristHasher.computeHash(
+      this.piecesMap,
+      this.currentPlayer,
+      this.enPassantSquare ?? null
+    );
+
+    const currentCount = this.positionRepetitionMap.get(hash) ?? 0;
+    this.positionRepetitionMap.set(hash, currentCount + 1);
   };
 
   public incrementHalfMoveClock = (move: Move): void => {
@@ -469,13 +477,42 @@ class ChessBoard extends ChessBoardController {
     const currentPlayer: Player = this.currentPlayer;
     const legalMoves: LegalMoves = this.allLegalMovesForCurrentPlayer;
 
+    // ♔ Checkmate
     if (RulesEngine.isCheckmate({ legalMoves, currentPlayer })) {
       const rivalPlayer: PieceColor = this.rivalPlayer.color;
       this.endGame({ winner: rivalPlayer, reason: "checkmate" });
+      return;
     }
     // TODO for much later: Win-Loss by timeout or resign
 
-    // TODO for now: Draw by: Stalemate, Insufficient material, 50 moves rule and threefold repetition
+    // 🤝 Stalemate
+    if (RulesEngine.isStalemate({ legalMoves, currentPlayer })) {
+      this.endGame({ winner: null, reason: "stalemate" });
+      return;
+    }
+
+    // 📋 Threefold Repetition
+    if (RulesEngine.isThreefoldRepetitionDraw(this.positionRepetitionMap)) {
+      this.endGame({ winner: null, reason: "threefold-repetition" });
+      return;
+    }
+
+    // ⏱️ Fifty-Move Rule
+    if (RulesEngine.isFiftyMoveRuleDraw(this.halfMoveClock)) {
+      this.endGame({ winner: null, reason: "50-move-rule" });
+      return;
+    }
+
+    // 🪙 Insufficient Material
+    if (RulesEngine.isInsufficientMaterialDraw(this.piecesMap)) {
+      this.endGame({
+        winner: null,
+        reason: "insufficient-checkmating-material",
+      });
+      return;
+    }
+
+    // TODO: Handle other draw scenarios: timeout vs insufficient material and agreement
   };
 
   private endGame = ({
@@ -488,6 +525,7 @@ class ChessBoard extends ChessBoardController {
     this.isGameOver = true;
 
     if (winner) {
+      alert(`Game over! ${winner} wins by ${reason}`);
       console.log(
         `%c${winner} wins by checkmate !!!`,
         `background: ${winner}; color: ${
@@ -495,6 +533,7 @@ class ChessBoard extends ChessBoardController {
         }; padding: 5px;`
       );
     } else {
+      alert(`Game over! Draw by ${reason}`);
       console.log(
         `%cDraw by ${reason}`,
         "background: grey; color: black; padding: 5px;"

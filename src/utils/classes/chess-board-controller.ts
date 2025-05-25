@@ -62,7 +62,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public boardPerspective: PieceColor = "white";
 
-  public playedMoves: Move[] = [];
+  // ? Using Zobrist hashing
+  protected positionRepetitionMap = new Map<bigint, number>();
 
   private promotionDialogContainer: HTMLElement | null = null;
 
