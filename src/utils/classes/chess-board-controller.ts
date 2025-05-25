@@ -60,6 +60,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     HTMLElement
   >();
 
+  public boardPerspective: PieceColor = "white";
+
   public playedMoves: Move[] = [];
 
   private promotionDialogContainer: HTMLElement | null = null;
@@ -68,13 +70,16 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public selectedPiece: Piece | null = null;
   public selectedPieceLegalMoves: AlgebraicNotation[] | null = null;
-  public boardPerspective: PieceColor = "white";
   public legalMovesForSelectedPiece: AlgebraicNotation[] | null = null;
 
   public currentTurn: PieceColor = "black";
   public whitePlayer: Player;
   public blackPlayer: Player;
+
   public enPassantSquare: AlgebraicNotation | null = null;
+
+  public halfMoveClock: number = 0;
+  public fullMoveNumber: number = 1;
 
   constructor(container: HTMLElement) {
     this.container = container;
