@@ -1,4 +1,9 @@
-import Piece, { PieceColor, PieceType } from "./piece.class";
+import Piece, {
+  FenPieceType,
+  IPieceLogic,
+  PieceColor,
+  PieceType,
+} from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import ChessBoardController, { LegalMoves } from "./chess-board-controller";
@@ -6,6 +11,7 @@ import RulesEngine from "./rules-engine.class";
 import { KingPiece } from "./move-generator.class";
 import Player from "./player.class";
 import ZobristHasher from "./zobrist-hasher.class";
+import NotationUtils from "./notation-utils.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -118,8 +124,6 @@ class ChessBoard extends ChessBoardController {
 
     return piece;
   };
-
-  public isGameOver = false;
 
   constructor(container: HTMLElement) {
     super(container);
@@ -309,6 +313,26 @@ class ChessBoard extends ChessBoardController {
     this.updateAllLegalMovesForCurrentPlayer();
 
     this.checkGameEndConditions();
+
+    const fen = NotationUtils.generateFenFromPosition({
+      currentTurn: this.currentTurn,
+      enPassantSquare: this.enPassantSquare,
+      halfMoveClock: this.halfMoveClock,
+      fullMoveNumber: this.fullMoveNumber,
+      piecesMap: this.piecesMap,
+      castlingRights: {
+        black: {
+          kingSide: this.blackPlayer.canCastle.get("kingSide"),
+          queenSide: this.blackPlayer.canCastle.get("queenSide"),
+        },
+        white: {
+          kingSide: this.whitePlayer.canCastle.get("kingSide"),
+          queenSide: this.whitePlayer.canCastle.get("queenSide"),
+        },
+      },
+    });
+
+    console.log("fen", fen);
   };
 
   private handleCastling = (move: Move, noAnimation: boolean): void => {
@@ -543,22 +567,79 @@ class ChessBoard extends ChessBoardController {
     // TODO: Disable interaction, show modal, highlight king, etc.
   };
 
-  /**
-   * Checks and updates the repetition count for the current position.
-   * This should be called *after* a move is made and the FEN is updated.
-   * Only the relevant portion of FEN (piece placement, side to move,
-   * castling rights, and en passant square) is used for repetition detection.
-   *
-   * Once a position has occurred 3 times, it's a draw by repetition.
-   */
-  private readonly updateRepetitionTracker = (fen: string): void => {
-    // TODO: Extract repetition key from FEN and track its count in a Map<string, number>
-    // If the count reaches 3, trigger draw-by-repetition logic
-  };
+  public loadFen(fen: string): void {
+    const isFenSyntaxValid = NotationUtils.validateFenSyntax(fen);
+    if (!isFenSyntaxValid) {
+      alert("Invalid FEN syntax");
+      return;
+    }
+    // 1. Parse raw FEN into interpreted structure
+    const {
+      pieces,
+      sideToMove,
+      castlingRights,
+      enPassant,
+      halfMoveClock,
+      fullMoveNumber,
+    } = NotationUtils.interpretFen(fen);
 
-  // Placeholder for FEN and PGN methods
-  public loadFen = (fen: string): void => {};
-  // Placeholder for FEN and PGN methods
+    // 2. Clear current board state
+    this.clearBoard();
+
+    // 3. Validate and apply the parsed piece positions
+    for (let rankIndex = 0; rankIndex < 8; rankIndex++) {
+      for (let fileIndex = 0; fileIndex < 8; fileIndex++) {
+        const char = pieces[rankIndex][fileIndex];
+        if (/\s+/g.test(char)) {
+          continue;
+        }
+
+        const pieceInfo = Piece.fenSymbolToPieceMap.get(char as FenPieceType);
+        if (!pieceInfo) {
+          throw new Error(`Invalid piece character in FEN: "${char}"`);
+        }
+
+        const square = BoardUtils.getAlgebraicNotationFromBoardIndices(
+          fileIndex,
+          rankIndex
+        );
+
+        this.addPiece(pieceInfo.type, pieceInfo.color, square);
+      }
+    }
+
+    const fenAsciiBoard = NotationUtils.createASCIIBoard(fen, false);
+    const fenAsciiBoardEm = NotationUtils.createASCIIBoard(fen, true);
+    console.log(fenAsciiBoard);
+    console.log(fenAsciiBoardEm);
+
+    // 4. Sync game state (castling, en passant, turn, clocks)
+    this.currentTurn = sideToMove;
+
+    // TODO: Update player states - add check verification
+    this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
+    this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
+    this.enPassantSquare = enPassant?.square ?? null;
+
+    this.halfMoveClock = halfMoveClock;
+    this.fullMoveNumber = fullMoveNumber;
+
+    // 5. Update metadata (e.g., repetition map, legal moves, checks)
+    this.recordMoveAsHash();
+    this.updateAllLegalMovesForCurrentPlayer();
+    this.updateCheckStateFor(this.whitePlayer);
+    this.updateCheckStateFor(this.blackPlayer);
+
+    // TODO: Check if game is playable
+    /*
+    1. Kings amount for each side is different than 1
+    2. Pawns on either 8th or 1st rank (regardless of color)
+    3. Both kings in check
+    4. Your turn to play but you're already checking opponent king making the king capture
+
+    */
+  }
+
   public loadPgn = (pgn: string): void => {};
 }
 

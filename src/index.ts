@@ -14,6 +14,39 @@ import UserPointer from "@utils/classes/user-pointer.class";
 import Piece from "@utils/classes/piece.class";
 import BoardUtils from "@utils/classes/board-utils.class";
 
+const analysisTabForm = selectQuery(
+  '[data-element="analysis-tab"]'
+) as HTMLFormElement;
+
+const fenInputElement = selectQuery(
+  '[data-element="fen-input"]'
+) as HTMLInputElement;
+
+const pgnInputElement = selectQuery(
+  '[data-element="pgn-input"]'
+) as HTMLTextAreaElement;
+
+analysisTabForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const currentForm = event.currentTarget as HTMLFormElement;
+
+  const formData = new FormData(currentForm);
+
+  const formHashmap = new Map<string, string>(formData.entries());
+
+  const fen = formHashmap.get("fen") as string;
+  if (fen) {
+    chessBoardInstance.loadFen(fen);
+  }
+
+  const pgn = formHashmap.get("pgn") as string;
+  if (pgn) {
+    chessBoardInstance.loadPgn(pgn);
+  }
+
+  console.log({ fen, pgn });
+});
+
 const chessBoardElement: HTMLElement = selectQuery(
   '[data-element="chess-board"]'
 );
@@ -195,70 +228,4 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 });
 
 chessBoardInstance.generateBoard();
-
-function enPassantTestPosition() {
-  chessBoardInstance.addPiece("bishop", "black", "g7");
-  chessBoardInstance.addPiece("king", "black", "g6");
-  chessBoardInstance.addPiece("pawn", "black", "c2");
-  chessBoardInstance.addPiece("pawn", "black", "a7");
-  chessBoardInstance.addPiece("rook", "white", "h4");
-  chessBoardInstance.addPiece("pawn", "white", "d7");
-  chessBoardInstance.addPiece("pawn", "white", "e2");
-  chessBoardInstance.addPiece("king", "white", "h1");
-  chessBoardInstance.addPiece("bishop", "white", "b1");
-
-  // chessBoardInstance.addPiece("king", "white", "a5");
-  // chessBoardInstance.addPiece("pawn", "white", "c5");
-  // chessBoardInstance.addPiece("rook", "black", "h5");
-  // chessBoardInstance.addPiece("pawn", "black", "d7");
-  // chessBoardInstance.addPiece("king", "black", "d8");
-}
-enPassantTestPosition();
-
-// chessBoardInstance.addPiece("pawn", "white", "e2");
-// chessBoardInstance.addPiece("rook", "white", "h1");
-
-// chessBoardInstance.addPiece("pawn", "black", "g7");
-// chessBoardInstance.addPiece("knight", "black", "c7");
-// chessBoardInstance.addPiece("queen", "black", "b8");
-chessBoardInstance.updateAllLegalMovesForCurrentPlayer();
-
-/**
- * 
-// DEFAULT CHESS POSITION
-// White pieces
- */
-// chessBoardInstance.addPiece("rook", "white", "a1");
-// chessBoardInstance.addPiece("knight", "white", "b1");
-// chessBoardInstance.addPiece("bishop", "white", "c1");
-// chessBoardInstance.addPiece("queen", "white", "d1");
-// chessBoardInstance.addPiece("king", "white", "e1");
-// chessBoardInstance.addPiece("bishop", "white", "f1");
-// chessBoardInstance.addPiece("knight", "white", "g1");
-// chessBoardInstance.addPiece("rook", "white", "h1");
-// chessBoardInstance.addPiece("pawn", "white", "a2");
-// chessBoardInstance.addPiece("pawn", "white", "b2");
-// chessBoardInstance.addPiece("pawn", "white", "c2");
-// chessBoardInstance.addPiece("pawn", "white", "d2");
-// chessBoardInstance.addPiece("pawn", "white", "e2");
-// chessBoardInstance.addPiece("pawn", "white", "f2");
-// chessBoardInstance.addPiece("pawn", "white", "g2");
-// chessBoardInstance.addPiece("pawn", "white", "h2");
-
-// // Black pieces
-// chessBoardInstance.addPiece("rook", "black", "a8");
-// chessBoardInstance.addPiece("knight", "black", "b8");
-// chessBoardInstance.addPiece("bishop", "black", "c8");
-// chessBoardInstance.addPiece("queen", "black", "d8");
-// chessBoardInstance.addPiece("king", "black", "e8");
-// chessBoardInstance.addPiece("bishop", "black", "f8");
-// chessBoardInstance.addPiece("knight", "black", "g8");
-// chessBoardInstance.addPiece("rook", "black", "h8");
-// chessBoardInstance.addPiece("pawn", "black", "a7");
-// chessBoardInstance.addPiece("pawn", "black", "b7");
-// chessBoardInstance.addPiece("pawn", "black", "c7");
-// chessBoardInstance.addPiece("pawn", "black", "d7");
-// chessBoardInstance.addPiece("pawn", "black", "e7");
-// chessBoardInstance.addPiece("pawn", "black", "f7");
-// chessBoardInstance.addPiece("pawn", "black", "g7");
-// chessBoardInstance.addPiece("pawn", "black", "h7");
+chessBoardInstance.loadFen(chessBoardInstance.initialFen);

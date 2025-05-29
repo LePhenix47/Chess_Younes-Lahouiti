@@ -126,6 +126,48 @@ abstract class NotationUtils {
     return `${fenBoard} ${sideToMove} ${castling} ${enPassant} ${halfMoveClock} ${fullMoveNumber}`;
   };
 
+  static validateFenSyntax = (fen: string): boolean => {
+    const fields = fen.trim().split(/\s+/);
+    if (fields.length !== 6) return false;
+
+    const [position, turn, castling, enPassant, halfmove, fullmove] = fields;
+
+    // 1. Validate position
+    const ranks = position.split("/");
+    if (ranks.length !== 8) return false;
+    const validPieces = /^[prnbqkPRNBQK1-8]+$/;
+    for (const rank of ranks) {
+      if (!validPieces.test(rank)) return false;
+
+      let count = 0;
+      for (const char of rank) {
+        if (/\d/.test(char)) {
+          count += parseInt(char, 10);
+        } else {
+          count += 1;
+        }
+      }
+      if (count !== 8) return false;
+    }
+
+    // 2. Turn
+    if (!/^[wb]$/.test(turn)) return false;
+
+    // 3. Castling rights
+    if (!/^(-|[KQkq]{1,4})$/.test(castling)) return false;
+
+    // 4. En passant
+    if (!/^(-|[a-h][36])$/.test(enPassant)) return false;
+
+    // 5. Halfmove clock
+    if (!/^\d+$/.test(halfmove)) return false;
+
+    // 6. Fullmove number
+    if (!/^[1-9]\d*$/.test(fullmove)) return false;
+
+    return true;
+  };
+
   public loadPgn = (pgn: string): void => {
     /* TODO: Parse PGN */
     /*
@@ -158,37 +200,52 @@ abstract class NotationUtils {
     */
   };
 
-  createASCIIBoard = (fen) => {
+  public static createASCIIBoard = (
+    fen: string,
+    withEmojis: boolean = false
+  ): string => {
     const { pieces } = NotationUtils.interpretFen(fen);
-    // TODO: Code needs refactor
-    // TODO: Use BoardUtils class methods
-    const files = ["a", "b", "c", "d", "e", "f", "g", "h"];
-    const ranks = ["8", "7", "6", "5", "4", "3", "2", "1"];
+    const files = [...BoardUtils.reverseFileMap.keys()] as const;
+    const ranks = [...BoardUtils.reverseRankMap.keys()] as const;
 
-    let asciiBoard: string = "";
-    const border: string = "+-------------------------------+\n";
-    const separator: string = "|";
+    // Settings based on emoji mode
+    const cellWidth = withEmojis ? 7 : 5; // includes vertical bars
+    const innerWidth = cellWidth - 2; // inside cell without border bars
 
-    // Add the top border
-    asciiBoard += border;
+    // Create border line: +------+
+    const borderSegment = "-".repeat(innerWidth);
+    const border = "+" + Array(8).fill(borderSegment).join("+") + "+\n";
 
-    // Add the ranks and pieces
-    // TODO: improve code intelligibility
+    let asciiBoard = border;
+
     for (let i = 0; i < 8; i++) {
-      asciiBoard += separator;
+      const rankLine = pieces[i];
+      asciiBoard += "|";
+
       for (let j = 0; j < 8; j++) {
-        const piece: string = pieces.get(ranks[i] + files[j]);
-        asciiBoard += ` ${piece} ` + separator;
+        let char = rankLine[j] || " ";
+        if (withEmojis) {
+          char =
+            char !== " " ? BoardUtils.pieceToEmojiMap.get(char) ?? " " : " ";
+        }
+
+        // center text inside the innerWidth space
+        const paddingLeft = Math.floor((innerWidth - [...char].length) / 2);
+        const paddingRight = innerWidth - paddingLeft - [...char].length;
+
+        asciiBoard +=
+          " ".repeat(paddingLeft) + char + " ".repeat(paddingRight) + "|";
       }
-      const rank = ranks[i];
-      asciiBoard += ` ${rank}\n`;
+      asciiBoard += ` ${ranks[i]}\n`;
       asciiBoard += border;
     }
 
-    // Add the file labels at the bottom
-    asciiBoard += "  ";
-    for (let file of files) {
-      asciiBoard += ` ${file}  `;
+    // File labels aligned with cells
+    asciiBoard += " ";
+    for (const file of files) {
+      const padLeft = Math.floor((innerWidth - 1) / 2);
+      const padRight = innerWidth - padLeft - 1;
+      asciiBoard += " ".repeat(padLeft) + file + " ".repeat(padRight);
     }
     asciiBoard += "\n";
 

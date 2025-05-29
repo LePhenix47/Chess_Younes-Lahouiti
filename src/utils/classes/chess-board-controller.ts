@@ -392,13 +392,16 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   ): void => {
     const normalizedPosition: IPieceLogic["position"] =
       BoardUtils.normalizePosition(position);
+    if (this.piecesMap.has(normalizedPosition.algebraicNotation)) {
+      console.error("Square is already occupied, cannot add piece!");
+      return;
+    }
 
     // * Create the piece using the updated normalizedPosition
     const piece = new Piece(type, color, normalizedPosition);
 
     // * Attach to board
     piece.attachToBoard(this.container);
-
     // * Update square occupation
 
     this.setOccupiedSquare(
@@ -763,7 +766,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     });
   };
 
-  public clearBoard = (): void => {
+  public readonly clearBoard = (): void => {
     // 1. Remove all piece elements from the DOM and internal map
     for (const piece of this.piecesMap.values()) {
       piece.removePiece();
@@ -801,5 +804,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     // 5. Clear promotion dialog if open
     this.clearPromotionDialog();
   };
+
+  getAllCastlingRights = () => {};
 }
 export default ChessBoardController;
