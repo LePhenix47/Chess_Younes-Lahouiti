@@ -1,5 +1,9 @@
+import BoardUtils from "./board-utils.class";
+import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
+import Piece, { PieceTypeMap } from "./piece.class";
+
 abstract class NotationUtils {
-  private static interpretFen = (fen: string) => {
+  public static interpretFen = (fen: string) => {
     const [
       board,
       sideToMoveRaw,
@@ -38,10 +42,11 @@ abstract class NotationUtils {
     let enPassant = null;
 
     if (enPassantRaw !== "-") {
+      const [file, rank] = enPassantRaw;
       enPassant = {
         square: enPassantRaw,
-        file: enPassantRaw[0],
-        rank: enPassantRaw[1],
+        fileIndex: BoardUtils.reverseFileMap.get(file as ChessFile),
+        rankIndex: BoardUtils.reverseRankMap.get(rank as ChessRank),
       };
     }
 
@@ -53,6 +58,72 @@ abstract class NotationUtils {
       halfMoveClock: Number(halfMoveClock),
       fullMoveNumber: Number(fullMoveNumber),
     };
+  };
+
+  public static generateFenFromPosition = ({
+    piecesMap,
+    currentTurn,
+    castlingRights,
+    enPassantSquare,
+    halfMoveClock,
+    fullMoveNumber,
+  }: {
+    piecesMap: Map<AlgebraicNotation, Piece>;
+    currentTurn: "white" | "black";
+    castlingRights: {
+      white: { kingSide: boolean; queenSide: boolean };
+      black: { kingSide: boolean; queenSide: boolean };
+    };
+    enPassantSquare: AlgebraicNotation | null;
+    halfMoveClock: number;
+    fullMoveNumber: number;
+  }): string => {
+    let fenBoard = "";
+
+    for (let rankIndex = 0; rankIndex < 8; rankIndex++) {
+      let emptyCount = 0;
+
+      for (let fileIndex = 0; fileIndex < 8; fileIndex++) {
+        const square: AlgebraicNotation =
+          BoardUtils.getAlgebraicNotationFromBoardIndices(fileIndex, rankIndex);
+        const piece: Piece = piecesMap.get(square);
+
+        if (piece) {
+          if (emptyCount > 0) {
+            fenBoard += emptyCount;
+            emptyCount = 0;
+          }
+
+          const key = `${piece.color}-${piece.type}` as PieceTypeMap;
+          fenBoard += Piece.pieceToFenSymbolMap.get(key) ?? "?";
+        } else {
+          emptyCount++;
+        }
+      }
+
+      if (emptyCount > 0) {
+        fenBoard += emptyCount;
+      }
+
+      if (rankIndex < 7) {
+        fenBoard += "/";
+      }
+    }
+
+    const sideToMove = currentTurn === "white" ? "w" : "b";
+
+    const castlingParts = [];
+
+    if (castlingRights.white.kingSide) castlingParts.push("K");
+    if (castlingRights.white.queenSide) castlingParts.push("Q");
+    if (castlingRights.black.kingSide) castlingParts.push("k");
+    if (castlingRights.black.queenSide) castlingParts.push("q");
+
+    const castling = castlingParts.length > 0 ? castlingParts.join("") : "-";
+
+    const enPassant = enPassantSquare ?? "-";
+
+    return `${fenBoard} ${sideToMove} ${castling} ${enPassant} ${halfMoveClock} ${fullMoveNumber}`;
   };
 
   public loadPgn = (pgn: string): void => {
