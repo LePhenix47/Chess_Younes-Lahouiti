@@ -63,7 +63,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public boardPerspective: PieceColor = "white";
 
   // ? Using Zobrist hashing
-  protected positionRepetitionMap = new Map<bigint, number>();
+  protected readonly positionRepetitionMap = new Map<bigint, number>();
 
   private promotionDialogContainer: HTMLElement | null = null;
 
@@ -81,6 +81,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public halfMoveClock: number = 0;
   public fullMoveNumber: number = 1;
+
+  public isGameOver = false;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -759,6 +761,45 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       type: "occupied",
       mode: "remove",
     });
+  };
+
+  public clearBoard = (): void => {
+    // 1. Remove all piece elements from the DOM and internal map
+    for (const piece of this.piecesMap.values()) {
+      piece.removePiece();
+    }
+    this.piecesMap.clear();
+
+    // 2. Clear square highlight attributes & classnames
+    for (const square of this.squareElementsMap.values()) {
+      square.removeAttribute("data-occupied-by");
+      square.removeAttribute("data-selected-square");
+      square.removeAttribute("data-available-move");
+      square.removeAttribute("data-checked");
+
+      square.classList.remove("test");
+    }
+
+    // 3. Reset game state
+    this.selectedPiece = null;
+    this.legalMovesForSelectedPiece = null;
+    this.selectedPieceLegalMoves = null;
+    this.allLegalMovesForCurrentPlayer = [];
+
+    this.enPassantSquare = null;
+    this.positionRepetitionMap.clear();
+
+    this.halfMoveClock = 0;
+    this.fullMoveNumber = 1;
+
+    this.currentTurn = "white"; // or "black" depending on your default
+
+    // 4. Reset players states
+    this.whitePlayer = new Player("white");
+    this.blackPlayer = new Player("black");
+
+    // 5. Clear promotion dialog if open
+    this.clearPromotionDialog();
   };
 }
 export default ChessBoardController;
