@@ -11,7 +11,13 @@ export type PieceType =
   | "queen"
   | "king";
 
+export type AllFenPieceType = "p" | "n" | "b" | "r" | "q" | "k";
+
+export type FenPieceType = AllFenPieceType | Capitalize<AllFenPieceType>;
+
 export type PromotedPiece = Exclude<PieceType, "pawn" | "king">;
+
+export type PieceTypeMap = `${PieceColor}-${PieceType}`;
 
 /**
  * Represents the core logical attributes of a chess piece used for move generation and game logic.
@@ -63,6 +69,46 @@ export interface IPieceUI {
 }
 
 class Piece implements IPieceLogic, IPieceUI {
+  public static readonly pieceToFenSymbolMap = new Map<
+    PieceTypeMap,
+    FenPieceType
+  >(
+    Object.entries({
+      "white-pawn": "P",
+      "white-knight": "N",
+      "white-bishop": "B",
+      "white-rook": "R",
+      "white-queen": "Q",
+      "white-king": "K",
+      "black-pawn": "p",
+      "black-knight": "n",
+      "black-bishop": "b",
+      "black-rook": "r",
+      "black-queen": "q",
+      "black-king": "k",
+    }) as [PieceTypeMap, FenPieceType][]
+  );
+
+  public static readonly fenSymbolToPieceMap = new Map<
+    FenPieceType,
+    { color: PieceColor; type: PieceType }
+  >(
+    Object.entries({
+      P: { color: "white", type: "pawn" },
+      N: { color: "white", type: "knight" },
+      B: { color: "white", type: "bishop" },
+      R: { color: "white", type: "rook" },
+      Q: { color: "white", type: "queen" },
+      K: { color: "white", type: "king" },
+      p: { color: "black", type: "pawn" },
+      n: { color: "black", type: "knight" },
+      b: { color: "black", type: "bishop" },
+      r: { color: "black", type: "rook" },
+      q: { color: "black", type: "queen" },
+      k: { color: "black", type: "king" },
+    }) as [FenPieceType, { color: PieceColor; type: PieceType }][]
+  );
+
   public static isType = (
     type: PieceType,
     pieceType: PieceType[]
