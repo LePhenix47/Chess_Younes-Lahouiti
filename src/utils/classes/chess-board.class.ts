@@ -333,25 +333,23 @@ class ChessBoard extends ChessBoardController {
     movedPiece?: Piece,
     previousPosition?: AlgebraicNotation
   ): void => {
-    console.log("removeCastlingRights", movedPiece, previousPosition);
-
     if (movedPiece.type === "king") {
       player.toggleAllCastling(false);
       return;
     }
 
-    // const { fileIndex } =
-    //   BoardUtils.getBoardIndicesFromAlgebraicNotation(previousPosition);
-    // const file: ChessFile = BoardUtils.fileMap.get(Number(fileIndex));
+    const { fileIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(previousPosition);
+    const file: ChessFile = BoardUtils.fileMap.get(Number(fileIndex));
 
-    // // TODO: Fix flawed logic, we move the king side rook on f1 for instance, it counts as the queenside castle right loss
-    // const side = file === "h" ? "kingSide" : "queenSide";
-    // console.log(player.color, file, side);
+    const side = file === "h" ? "kingSide" : "queenSide";
 
-    // console.log("BEFORE", player.canCastle);
-    // player.toggleOneSideCastling(side, false);
+    if (movedPiece.hasMoved) {
+      return;
+    }
 
-    // console.log("AFTER", player.canCastle);
+    player.toggleOneSideCastling(side, false);
+    console.log("removeCastlingRights", movedPiece, previousPosition);
   };
 
   private handleCastling = (move: Move, noAnimation: boolean): void => {
