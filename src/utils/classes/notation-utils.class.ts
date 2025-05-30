@@ -132,7 +132,7 @@ abstract class NotationUtils {
 
     const [position, turn, castling, enPassant, halfmove, fullmove] = fields;
 
-    // 1. Validate position
+    // * 1. Validate position
     const ranks = position.split("/");
     if (ranks.length !== 8) return false;
     const validPieces = /^[prnbqkPRNBQK1-8]+$/;
@@ -142,7 +142,7 @@ abstract class NotationUtils {
       let count = 0;
       for (const char of rank) {
         if (/\d/.test(char)) {
-          count += parseInt(char, 10);
+          count += Number(char);
         } else {
           count += 1;
         }
@@ -150,19 +150,19 @@ abstract class NotationUtils {
       if (count !== 8) return false;
     }
 
-    // 2. Turn
+    // * 2. Turn
     if (!/^[wb]$/.test(turn)) return false;
 
-    // 3. Castling rights
+    // * 3. Castling rights
     if (!/^(-|[KQkq]{1,4})$/.test(castling)) return false;
 
-    // 4. En passant
+    // * 4. En passant
     if (!/^(-|[a-h][36])$/.test(enPassant)) return false;
 
-    // 5. Halfmove clock
+    // * 5. Halfmove clock
     if (!/^\d+$/.test(halfmove)) return false;
 
-    // 6. Fullmove number
+    // * 6. Fullmove number
     if (!/^[1-9]\d*$/.test(fullmove)) return false;
 
     return true;
@@ -225,8 +225,7 @@ abstract class NotationUtils {
       for (let j = 0; j < 8; j++) {
         let char = rankLine[j] || " ";
         if (withEmojis) {
-          char =
-            char !== " " ? BoardUtils.pieceToEmojiMap.get(char) ?? " " : " ";
+          char = char !== " " ? BoardUtils.pieceToEmojiMap.get(char)! : " ";
         }
 
         // center text inside the innerWidth space
@@ -236,7 +235,8 @@ abstract class NotationUtils {
         asciiBoard +=
           " ".repeat(paddingLeft) + char + " ".repeat(paddingRight) + "|";
       }
-      asciiBoard += ` ${ranks[i]}\n`;
+      const currentRank = ranks[i];
+      asciiBoard += ` ${currentRank}\n`;
       asciiBoard += border;
     }
 
@@ -244,7 +244,7 @@ abstract class NotationUtils {
     asciiBoard += " ";
     for (const file of files) {
       const padLeft = Math.floor((innerWidth - 1) / 2);
-      const padRight = innerWidth - padLeft - 1;
+      const padRight = innerWidth - padLeft;
       asciiBoard += " ".repeat(padLeft) + file + " ".repeat(padRight);
     }
     asciiBoard += "\n";
