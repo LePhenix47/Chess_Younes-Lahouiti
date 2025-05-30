@@ -82,6 +82,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public halfMoveClock: number = 0;
   public fullMoveNumber: number = 1;
 
+  public isGamePlayable: boolean = false;
   public isGameOver = false;
 
   constructor(container: HTMLElement) {
@@ -392,9 +393,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   ): void => {
     const normalizedPosition: IPieceLogic["position"] =
       BoardUtils.normalizePosition(position);
+
     if (this.piecesMap.has(normalizedPosition.algebraicNotation)) {
-      console.error("Square is already occupied, cannot add piece!");
-      return;
+      this.piecesMap.delete(normalizedPosition.algebraicNotation);
     }
 
     // * Create the piece using the updated normalizedPosition
