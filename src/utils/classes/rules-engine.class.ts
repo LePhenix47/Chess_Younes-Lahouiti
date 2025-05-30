@@ -44,7 +44,76 @@ export type InsufficientMaterialType =
   | "king-and-same-color-bishops"
   | null;
 
+export type PlayabilityCheckInput = {
+  board: ChessBoard;
+  sideToMove: PieceColor;
+};
+
 abstract class RulesEngine {
+  public static isFenPositionPlayable = (board: ChessBoard): boolean => {
+    try {
+      const { piecesMap } = board;
+
+      // * 1. Validate each side has exactly 1 king
+      const whiteMaterial: PlayerMaterialCount = ChessBoard.getPlayerMaterial(
+        piecesMap,
+        "white"
+      );
+
+      const blackMaterial: PlayerMaterialCount = ChessBoard.getPlayerMaterial(
+        piecesMap,
+        "black"
+      );
+
+      console.log(whiteMaterial, blackMaterial);
+
+      if (whiteMaterial.kings !== 1 || blackMaterial.kings !== 1) {
+        return false;
+      }
+
+      // * 2. No pawns on ranks 1 or 8
+      for (const [square, piece] of piecesMap.entries()) {
+        if (piece.type !== "pawn") {
+          continue;
+        }
+
+        const [file, rank] = square;
+
+        if (rank === "1" || rank === "8") {
+          return false;
+        }
+      }
+
+      // * 3. Both kings cannot be in check
+      const whiteInCheck = RulesEngine.isKingInCheck(
+        piecesMap,
+        board.whitePlayer
+      );
+      const blackInCheck = RulesEngine.isKingInCheck(
+        piecesMap,
+        board.blackPlayer
+      );
+
+      if (whiteInCheck && blackInCheck) {
+        return false;
+      }
+
+      // * 4. It can't be your turn if opponent is already in check
+      if (
+        (board.currentTurn === "white" && blackInCheck) ||
+        (board.currentTurn === "black" && whiteInCheck)
+      ) {
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.log(error);
+
+      return false;
+    }
+  };
+
   public static isCheckmate = ({
     legalMoves,
     currentPlayer,
@@ -221,6 +290,10 @@ abstract class RulesEngine {
       player.color
     ) as KingPiece;
 
+    if (!king) {
+      return false;
+    }
+
     const opponentAttackingSquaresDetailed: OpponentAttackDetail[] =
       opponentAttacksDetailed ??
       AttacksGenerator.getAttackedSquaresByOpponentDetailed(player, pieces);
@@ -259,6 +332,7 @@ abstract class RulesEngine {
     return whiteCanPromote || blackCanPromote;
   };
 
+  // TODO: Relocate method to MovesGenerator
   public static filterIllegalKingMoves = (
     possibleKingMoves: AlgebraicNotation[],
     enemyAttackingSquares: AlgebraicNotation[]
@@ -270,6 +344,7 @@ abstract class RulesEngine {
     return kingLegalMoves;
   };
 
+  // TODO: Relocate method to MovesGenerator
   public static getAttackingPiecesAndPathToKing = (
     king: KingPiece,
     player: Player,
@@ -440,6 +515,10 @@ abstract class RulesEngine {
     pieces: Map<AlgebraicNotation, Piece>
   ): PinnedPieceInfo[] => {
     const pinnedPieces: PinnedPieceInfo[] = [];
+
+    if (!king) {
+      return pinnedPieces;
+    }
 
     const kingFile = Number(king.position.fileIndex);
     const kingRank = Number(king.position.rankIndex);
