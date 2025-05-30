@@ -158,8 +158,6 @@ abstract class AttacksGenerator {
       }
     }
 
-    console.log({ enPassantSquare });
-
     const king = ChessBoard.getPieceFromArray(
       pieces,
       "king",

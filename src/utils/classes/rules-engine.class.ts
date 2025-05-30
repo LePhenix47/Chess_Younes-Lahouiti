@@ -65,8 +65,6 @@ abstract class RulesEngine {
         "black"
       );
 
-      console.log(whiteMaterial, blackMaterial);
-
       if (whiteMaterial.kings !== 1 || blackMaterial.kings !== 1) {
         return false;
       }
@@ -320,8 +318,6 @@ abstract class RulesEngine {
     const [file, rank] = to;
 
     const rankIndex = BoardUtils.reverseRankMap.get(rank as ChessRank);
-
-    console.log({ rankIndex });
 
     const whiteCanPromote: boolean =
       piece.color === "white" && rankIndex === PawnPromotionRank.White;
