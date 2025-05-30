@@ -495,6 +495,8 @@ class ChessBoard extends ChessBoardController {
       kingSide: player.canCastle.get("kingSide"),
       queenSide: player.canCastle.get("queenSide"),
     });
+
+    console.log(this.currentPlayer);
   };
 
   private checkGameEndConditions = (): void => {
@@ -567,7 +569,7 @@ class ChessBoard extends ChessBoardController {
     // TODO: Disable interaction, show modal, highlight king, etc.
   };
 
-  public loadFen(fen: string): void {
+  public loadFen = (fen: string): void => {
     const isFenSyntaxValid = NotationUtils.validateFenSyntax(fen);
     if (!isFenSyntaxValid) {
       alert("Invalid FEN syntax");
@@ -638,7 +640,11 @@ class ChessBoard extends ChessBoardController {
     4. Your turn to play but you're already checking opponent king making the king capture
 
     */
-  }
+
+    this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
+
+    console.log(`%cGame is playable: ${this.isGamePlayable}`, "color: green");
+  };
 
   public loadPgn = (pgn: string): void => {};
 }
