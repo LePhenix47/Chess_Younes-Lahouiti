@@ -306,7 +306,7 @@ class ChessBoard extends ChessBoardController {
     this.incrementHalfMoveClock(move);
     this.incrementFullMoveNumber();
 
-    this.updateCheckStateFor(this.currentPlayer);
+    this.updateCheckStateFor(this.currentPlayer, piece, from);
     this.updateCheckStateFor(this.rivalPlayer);
 
     this.switchTurnTo();
@@ -320,19 +320,38 @@ class ChessBoard extends ChessBoardController {
       halfMoveClock: this.halfMoveClock,
       fullMoveNumber: this.fullMoveNumber,
       piecesMap: this.piecesMap,
-      castlingRights: {
-        black: {
-          kingSide: this.blackPlayer.canCastle.get("kingSide"),
-          queenSide: this.blackPlayer.canCastle.get("queenSide"),
-        },
-        white: {
-          kingSide: this.whitePlayer.canCastle.get("kingSide"),
-          queenSide: this.whitePlayer.canCastle.get("queenSide"),
-        },
-      },
+      castlingRights: this.getAllCastlingRights(),
     });
 
     console.log("fen", fen);
+
+    console.log(this.currentPlayer);
+  };
+
+  private removeCastlingRights = (
+    player: Player,
+    movedPiece?: Piece,
+    previousPosition?: AlgebraicNotation
+  ): void => {
+    console.log("removeCastlingRights", movedPiece, previousPosition);
+
+    if (movedPiece.type === "king") {
+      player.toggleAllCastling(false);
+      return;
+    }
+
+    // const { fileIndex } =
+    //   BoardUtils.getBoardIndicesFromAlgebraicNotation(previousPosition);
+    // const file: ChessFile = BoardUtils.fileMap.get(Number(fileIndex));
+
+    // // TODO: Fix flawed logic, we move the king side rook on f1 for instance, it counts as the queenside castle right loss
+    // const side = file === "h" ? "kingSide" : "queenSide";
+    // console.log(player.color, file, side);
+
+    // console.log("BEFORE", player.canCastle);
+    // player.toggleOneSideCastling(side, false);
+
+    // console.log("AFTER", player.canCastle);
   };
 
   private handleCastling = (move: Move, noAnimation: boolean): void => {
@@ -476,7 +495,11 @@ class ChessBoard extends ChessBoardController {
     this.fullMoveNumber++;
   };
 
-  private updateCheckStateFor = (player: Player): void => {
+  private updateCheckStateFor = (
+    player: Player,
+    movedPiece?: Piece,
+    from?: AlgebraicNotation
+  ): void => {
     const isInCheck = RulesEngine.isKingInCheck(this.piecesMap, player);
 
     const king = ChessBoard.getPieceFromArray(
@@ -491,12 +514,23 @@ class ChessBoard extends ChessBoardController {
       this.clearCheckHighlightSquare();
     }
 
+    if (movedPiece && from && Piece.isType(movedPiece.type, ["king", "rook"])) {
+      this.removeCastlingRights(player, movedPiece, from);
+
+      console.log({ player });
+
+      console.log(
+        "white:",
+        this.whitePlayer.canCastle,
+        "black:",
+        this.blackPlayer.canCastle
+      );
+    }
+
     this.updatePlayerState(player, isInCheck, {
       kingSide: player.canCastle.get("kingSide"),
       queenSide: player.canCastle.get("queenSide"),
     });
-
-    console.log(this.currentPlayer);
   };
 
   private checkGameEndConditions = (): void => {

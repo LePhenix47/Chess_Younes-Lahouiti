@@ -573,10 +573,16 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public updatePlayerState = (
     player: Player,
     inCheck: boolean,
-    canCastle: CastlingRights
+    canCastle?: CastlingRights
   ) => {
     player.setInCheck(inCheck);
-    player.setCanCastle(canCastle);
+
+    if (!canCastle) {
+      return;
+    }
+
+    player.toggleOneSideCastling("kingSide", canCastle.kingSide);
+    player.toggleOneSideCastling("queenSide", canCastle.queenSide);
   };
 
   public switchTurnTo = (color?: PieceColor): void => {
@@ -806,6 +812,21 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.clearPromotionDialog();
   };
 
-  getAllCastlingRights = () => {};
+  public getAllCastlingRights = () => {
+    const black = {
+      kingSide: this.blackPlayer.canCastle.get("kingSide"),
+      queenSide: this.blackPlayer.canCastle.get("queenSide"),
+    };
+
+    const white = {
+      kingSide: this.whitePlayer.canCastle.get("kingSide"),
+      queenSide: this.whitePlayer.canCastle.get("queenSide"),
+    };
+
+    return {
+      black,
+      white,
+    };
+  };
 }
 export default ChessBoardController;

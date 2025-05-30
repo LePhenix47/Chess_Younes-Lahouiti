@@ -111,9 +111,13 @@ class Piece implements IPieceLogic, IPieceUI {
 
   public static isType = (
     type: PieceType,
-    pieceType: PieceType[]
+    pieceType: PieceType[] | PieceType
   ): type is PieceType => {
-    return pieceType.includes(type);
+    const currentPieceType: PieceType[] = Array.isArray(pieceType)
+      ? pieceType
+      : [pieceType];
+
+    return currentPieceType.includes(type);
   };
 
   public static arePiecesTheSame = (piece1: Piece, piece2: Piece): boolean => {

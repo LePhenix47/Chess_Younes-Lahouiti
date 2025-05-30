@@ -228,4 +228,7 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 });
 
 chessBoardInstance.generateBoard();
-chessBoardInstance.loadFen(chessBoardInstance.initialFen);
+// chessBoardInstance.loadFen(chessBoardInstance.initialFen);
+chessBoardInstance.loadFen(
+  "r3k2r/ppp1qppp/2n1bn2/2b1p3/2BBP3/2N2N2/PPPQPPPP/R3K2R w KQkq - 1 1"
+);

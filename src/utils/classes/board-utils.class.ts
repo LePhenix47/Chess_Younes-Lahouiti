@@ -1,5 +1,5 @@
 import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
-import { IPieceLogic } from "./piece.class";
+import { IPieceLogic, PieceColor } from "./piece.class";
 
 abstract class BoardUtils {
   public static fileMap = new Map<number, ChessFile>(
@@ -158,6 +158,22 @@ abstract class BoardUtils {
     const isLightSquare: boolean = (file + rank) % 2 === 0;
 
     return isLightType ? isLightSquare : !isLightSquare;
+  };
+
+  public static getRookSide = (
+    position: AlgebraicNotation,
+    color: PieceColor
+  ): "kingSide" | "queenSide" | null => {
+    const [file, rank] = position;
+
+    const expectedRank = color === "white" ? "1" : "8";
+
+    if (rank !== expectedRank) return null;
+
+    if (file === "h") return "kingSide";
+    if (file === "a") return "queenSide";
+
+    return null;
   };
 }
 

@@ -27,11 +27,18 @@ class Player {
     this.color = color;
   }
 
-  // Setter methods for properties
-  public setCanCastle = (rights: Partial<CastlingRights>): this => {
-    for (const [key, value] of Object.entries(rights)) {
-      this.canCastle.set(key as "kingSide" | "queenSide", value);
-    }
+  public toggleOneSideCastling = (
+    side: "kingSide" | "queenSide",
+    value: boolean
+  ): this => {
+    this.canCastle.set(side, value);
+
+    return this;
+  };
+
+  public toggleAllCastling = (value: boolean): this => {
+    this.canCastle.set("kingSide", value);
+    this.canCastle.set("queenSide", value);
 
     return this;
   };
