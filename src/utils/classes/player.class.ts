@@ -47,6 +47,13 @@ class Player {
     this.inCheck = inCheck;
     return this;
   };
+
+  reset = (): this => {
+    this.toggleAllCastling(true);
+
+    this.inCheck = false;
+    return this;
+  };
 }
 
 export default Player;
