@@ -143,6 +143,10 @@ class Piece implements IPieceLogic, IPieceUI {
   }
 
   public get pgnSymbol(): Capitalize<AllFenPieceType> | (string & {}) {
+    if (Piece.isType(this.type, "pawn")) {
+      return "";
+    }
+
     const fen: FenPieceType = this.fenSymbol;
 
     return fen.toUpperCase();
