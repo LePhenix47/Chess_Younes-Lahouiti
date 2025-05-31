@@ -13,7 +13,10 @@ export type PieceType =
 
 export type AllFenPieceType = "p" | "n" | "b" | "r" | "q" | "k";
 
-export type FenPieceType = AllFenPieceType | Capitalize<AllFenPieceType>;
+export type FenPieceType =
+  | AllFenPieceType
+  | Capitalize<AllFenPieceType>
+  | (string & {}); // ? defers the string type to avoid setting the type to just "string"
 
 export type PromotedPiece = Exclude<PieceType, "pawn" | "king">;
 
@@ -110,14 +113,14 @@ class Piece implements IPieceLogic, IPieceUI {
   );
 
   public static isType = (
-    type: PieceType,
+    type: Piece | PieceType,
     pieceType: PieceType[] | PieceType
   ): type is PieceType => {
     const currentPieceType: PieceType[] = Array.isArray(pieceType)
       ? pieceType
       : [pieceType];
 
-    return currentPieceType.includes(type);
+    return currentPieceType.includes(type instanceof Piece ? type.type : type);
   };
 
   public static arePiecesTheSame = (piece1: Piece, piece2: Piece): boolean => {
@@ -127,6 +130,23 @@ class Piece implements IPieceLogic, IPieceUI {
       piece1.position.algebraicNotation === piece2.position.algebraicNotation
     );
   };
+
+  public static getPgnSymbol = (pieceType: PieceType) => {
+    const key: PieceTypeMap = `white-${pieceType}`;
+
+    return Piece.pieceToFenSymbolMap.get(key)!;
+  };
+
+  public get fenSymbol(): FenPieceType {
+    const key: PieceTypeMap = `${this.color}-${this.type}`;
+    return Piece.pieceToFenSymbolMap.get(key)!;
+  }
+
+  public get pgnSymbol(): Capitalize<AllFenPieceType> | (string & {}) {
+    const fen: FenPieceType = this.fenSymbol;
+
+    return fen.toUpperCase();
+  }
 
   public type: PieceType;
   public color: PieceColor;
