@@ -602,6 +602,8 @@ class ChessBoard extends ChessBoardController {
   };
 
   public loadFen = (fen: string): void => {
+    console.log("loadFen", fen);
+
     const isFenSyntaxValid = NotationUtils.validateFenSyntax(fen);
     if (!isFenSyntaxValid) {
       alert("Invalid FEN syntax");
@@ -642,17 +644,13 @@ class ChessBoard extends ChessBoardController {
       }
     }
 
-    const fenAsciiBoard = NotationUtils.createASCIIBoard(fen, false);
-    const fenAsciiBoardEm = NotationUtils.createASCIIBoard(fen, true);
+    const fenAsciiBoard = NotationUtils.createASCIIBoard(fen);
     console.log(fenAsciiBoard);
-    console.log(fenAsciiBoardEm);
 
     // 4. Sync game state (castling, en passant, turn, clocks)
     this.currentTurn = sideToMove;
 
     // TODO: Update player states - add check verification
-    this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
-    this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
     this.enPassantSquare = enPassant?.square ?? null;
 
     this.halfMoveClock = halfMoveClock;
@@ -660,10 +658,19 @@ class ChessBoard extends ChessBoardController {
 
     // 5. Update metadata (e.g., repetition map, legal moves, checks)
     this.recordMoveAsHash();
-    this.updateAllLegalMovesForCurrentPlayer();
+
+    this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
+
+    console.log(`%cGame is playable: ${this.isGamePlayable}`, "color: green");
+
     this.updateCheckStateFor(this.whitePlayer);
     this.updateCheckStateFor(this.blackPlayer);
 
+    this.updateCheckStateFor(this.currentPlayer);
+    this.updateAllLegalMovesForCurrentPlayer();
+
+    this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
+    this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
     // TODO: Check if game is playable
     /*
     1. Kings amount for each side is different than 1
@@ -672,10 +679,6 @@ class ChessBoard extends ChessBoardController {
     4. Your turn to play but you're already checking opponent king making the king capture
 
     */
-
-    this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
-
-    console.log(`%cGame is playable: ${this.isGamePlayable}`, "color: green");
   };
 
   public loadPgn = (pgn: string): void => {};
