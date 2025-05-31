@@ -175,6 +175,30 @@ abstract class BoardUtils {
 
     return null;
   };
+
+  public static getCastlingSide = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation,
+    color: PieceColor
+  ): "kingSide" | "queenSide" | null => {
+    const [fromFile, fromRank] = from;
+    const [toFile, toRank] = to;
+    const expectedRank = color === "white" ? "1" : "8";
+
+    // Check if the move is on the correct rank for the given color
+    if (fromRank !== expectedRank || toRank !== expectedRank) {
+      return null;
+    }
+
+    // Check if the move is a castling move
+    if (fromFile === "e" && toFile === "g") {
+      return "kingSide";
+    } else if (fromFile === "e" && toFile === "c") {
+      return "queenSide";
+    }
+
+    return null;
+  };
 }
 
 export default BoardUtils;
