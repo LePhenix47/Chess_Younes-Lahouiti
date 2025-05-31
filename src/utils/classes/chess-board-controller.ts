@@ -9,7 +9,12 @@ import Piece, {
 } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
-import type { Move, AlgebraicNotation } from "./chess-board.class"; //
+import type {
+  Move,
+  AlgebraicNotation,
+  WinLossResult,
+  DrawResult,
+} from "./chess-board.class"; //
 import AttacksGenerator from "./attacks-generator.class";
 import RulesEngine from "./rules-engine.class";
 import ChessBoard from "./chess-board.class";
@@ -83,7 +88,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public fullMoveNumber: number = 1;
 
   public isGamePlayable: boolean = false;
-  public isGameOver = false;
+  public isGameOver: WinLossResult | DrawResult | null = null;
+
+  public readonly pgnMoveText = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -394,15 +401,22 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     const normalizedPosition: IPieceLogic["position"] =
       BoardUtils.normalizePosition(position);
 
+    let piece: Piece;
+
     if (this.piecesMap.has(normalizedPosition.algebraicNotation)) {
+      piece = this.piecesMap.get(normalizedPosition.algebraicNotation) as Piece;
+
+      piece.moveTo(normalizedPosition, false);
+
       this.piecesMap.delete(normalizedPosition.algebraicNotation);
+    } else {
+      // * Create the piece using the updated normalizedPosition
+      piece = new Piece(type, color, normalizedPosition);
+
+      // * Attach to board
+      piece.attachToBoard(this.container);
     }
 
-    // * Create the piece using the updated normalizedPosition
-    const piece = new Piece(type, color, normalizedPosition);
-
-    // * Attach to board
-    piece.attachToBoard(this.container);
     // * Update square occupation
 
     this.setOccupiedSquare(
