@@ -275,6 +275,7 @@ class ChessBoard extends ChessBoardController {
   };
 
   private applyMove = (move: Move, noAnimation: boolean): void => {
+    const previousLegalMoves = this.allLegalMovesForCurrentPlayer;
     // TODO: Remove this when done testing
     this.clearTest();
     const { from, to, piece, capturedPiece } = move;
@@ -287,7 +288,9 @@ class ChessBoard extends ChessBoardController {
     this.updateGameState(from, to, piece);
 
     // * ♔♖ Castling
-    if (piece.isCastlingMove(from, to)) {
+    const isCastlingMove = piece.isCastlingMove(from, to);
+
+    if (isCastlingMove) {
       this.handleCastling(move, noAnimation);
     }
 
@@ -326,6 +329,23 @@ class ChessBoard extends ChessBoardController {
     console.log("fen", fen);
 
     console.log(this.currentPlayer);
+
+    const castingSide = isCastlingMove
+      ? BoardUtils.getCastlingSide(from, to, piece.color)
+      : null;
+
+    const currentPgn = NotationUtils.recordPgnMove({
+      castle: castingSide,
+      isCheck: this.currentPlayer.inCheck,
+      legalMoves: previousLegalMoves,
+      move,
+      isCheckmate: this.isGameOver === "checkmate",
+    });
+
+    this.pgnMoveText.push(currentPgn);
+    const currPgn = this.pgnMoveText.join(" ");
+
+    console.log("currPgn", currPgn);
   };
 
   private removeCastlingRights = (
@@ -580,7 +600,7 @@ class ChessBoard extends ChessBoardController {
     winner: PieceColor | null;
     reason: WinLossResult | DrawResult;
   }): void => {
-    this.isGameOver = true;
+    this.isGameOver = reason;
 
     if (winner) {
       alert(`Game over! ${winner} wins by ${reason}`);
@@ -662,6 +682,10 @@ class ChessBoard extends ChessBoardController {
     this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
 
     console.log(`%cGame is playable: ${this.isGamePlayable}`, "color: green");
+
+    if (!this.isGamePlayable) {
+      alert("Game is not playable! Please fix the board and try again.");
+    }
 
     this.updateCheckStateFor(this.whitePlayer);
     this.updateCheckStateFor(this.blackPlayer);

@@ -44,7 +44,7 @@ analysisTabForm.addEventListener("submit", (event) => {
     chessBoardInstance.loadPgn(pgn);
   }
 
-  console.log({ fen, pgn });
+  // console.log({ fen, pgn });
 });
 
 const chessBoardElement: HTMLElement = selectQuery(
@@ -70,10 +70,10 @@ userPointer.on("custom:pointer-drag-start", (e) => {
   const piece = userPointer.pressedElement;
   chessBoardInstance.selectPiece(piece);
 
-  console.log(
-    "%ccustom:pointer-drag-start",
-    "background: darkblue; padding: 1rem"
-  );
+  // console.log(
+  //   "%ccustom:pointer-drag-start",
+  //   "background: darkblue; padding: 1rem"
+  // );
 });
 
 userPointer.on("custom:pointer-drag-click", (e) => {
@@ -85,7 +85,7 @@ userPointer.on("custom:pointer-drag-click", (e) => {
 
   clickedElement.classList.remove("dragging");
 
-  console.log("custom:pointer-drag-click");
+  // console.log("custom:pointer-drag-click");
 
   // const target = e.target as HTMLElement;
   const isPiece = chessBoardInstance.elementIsChessPiece(
@@ -120,7 +120,7 @@ userPointer.on("custom:pointer-drag-click", (e) => {
   }
 
   // c) Clicked an empty square or an enemy piece → move
-  console.log(clickedPiece);
+  // console.log(clickedPiece);
   const attributeToCheck = clickedPiece ? "position" : "algebraicNotation";
   const targetPosition = userPointer.pressedElement.dataset[
     attributeToCheck
@@ -224,11 +224,10 @@ userPointer.on("custom:pointer-drag-end", (e) => {
   );
   chessBoardInstance.clearSelectedPiece();
 
-  console.log("%ccustom:pointer-drag-end", "background: #222; color: #bada55");
+  // console.log("%ccustom:pointer-drag-end", "background: #222; color: #bada55");
 });
 
 chessBoardInstance.generateBoard();
 // chessBoardInstance.loadFen(chessBoardInstance.initialFen);
-chessBoardInstance.loadFen(
-  "r3k2r/ppp1qppp/2n1bn2/2b1p3/2BBP3/2N2N2/PPPQPPPP/R3K2R w KQkq - 1 1"
-);
+const fen = "kq6/6R1/K7/8/3p4/4N3/8/4N1R1 w - - 0 1";
+chessBoardInstance.loadFen(fen);

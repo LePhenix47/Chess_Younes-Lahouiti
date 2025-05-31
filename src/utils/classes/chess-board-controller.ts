@@ -90,7 +90,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public isGamePlayable: boolean = false;
   public isGameOver: WinLossResult | DrawResult | null = null;
 
-  public readonly pgnMoveText = [];
+  public pgnMoveText = [];
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -804,6 +804,13 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       square.classList.remove("test");
     }
 
+    this.resetBoardState();
+
+    // 5. Clear promotion dialog if open
+    this.clearPromotionDialog();
+  };
+
+  private resetBoardState = () => {
     // 3. Reset game state
     this.selectedPiece = null;
     this.legalMovesForSelectedPiece = null;
@@ -816,14 +823,14 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.halfMoveClock = 0;
     this.fullMoveNumber = 1;
 
-    this.currentTurn = "white"; // or "black" depending on your default
+    this.currentTurn = "white";
+    this.isGameOver = null;
+
+    this.pgnMoveText = [];
 
     // 4. Reset players states
     this.whitePlayer = new Player("white");
     this.blackPlayer = new Player("black");
-
-    // 5. Clear promotion dialog if open
-    this.clearPromotionDialog();
   };
 
   public getAllCastlingRights = () => {

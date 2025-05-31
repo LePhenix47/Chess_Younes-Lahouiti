@@ -1,6 +1,37 @@
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
-import Piece, { PieceTypeMap } from "./piece.class";
+import { LegalMoves } from "./chess-board-controller";
+import {
+  AlgebraicNotation,
+  ChessFile,
+  ChessRank,
+  Move,
+} from "./chess-board.class";
+import Piece, {
+  FenPieceType,
+  PieceColor,
+  PieceType,
+  PieceTypeMap,
+} from "./piece.class";
+
+// pgn.types.ts
+
+export type PieceLetter = "K" | "Q" | "R" | "B" | "N" | ""; // Pawn = ""
+
+export type CastleNotation = "O-O" | "O-O-O";
+
+export type CaptureIndicator = `${ChessFile | ""}x` | "";
+
+export type PromotionNotation = "" | `=${FenPieceType}`;
+
+export type CheckSuffix = "+" | "#" | "";
+
+export type Disambiguation = string; // "e", "4", "e4", or ""
+
+export type PgnMoveText =
+  | CastleNotation
+  | `${PieceLetter}${Disambiguation}${CaptureIndicator}${AlgebraicNotation}${
+      | PromotionNotation
+      | ""}${CheckSuffix}`;
 
 abstract class NotationUtils {
   public static interpretFen = (fen: string) => {
@@ -168,48 +199,13 @@ abstract class NotationUtils {
     return true;
   };
 
-  public loadPgn = (pgn: string): void => {
-    /* TODO: Parse PGN */
-    /*
-    Abbreviations:
-    K - King
-    Q - Queen
-    R - Rook
-    B - Bishop
-    N - Knight
-    [No name] - Pawn
-    0-0 = castling with rook h1 or rook h8 (kingside castling)
-    0-0-0 = castling with rook a1 or rook a8 (queenside castling)
-    x = captures
-    + = check
-    # = checkmate
-    e.p. = captures "en passant"
-
-    Promotion:
-    - = 
-    ex: e8=Q
-    if it promotion causes check → e8=Q+
-    if it promotion causes checkmate → e8=Q#
-    if the promotion involves a capture → exf8=Q
-
-    (not 100% accurate)
-
-    NOTE: how tf do pawn captures work in movetext ?? ex: exf6
-    where was the pawn before ? why not e5xf6 ???
-
-    */
-  };
-
-  public static createASCIIBoard = (
-    fen: string,
-    withEmojis: boolean = false
-  ): string => {
+  public static createASCIIBoard = (fen: string): string => {
     const { pieces } = NotationUtils.interpretFen(fen);
     const files = [...BoardUtils.reverseFileMap.keys()] as const;
     const ranks = [...BoardUtils.reverseRankMap.keys()] as const;
 
     // Settings based on emoji mode
-    const cellWidth = withEmojis ? 7 : 5; // includes vertical bars
+    const cellWidth = 5; // includes vertical bars
     const innerWidth = cellWidth - 2; // inside cell without border bars
 
     // Create border line: +------+
@@ -224,9 +220,6 @@ abstract class NotationUtils {
 
       for (let j = 0; j < 8; j++) {
         let char = rankLine[j] || " ";
-        if (withEmojis) {
-          char = char !== " " ? BoardUtils.pieceToEmojiMap.get(char)! : " ";
-        }
 
         // center text inside the innerWidth space
         const paddingLeft = Math.floor((innerWidth - [...char].length) / 2);
@@ -250,6 +243,191 @@ abstract class NotationUtils {
     asciiBoard += "\n";
 
     return asciiBoard;
+  };
+
+  /*
+  Abbreviations:
+  K - King
+  Q - Queen
+  R - Rook
+  B - Bishop
+  N - Knight
+  [No name] - Pawn
+  0-0 = castling with rook h1 or rook h8 (kingside castling)
+  0-0-0 = castling with rook a1 or rook a8 (queenside castling)
+  x = captures
+  + = check
+  # = checkmate
+  e.p. = captures "en passant"
+
+  Promotion:
+  - = 
+  ex: e8=Q
+  if it promotion causes check → e8=Q+
+  if it promotion causes checkmate → e8=Q#
+  if the promotion involves a capture → exf8=Q
+
+  (not 100% accurate)
+
+  NOTE: how tf do pawn captures work in movetext ?? ex: exf6
+  where was the pawn before ? why not e5xf6 ???
+
+  */
+
+  public static recordPgnMove = ({
+    move,
+    isCheck,
+    isCheckmate,
+    castle,
+    legalMoves,
+  }: {
+    move: Move;
+    isCheck: boolean;
+    isCheckmate: boolean;
+    castle: "kingSide" | "queenSide" | null;
+    legalMoves: LegalMoves;
+  }): PgnMoveText => {
+    if (castle) {
+      return NotationUtils.formatCastling(castle);
+    }
+
+    const { from, to, piece, capturedPiece, promotion } = move;
+    const isPawn = Piece.isType(piece.type, "pawn");
+
+    const pieceChar = NotationUtils.getPieceChar({ piece, promotion });
+
+    const disambiguation = NotationUtils.getDisambiguation({
+      move,
+      legalMoves,
+    });
+    const capture = NotationUtils.getCaptureIndicator({
+      isPawnMove: isPawn || Boolean(promotion),
+      from,
+      capturedPiece,
+    });
+
+    const promotionText = NotationUtils.getPromotionText(promotion);
+    const endSymbol = NotationUtils.getCheckOrCheckMateSuffix({
+      isCheck,
+      isCheckmate,
+    });
+
+    return `${pieceChar}${disambiguation}${capture}${to}${promotionText}${endSymbol}`;
+  };
+
+  private static formatCastling = (
+    castle: "kingSide" | "queenSide"
+  ): CastleNotation => {
+    return castle === "kingSide" ? "O-O" : "O-O-O";
+  };
+
+  private static getPieceChar = ({
+    piece,
+    promotion,
+  }: {
+    piece: Piece;
+    promotion?: PieceType;
+  }): string => {
+    // If it's a pawn (including promotion), no piece letter
+    if (Piece.isType(piece.type, "pawn") || promotion) {
+      return "";
+    }
+
+    return piece.pgnSymbol;
+  };
+
+  private static getDisambiguation = ({
+    move,
+    legalMoves,
+  }: {
+    move: Move;
+    legalMoves: LegalMoves;
+  }): Disambiguation => {
+    console.log(legalMoves);
+
+    const { from, to, piece } = move;
+    if (Piece.isType(piece.type, "pawn")) {
+      return "";
+    }
+    const [fromFile, fromRank] = from;
+
+    const isSamePieceType = (p: Piece) =>
+      p.type === piece.type &&
+      p.color === piece.color &&
+      p.position.algebraicNotation !== from;
+
+    // ♟️ Find ambiguous pieces of same type that could have moved to `to`
+    const ambiguousPieces = legalMoves
+      .filter(({ piece: p, moves }) => isSamePieceType(p) && moves.includes(to))
+      .map(({ piece: p }) => p);
+
+    if (!ambiguousPieces.length) {
+      return "";
+    }
+
+    const conflictsOnFile = ambiguousPieces.some(
+      (p) => p.position.algebraicNotation[0] === fromFile
+    );
+
+    const conflictsOnRank = ambiguousPieces.some(
+      (p) => p.position.algebraicNotation[1] === fromRank
+    );
+
+    if (!conflictsOnFile) {
+      return fromFile;
+    }
+    if (!conflictsOnRank) {
+      return fromRank;
+    }
+
+    return fromFile + fromRank;
+  };
+
+  private static getCaptureIndicator = ({
+    isPawnMove,
+    from,
+    capturedPiece,
+  }: {
+    isPawnMove: boolean;
+    from: AlgebraicNotation;
+    capturedPiece?: Piece;
+  }): CaptureIndicator => {
+    if (!capturedPiece) {
+      return "";
+    }
+
+    const [file] = from;
+
+    // 🧤 For pawns, capture must include the file
+    return isPawnMove ? `${file as ChessFile}x` : "x";
+  };
+
+  private static getPromotionText = (
+    promotion?: PieceType
+  ): PromotionNotation => {
+    if (!promotion) {
+      return "";
+    }
+
+    const symbol = Piece.getPgnSymbol(promotion);
+
+    return `=${symbol}`;
+  };
+
+  private static getCheckOrCheckMateSuffix = ({
+    isCheck,
+    isCheckmate,
+  }: {
+    isCheck: boolean;
+    isCheckmate: boolean;
+  }): CheckSuffix => {
+    if (isCheckmate) {
+      return "#";
+    } else if (isCheck) {
+      return "+";
+    } else {
+      return "";
+    }
   };
 }
 
