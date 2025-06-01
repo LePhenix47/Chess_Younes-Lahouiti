@@ -7,21 +7,19 @@ import {
   Move,
 } from "./chess-board.class";
 import Piece, {
-  FenPieceType,
-  PieceColor,
+  PgnPieceType,
+  PgnPromotionPieceType,
   PieceType,
   PieceTypeMap,
 } from "./piece.class";
 
 // pgn.types.ts
 
-export type PieceLetter = "K" | "Q" | "R" | "B" | "N" | ""; // Pawn = ""
-
 export type CastleNotation = "O-O" | "O-O-O";
 
 export type CaptureIndicator = `${ChessFile | ""}x` | "";
 
-export type PromotionNotation = "" | `=${FenPieceType}`;
+export type PromotionNotation = "" | `=${PgnPromotionPieceType}`;
 
 export type CheckSuffix = "+" | "#" | "";
 
@@ -29,7 +27,7 @@ export type Disambiguation = string; // "e", "4", "e4", or ""
 
 export type PgnMoveText =
   | CastleNotation
-  | `${PieceLetter}${Disambiguation}${CaptureIndicator}${AlgebraicNotation}${
+  | `${PgnPieceType}${Disambiguation}${CaptureIndicator}${AlgebraicNotation}${
       | PromotionNotation
       | ""}${CheckSuffix}`;
 
@@ -274,6 +272,24 @@ abstract class NotationUtils {
 
   */
 
+  public static formatPgnMoves = (moves: PgnMoveText[]): string => {
+    const lines: string[] = [];
+
+    for (let i = 0; i < moves.length; i += 2) {
+      const moveNumber: number = Math.floor(i / 2) + 1;
+
+      const whiteMove: PgnMoveText = moves[i];
+      const blackMove: PgnMoveText | "" = moves[i + 1] || "";
+
+      const formattedPgnMove =
+        `${moveNumber}. ${whiteMove} ${blackMove}`.trim();
+
+      lines.push(formattedPgnMove);
+    }
+
+    return lines.join(" ");
+  };
+
   public static recordPgnMove = ({
     move,
     isCheck,
@@ -286,7 +302,7 @@ abstract class NotationUtils {
     isCheckmate: boolean;
     castle: "kingSide" | "queenSide" | null;
     legalMoves: LegalMoves;
-  }): PgnMoveText => {
+  }): string => {
     if (castle) {
       return NotationUtils.formatCastling(castle);
     }
@@ -343,8 +359,6 @@ abstract class NotationUtils {
     move: Move;
     legalMoves: LegalMoves;
   }): Disambiguation => {
-    console.log(legalMoves);
-
     const { from, to, piece } = move;
     if (Piece.isType(piece.type, "pawn")) {
       return "";
@@ -409,7 +423,7 @@ abstract class NotationUtils {
       return "";
     }
 
-    const symbol = Piece.getPgnSymbol(promotion);
+    const symbol = Piece.getPgnSymbol<PgnPromotionPieceType>(promotion);
 
     return `=${symbol}`;
   };
