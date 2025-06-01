@@ -1,14 +1,8 @@
-import Piece, {
-  FenPieceType,
-  IPieceLogic,
-  PieceColor,
-  PieceType,
-} from "./piece.class";
+import Piece, { FenPieceType, PieceColor, PieceType } from "./piece.class";
 import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import ChessBoardController, { LegalMoves } from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
-import { KingPiece } from "./move-generator.class";
 import Player from "./player.class";
 import ZobristHasher from "./zobrist-hasher.class";
 import NotationUtils from "./notation-utils.class";
@@ -345,7 +339,8 @@ class ChessBoard extends ChessBoardController {
     this.pgnMoveText.push(currentPgn);
     const currPgn = this.pgnMoveText.join(" ");
 
-    console.log("currPgn", currPgn);
+    console.log("PGN:", currPgn);
+    console.log("formatted:", NotationUtils.formatPgnMoves(this.pgnMoveText));
   };
 
   private removeCastlingRights = (
