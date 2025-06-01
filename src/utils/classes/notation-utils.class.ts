@@ -279,7 +279,7 @@ abstract class NotationUtils {
       const moveNumber: number = Math.floor(i / 2) + 1;
 
       const whiteMove: PgnMoveText = moves[i];
-      const blackMove: PgnMoveText | "" = moves[i + 1] || "";
+      const blackMove: string | "" = moves[i + 1] || ("" as string);
 
       const formattedPgnMove =
         `${moveNumber}. ${whiteMove} ${blackMove}`.trim();
