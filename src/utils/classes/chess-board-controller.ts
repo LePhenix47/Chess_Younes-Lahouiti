@@ -1,5 +1,5 @@
 import BoardUtils from "./board-utils.class";
-import MovesGenerator, { KingPiece } from "./move-generator.class";
+import { KingPiece } from "./move-generator.class";
 
 import Piece, {
   PieceColor,
@@ -10,45 +10,15 @@ import Piece, {
 import Player, { CastlingRights } from "./player.class";
 
 import type {
-  Move,
   AlgebraicNotation,
   WinLossResult,
   DrawResult,
+  Move,
 } from "./chess-board.class"; //
-import AttacksGenerator from "./attacks-generator.class";
 import RulesEngine from "./rules-engine.class";
 import ChessBoard from "./chess-board.class";
-import GameLogic from "./game-logic.class";
-import BoardUI from "./board-ui.class";
-//
-export interface IGameLogic {
-  currentTurn: PieceColor;
-  currentPlayer: Player;
-  selectPiece(el: HTMLElement): void;
-  clearSelectedPiece(oldPosition?: AlgebraicNotation): void;
-  switchTurnTo(color?: PieceColor): void;
-  updatePlayerState(
-    player: Player,
-    inCheck: boolean,
-    canCastle: CastlingRights
-  ): void;
-}
-
-export interface IBoardUI {
-  get squareSize(): number;
-  container: HTMLElement;
-  elementIsChessPiece(el: HTMLElement): boolean;
-  elementIsPieceSelected(el: HTMLElement): boolean;
-  getPieceFromElement(el: HTMLElement): Piece | null;
-  addPiece(
-    type: PieceType,
-    color: PieceColor,
-    position:
-      | AlgebraicNotation
-      | Omit<IPieceLogic["position"], "algebraicNotation">
-  ): void;
-  dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
-}
+import GameLogic, { IGameLogic } from "./game-logic.class";
+import BoardUI, { IBoardUI } from "./board-ui.class";
 
 export type LegalMoves = {
   piece: Piece;
@@ -78,8 +48,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   public legalMovesForSelectedPiece: AlgebraicNotation[] | null = null;
 
   public currentTurn: PieceColor = "black";
-  public whitePlayer: Player;
-  public blackPlayer: Player;
+  public readonly whitePlayer: Player;
+  public readonly blackPlayer: Player;
 
   public enPassantSquare: AlgebraicNotation | null = null;
 
@@ -91,8 +61,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public pgnMoveText = [];
 
-  private gameLogic: GameLogic;
-  private boardUI: BoardUI;
+  private readonly gameLogic: GameLogic;
+  private readonly boardUI: BoardUI;
 
   constructor(container: HTMLElement) {
     this.container = container;
@@ -102,21 +72,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     this.gameLogic = new GameLogic(this);
     this.boardUI = new BoardUI(this);
-  }
-
-  public generateBoard = (): void => {
-    this.boardUI.generateBoard();
-  };
-
-  public set currentPlayer(player: Player) {
-    if (player.color !== this.currentTurn) {
-      throw new Error("The player color doesn't match the current turn.");
-    }
-    if (player.color === "white") {
-      this.whitePlayer = player;
-    } else {
-      this.blackPlayer = player;
-    }
   }
 
   public get currentPlayer(): Player {
@@ -136,18 +91,22 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     return squareSize;
   }
 
-  public updateAllLegalMovesForCurrentPlayer = (): void => {
+  public readonly generateBoard = (): void => {
+    this.boardUI.generateBoard();
+  };
+
+  public readonly updateAllLegalMovesForCurrentPlayer = (): void => {
     this.gameLogic.updateAllLegalMovesForCurrentPlayer();
   };
 
-  protected showPromotionDialog = (
+  protected readonly showPromotionDialog = (
     square: AlgebraicNotation,
     color: "white" | "black"
   ): Promise<PromotedPiece> => {
     return this.boardUI.showPromotionDialog(square, color);
   };
 
-  public addPiece = (
+  public readonly addPiece = (
     type: PieceType,
     color: PieceColor,
     position:
@@ -186,7 +145,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       piece
     );
   };
-  public dragPiece = (piece: Piece, offsetX: number, offsetY: number) => {
+  public readonly dragPiece = (
+    piece: Piece,
+    offsetX: number,
+    offsetY: number
+  ) => {
     // Turn check: Ensure it's the current player's turn before dragging
     if (piece.color !== this.currentTurn) {
       piece.moveTo(piece.position, true);
@@ -197,11 +160,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     piece.drag(offsetX, offsetY);
   };
 
-  public elementIsChessPiece = (element: HTMLElement): boolean => {
+  public readonly elementIsChessPiece = (element: HTMLElement): boolean => {
     return this.boardUI.elementIsChessPiece(element);
   };
 
-  public getPieceFromElement = (el: HTMLElement): Piece | null => {
+  public readonly getPieceFromElement = (el: HTMLElement): Piece | null => {
     const piece: Piece | null = [...this.piecesMap.values()].find(
       (piece) => piece.element === el
     );
@@ -209,7 +172,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     return piece || null;
   };
 
-  public selectPiece = (el: HTMLElement) => {
+  public readonly selectPiece = (el: HTMLElement) => {
     const piece = this.getPieceFromElement(el);
     if (!piece) {
       return;
@@ -234,7 +197,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
   };
 
-  private getLegalMovesForSelectedPiece = (
+  private readonly getLegalMovesForSelectedPiece = (
     piece: Piece
   ): AlgebraicNotation[] => {
     return this.gameLogic.getLegalMovesForSelectedPiece(piece);
@@ -308,7 +271,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     });
   };
 
-  public clearSelectedPiece = (oldPosition?: AlgebraicNotation): void => {
+  public readonly clearSelectedPiece = (
+    oldPosition?: AlgebraicNotation
+  ): void => {
     const prev = this.selectedPiece;
 
     if (!prev) {
@@ -327,11 +292,11 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.legalMovesForSelectedPiece = null;
   };
 
-  public elementIsPieceSelected = (el: HTMLElement): boolean => {
+  public readonly elementIsPieceSelected = (el: HTMLElement): boolean => {
     return this.boardUI.elementIsPieceSelected(el);
   };
 
-  public updatePlayerState = (
+  public readonly updatePlayerState = (
     player: Player,
     inCheck: boolean,
     canCastle?: CastlingRights
@@ -339,8 +304,16 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.gameLogic.updatePlayerState(player, inCheck, canCastle);
   };
 
-  public switchTurnTo = (color?: PieceColor): void => {
+  public readonly switchTurnTo = (color?: PieceColor): void => {
     this.gameLogic.switchTurnTo(color);
+  };
+
+  public readonly movePiece = (
+    piece: Piece,
+    to: AlgebraicNotation,
+    noAnimation: boolean
+  ) => {
+    this.boardUI.movePiece(piece, to, noAnimation);
   };
 
   // TODO: Improve types for the param, RN I'm manually adding the possible values for the type parameter
@@ -412,6 +385,20 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     });
   };
 
+  public readonly updateGameState = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation,
+    piece: Piece
+  ): void => {
+    // * Remove the piece from the old position
+    this.piecesMap.delete(from);
+    this.clearOccupiedSquare(from);
+
+    // * Set the piece at the new position
+    this.piecesMap.set(to, piece);
+    this.setOccupiedSquare(to, piece);
+  };
+
   public readonly setOccupiedSquare = (
     square: AlgebraicNotation,
     piece: Piece
@@ -455,7 +442,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     this.boardUI.clearPromotionDialog();
   };
 
-  public getAllCastlingRights = () => {
+  public readonly getAllCastlingRights = () => {
     const black = {
       kingSide: this.blackPlayer.canCastle.get("kingSide"),
       queenSide: this.blackPlayer.canCastle.get("queenSide"),
@@ -470,6 +457,65 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       black,
       white,
     };
+  };
+
+  public readonly recordMoveAsHash = () => {
+    this.gameLogic.recordMoveAsHash();
+  };
+
+  public readonly incrementHalfMoveClock = (move: Move): void => {
+    const isPawnMove: boolean =
+      move.piece.type === "pawn" || Boolean(move.promotion);
+    const isCapture: boolean = !!move.capturedPiece;
+
+    if (isPawnMove || isCapture) {
+      this.halfMoveClock = 0;
+    } else {
+      this.halfMoveClock++;
+    }
+  };
+
+  public readonly incrementFullMoveNumber = (): void => {
+    if (this.currentPlayer.color === "white") {
+      return;
+    }
+
+    this.fullMoveNumber++;
+  };
+
+  public readonly getEnPassantCapturedSquare = (
+    to: AlgebraicNotation,
+    color: "white" | "black"
+  ): AlgebraicNotation => {
+    return this.gameLogic.getEnPassantCapturedSquare(to, color);
+  };
+
+  public readonly isEnPassantCapture = (
+    piece: Piece,
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ): boolean => {
+    return this.gameLogic.isEnPassantCapture(piece, from, to);
+  };
+
+  public readonly removeCastlingRights = (
+    player: Player,
+    movedPiece?: Piece,
+    previousPosition?: AlgebraicNotation
+  ) => {
+    this.gameLogic.removeCastlingRights(player, movedPiece, previousPosition);
+  };
+
+  public readonly handleCastling = (move: Move, noAnimation: boolean) => {
+    this.gameLogic.handleCastling(move, noAnimation);
+  };
+
+  public readonly handleEnPassantMarking = (to: AlgebraicNotation) => {
+    this.enPassantSquare = this.gameLogic.getEnPassantMarking(to);
+  };
+
+  public readonly clearEnPassantMarking = () => {
+    this.enPassantSquare = this.gameLogic.clearEnPassantMarking();
   };
 }
 export default ChessBoardController;

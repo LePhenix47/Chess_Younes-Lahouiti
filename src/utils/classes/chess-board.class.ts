@@ -1,10 +1,8 @@
 import Piece, { FenPieceType, PieceColor, PieceType } from "./piece.class";
-import { clamp } from "@utils/functions/helper-functions/number.functions";
 import BoardUtils from "./board-utils.class";
 import ChessBoardController, { LegalMoves } from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
 import Player from "./player.class";
-import ZobristHasher from "./zobrist-hasher.class";
 import NotationUtils from "./notation-utils.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
@@ -133,10 +131,9 @@ class ChessBoard extends ChessBoardController {
     fileIndex: number,
     noAnimation: boolean = false
   ): Promise<void> => {
-    const to: AlgebraicNotation = this.resolveTargetSquare(
-      rankIndex,
-      fileIndex
-    );
+    const to: AlgebraicNotation =
+      BoardUtils.getAlgebraicNotationFromBoardIndices(fileIndex, rankIndex);
+
     const from: AlgebraicNotation = piece.position.algebraicNotation;
 
     // ? Cannot skip turn
@@ -170,51 +167,9 @@ class ChessBoard extends ChessBoardController {
     this.clearSelectedPiece(from);
   };
 
-  private resolveTargetSquare = (
-    rankIndex: number,
-    fileIndex: number
-  ): AlgebraicNotation => {
-    const clampedRank = clamp(0, rankIndex, 7);
-    const clampedFile = clamp(0, fileIndex, 7);
-
-    const file = BoardUtils.fileMap.get(clampedFile)!;
-    const rank = BoardUtils.rankMap.get(clampedRank)!;
-
-    return `${file}${rank}` as AlgebraicNotation;
-  };
-
   private rejectMove = (piece: Piece, noAnimation: boolean): void => {
     console.error("Move rejected, putting piece back.");
     piece.moveTo(piece.position, noAnimation);
-  };
-
-  private isEnPassantCapture = (
-    piece: Piece,
-    from: AlgebraicNotation,
-    to: AlgebraicNotation
-  ): boolean => {
-    const isPawn: boolean = piece.type === "pawn";
-    const isDiagonalMove: boolean = from.charAt(0) !== to.charAt(0);
-    const isToSquareEmpty: boolean = !this.piecesMap.has(to);
-    const isEnPassantSquare: boolean = this.enPassantSquare === to;
-
-    return isPawn && isDiagonalMove && isToSquareEmpty && isEnPassantSquare;
-  };
-
-  private getEnPassantCapturedSquare = (
-    to: AlgebraicNotation,
-    color: "white" | "black"
-  ): AlgebraicNotation => {
-    const toPos = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
-    const fileIndex = Number(toPos.fileIndex);
-    const rankIndex = Number(toPos.rankIndex);
-
-    const captureRank = color === "white" ? rankIndex + 1 : rankIndex - 1;
-
-    return BoardUtils.getAlgebraicNotationFromBoardIndices(
-      fileIndex,
-      captureRank
-    );
   };
 
   private createMove = (
@@ -341,171 +296,6 @@ class ChessBoard extends ChessBoardController {
 
     console.log("PGN:", currPgn);
     console.log("formatted:", NotationUtils.formatPgnMoves(this.pgnMoveText));
-  };
-
-  private removeCastlingRights = (
-    player: Player,
-    movedPiece?: Piece,
-    previousPosition?: AlgebraicNotation
-  ): void => {
-    if (movedPiece.type === "king") {
-      player.toggleAllCastling(false);
-      return;
-    }
-
-    const { fileIndex } =
-      BoardUtils.getBoardIndicesFromAlgebraicNotation(previousPosition);
-    const file: ChessFile = BoardUtils.fileMap.get(Number(fileIndex));
-
-    const side = file === "h" ? "kingSide" : "queenSide";
-
-    if (movedPiece.hasMoved) {
-      return;
-    }
-
-    player.toggleOneSideCastling(side, false);
-    console.log("removeCastlingRights", movedPiece, previousPosition);
-  };
-
-  private handleCastling = (move: Move, noAnimation: boolean): void => {
-    const { piece, from, to } = move;
-
-    const { fileIndex: fromFileStr, rankIndex: fromRankStr } =
-      BoardUtils.getBoardIndicesFromAlgebraicNotation(from);
-    const { fileIndex: toFileStr } =
-      BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
-
-    const fromFile = Number(fromFileStr);
-    const toFile = Number(toFileStr);
-
-    const fileDiff: number = toFile - fromFile;
-
-    const [file, rank] = from;
-    const isKingSide: boolean = fileDiff > 0;
-
-    const rookFrom: AlgebraicNotation = (
-      isKingSide ? `h${rank}` : `a${rank}`
-    ) as AlgebraicNotation;
-    const rookTo: AlgebraicNotation = (
-      isKingSide ? `f${rank}` : `d${rank}`
-    ) as AlgebraicNotation;
-
-    const rook = this.piecesMap.get(rookFrom);
-    if (!rook) {
-      console.warn(`Rook not found at expected castling position: ${rookFrom}`);
-      return;
-    }
-
-    this.movePiece(rook, rookTo, noAnimation);
-    this.updateGameState(rookFrom, rookTo, rook);
-  };
-
-  private handleEnPassantMarking = (to: AlgebraicNotation): void => {
-    const pos = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
-    const file = Number(pos.fileIndex);
-    const rank = Number(pos.rankIndex);
-
-    // ? Only check adjacent pawns on the pawn's current rank
-    const hasNotLandedAdjacentToEnemyPawn: boolean =
-      !this.hasAdjacentOpponentPawn(file, rank, this.currentPlayer.color);
-    if (hasNotLandedAdjacentToEnemyPawn) {
-      this.enPassantSquare = null;
-      return;
-    }
-
-    // ? + 1 ↓, - 1 ↑
-    const enPassantRank =
-      this.currentPlayer.color === "white" ? rank + 1 : rank - 1;
-
-    this.enPassantSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
-      file,
-      enPassantRank
-    );
-  };
-
-  private hasAdjacentOpponentPawn = (
-    file: number,
-    rank: number,
-    playerColor: "white" | "black"
-  ): boolean => {
-    const adjacentFiles = [file - 1, file + 1];
-
-    for (const adjFile of adjacentFiles) {
-      if (!RulesEngine.isWithinBounds(adjFile, rank)) {
-        // * skip out-of-board files
-        continue;
-      }
-
-      const adjSquare = BoardUtils.getAlgebraicNotationFromBoardIndices(
-        adjFile,
-        rank
-      );
-      const piece = this.piecesMap.get(adjSquare);
-
-      if (piece?.type === "pawn" && piece.color !== playerColor) {
-        return true;
-      }
-    }
-
-    return false;
-  };
-
-  private clearEnPassantMarking = (): void => {
-    this.enPassantSquare = null;
-  };
-
-  private movePiece = (
-    piece: Piece,
-    to: AlgebraicNotation,
-    noAnimation: boolean
-  ): void => {
-    const newPosition = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
-    piece.moveTo(newPosition, noAnimation);
-  };
-
-  private updateGameState = (
-    from: AlgebraicNotation,
-    to: AlgebraicNotation,
-    piece: Piece
-  ): void => {
-    // * Remove the piece from the old position
-    this.piecesMap.delete(from);
-    this.clearOccupiedSquare(from);
-
-    // * Set the piece at the new position
-    this.piecesMap.set(to, piece);
-    this.setOccupiedSquare(to, piece);
-  };
-
-  private recordMoveAsHash = (): void => {
-    const hash = ZobristHasher.computeHash(
-      this.piecesMap,
-      this.currentPlayer,
-      this.enPassantSquare ?? null
-    );
-
-    const currentCount = this.positionRepetitionMap.get(hash) ?? 0;
-    this.positionRepetitionMap.set(hash, currentCount + 1);
-  };
-
-  public incrementHalfMoveClock = (move: Move): void => {
-    const isPawnMove: boolean =
-      move.piece.type === "pawn" || Boolean(move.promotion);
-    const isCapture: boolean = !!move.capturedPiece;
-
-    if (isPawnMove || isCapture) {
-      this.halfMoveClock = 0;
-    } else {
-      this.halfMoveClock++;
-    }
-  };
-
-  public incrementFullMoveNumber = (): void => {
-    if (this.currentPlayer.color === "white") {
-      return;
-    }
-
-    this.fullMoveNumber++;
   };
 
   private updateCheckStateFor = (

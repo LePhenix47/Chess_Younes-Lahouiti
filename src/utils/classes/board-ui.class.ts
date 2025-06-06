@@ -1,14 +1,16 @@
 import BoardUtils from "./board-utils.class";
 import ChessBoardController from "./chess-board-controller";
 import { AlgebraicNotation } from "./chess-board.class";
-import Piece, {
-  PieceType,
-  PieceColor,
-  IPieceLogic,
-  PromotedPiece,
-} from "./piece.class";
+import Piece, { PieceColor, PromotedPiece } from "./piece.class";
 
-class BoardUI {
+export interface IBoardUI {
+  elementIsChessPiece(el: HTMLElement): boolean;
+  elementIsPieceSelected(el: HTMLElement): boolean;
+  getPieceFromElement(el: HTMLElement): Piece | null;
+  dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
+}
+
+class BoardUI implements IBoardUI {
   constructor(private chessBoardController: ChessBoardController) {}
 
   public generateBoard = (): void => {
@@ -455,6 +457,16 @@ class BoardUI {
     if (isBackdrop) {
       this.clearPromotionDialog();
     }
+  };
+
+  // TODO: Relocate to BoardUI
+  public movePiece = (
+    piece: Piece,
+    to: AlgebraicNotation,
+    noAnimation: boolean
+  ): void => {
+    const newPosition = BoardUtils.getBoardIndicesFromAlgebraicNotation(to);
+    piece.moveTo(newPosition, noAnimation);
   };
 }
 
