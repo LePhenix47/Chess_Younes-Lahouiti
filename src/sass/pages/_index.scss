@@ -87,7 +87,7 @@
             }
 
             &[data-occupied-by] {
-                --_thickness: 10px;
+                --_thickness: 1.5cqi;
 
                 outline: var(--_thickness) solid rgba(9, 178, 2, 50%);
                 outline-offset: calc(-1 * var(--_thickness));
@@ -96,7 +96,7 @@
 
         &::after {
             --_blur-transparency: 80%;
-            --_diameter: 30px;
+            --_diameter: 40%;
             --_color: rgba(255, 0, 0, 85%);
 
             background-image: radial-gradient(circle at center, var(--_color) var(--_diameter), transparent var(--_blur-transparency));
