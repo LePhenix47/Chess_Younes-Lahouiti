@@ -117,6 +117,14 @@
             opacity: 1;
         }
 
+        &[data-last-move].light-square {
+            background-color: #cdd26a;
+        }
+
+        &[data-last-move].dark-square {
+            background-color: #aaa23a;
+        }
+
         &.light-square {
             --_init-bg-color: var(--chess-light-square-color);
             background-color: var(--chess-light-square-color);

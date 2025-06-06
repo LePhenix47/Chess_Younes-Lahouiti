@@ -225,9 +225,10 @@ class ChessBoard extends ChessBoardController {
 
   private applyMove = (move: Move, noAnimation: boolean): void => {
     const previousLegalMoves = this.allLegalMovesForCurrentPlayer;
-    // TODO: Remove this when done testing
-    this.clearTest();
+
     const { from, to, piece, capturedPiece } = move;
+    this.clearLastMove();
+    this.markLastMove(from, to);
 
     if (capturedPiece) {
       this.capturePiece(capturedPiece, noAnimation);
@@ -414,6 +415,7 @@ class ChessBoard extends ChessBoardController {
       alert("Invalid FEN syntax");
       return;
     }
+
     // 1. Parse raw FEN into interpreted structure
     const {
       pieces,
@@ -480,14 +482,6 @@ class ChessBoard extends ChessBoardController {
 
     this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
     this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
-    // TODO: Check if game is playable
-    /*
-    1. Kings amount for each side is different than 1
-    2. Pawns on either 8th or 1st rank (regardless of color)
-    3. Both kings in check
-    4. Your turn to play but you're already checking opponent king making the king capture
-
-    */
   };
 
   public loadPgn = (pgn: string): void => {};

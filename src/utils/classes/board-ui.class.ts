@@ -216,6 +216,7 @@ class BoardUI implements IBoardUI {
   };
 
   // TODO: Improve types for the param, RN I'm manually adding the possible values for the type parameter
+  // When they should be inferred from the hashmap keys
   public readonly updateSquareHighlight = ({
     targetSquares,
     type,
@@ -224,7 +225,7 @@ class BoardUI implements IBoardUI {
     className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type?: "selected" | "can-move" | "occupied" | "checked";
+    type?: "selected" | "can-move" | "occupied" | "checked" | "last-move";
     mode?: "add" | "remove" | "toggle";
     value?: string;
     className?: string;
@@ -240,6 +241,7 @@ class BoardUI implements IBoardUI {
         "can-move": "data-available-move",
         occupied: "data-occupied-by",
         checked: "data-checked",
+        "last-move": "data-last-move",
       })
     );
 

@@ -64,6 +64,9 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   private readonly gameLogic: GameLogic;
   private readonly boardUI: BoardUI;
 
+  test = () => {};
+  clearTest = () => {};
+
   constructor(container: HTMLElement) {
     this.container = container;
 
@@ -191,9 +194,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     this.legalMovesForSelectedPiece = this.getLegalMovesForSelectedPiece(piece);
 
-    // TODO: Remove this when done testing
-    this.test();
-
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "add");
   };
 
@@ -201,74 +201,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     piece: Piece
   ): AlgebraicNotation[] => {
     return this.gameLogic.getLegalMovesForSelectedPiece(piece);
-  };
-
-  test = () => {
-    // TODO: Test that the new methods work correctly
-    const king = ChessBoard.getPieceFromArray(
-      this.piecesMap,
-      "king",
-      this.currentTurn
-    ) as KingPiece;
-
-    // const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
-    // const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
-    // this.updateSquareHighlight({
-    //   targetSquares: testSquares,
-    //   className: "blinking",
-    //   mode: "add",
-    // });
-    // console.log("Pinned Pieces:", pinned);
-
-    const a = RulesEngine.getAttackingPiecesAndPathToKing(
-      king,
-      this.currentPlayer,
-      this.piecesMap
-    ).flatMap((p) => p.pathToKing);
-    this.updateSquareHighlight({
-      targetSquares: a,
-      className: "test",
-      mode: "add",
-    });
-
-    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-    //   this.currentPlayer,
-    //   this.piecesMap
-    // );
-
-    // console.log("Opponent attacked squares:", attacked);
-  };
-  clearTest = () => {
-    const king = ChessBoard.getPieceFromArray(
-      this.piecesMap,
-      "king",
-      this.currentTurn
-    ) as KingPiece;
-
-    // const pinned = RulesEngine.getPinnedPieces(king, this.piecesMap);
-    // const testSquares = pinned.map((p) => p.pinned.position.algebraicNotation);
-    // this.updateSquareHighlight({
-    //   targetSquares: testSquares,
-    //   className: "blinking",
-    //   mode: "remove",
-    // });
-
-    // const attacked = AttacksGenerator.getAttackedSquaresByOpponent(
-    //   this.currentPlayer,
-    //   this.piecesMap
-    // );
-
-    const a = RulesEngine.getAttackingPiecesAndPathToKing(
-      king,
-      this.currentPlayer,
-      this.piecesMap
-    ).flatMap((p) => p.pathToKing);
-
-    this.updateSquareHighlight({
-      targetSquares: a,
-      className: "test",
-      mode: "remove",
-    });
   };
 
   public readonly clearSelectedPiece = (
@@ -325,7 +257,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type?: "selected" | "can-move" | "occupied" | "checked";
+    type?: "selected" | "can-move" | "occupied" | "checked" | "last-move";
     mode?: "add" | "remove" | "toggle";
     value?: string;
     className?: string;
@@ -440,6 +372,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
     // 5. Clear promotion dialog if open
     this.boardUI.clearPromotionDialog();
+
+    this.clearLastMove();
   };
 
   public readonly getAllCastlingRights = () => {
@@ -516,6 +450,26 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
 
   public readonly clearEnPassantMarking = () => {
     this.enPassantSquare = this.gameLogic.clearEnPassantMarking();
+  };
+
+  public readonly markLastMove = (
+    from: AlgebraicNotation,
+    to: AlgebraicNotation
+  ) => {
+    this.updateSquareHighlight({
+      targetSquares: [from, to],
+      type: "last-move",
+      mode: "add",
+    });
+  };
+
+  public readonly clearLastMove = () => {
+    const lastTwoMovesSquares =
+      this.container.querySelectorAll<HTMLDivElement>("[data-last-move]");
+
+    for (const square of lastTwoMovesSquares) {
+      square.removeAttribute("data-last-move");
+    }
   };
 }
 export default ChessBoardController;
