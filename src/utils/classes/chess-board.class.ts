@@ -4,6 +4,7 @@ import ChessBoardController, { LegalMoves } from "./chess-board-controller";
 import RulesEngine from "./rules-engine.class";
 import Player from "./player.class";
 import NotationUtils from "./notation-utils.class";
+import DragManager from "./drag-manager.class";
 
 export type ChessFile = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h";
 export type ChessRank = "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
@@ -117,9 +118,111 @@ class ChessBoard extends ChessBoardController {
     return piece;
   };
 
+  private readonly uiDragManager: DragManager;
+
   constructor(container: HTMLElement) {
     super(container);
+
+    this.uiDragManager = new DragManager(container);
+
+    this.uiDragManager.setCallbacks({
+      onDragStart: this.handleDragStart,
+      onDragMove: this.handleDragMove,
+      onDrop: this.handleDrop,
+      onPieceClick: this.handlePieceClick,
+      onEmptySquareClick: this.handleEmptySquareClick,
+    });
   }
+
+  private handleDragStart = (
+    pieceElement: HTMLElement,
+    startSquare: AlgebraicNotation
+  ) => {
+    this.selectPiece(pieceElement);
+  };
+
+  private handleDragMove = (
+    pieceElement: HTMLElement,
+    pieceDragX: number,
+    pieceDragY: number,
+    hoveringSquare: AlgebraicNotation | null
+  ) => {
+    const draggedPiece = this.getPieceFromElement(pieceElement);
+    this.dragPiece(draggedPiece, pieceDragX, pieceDragY);
+    console.log(hoveringSquare);
+  };
+
+  private handleDrop = (
+    pieceElement: HTMLElement,
+    fromSquare: AlgebraicNotation,
+    toSquare: AlgebraicNotation,
+    isInsideBoard: boolean
+  ) => {
+    console.log("custom:pointer-drag-drop");
+    const draggedPiece: Piece = this.getPieceFromElement(pieceElement);
+
+    if (!isInsideBoard) {
+      // Not inside → snap back to original square!
+      draggedPiece.moveTo(draggedPiece.position, false); // `noAnimation = true`
+      return;
+    }
+
+    const { rankIndex, fileIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(toSquare);
+
+    console.log(toSquare);
+
+    this.updatePiecePosition(
+      draggedPiece,
+      Number(rankIndex),
+      Number(fileIndex),
+      true
+    );
+
+    this.clearSelectedPiece();
+  };
+
+  private handlePieceClick = (
+    pieceElement: HTMLElement,
+    square: AlgebraicNotation
+  ) => {
+    // TODO: BODGE FIX
+    console.log("custom:pointer-click");
+    pieceElement.classList.remove("dragging");
+
+    const draggedPiece: Piece = this.getPieceFromElement(pieceElement);
+
+    // * 1. No piece is selected yet
+    if (!this.selectedPiece) {
+      this.selectPiece(pieceElement);
+    }
+    // * 2. Re-selected same piece → clear selection
+    else if (draggedPiece === this.selectedPiece) {
+      this.clearSelectedPiece();
+    }
+    // * 3. Clicked another of my own pieces → switch selection
+    else if (draggedPiece.color === this.selectedPiece.color) {
+      this.selectPiece(pieceElement);
+    }
+  };
+
+  private handleEmptySquareClick = (square: AlgebraicNotation) => {
+    if (!this.selectedPiece) {
+      // * Clicked an empty square but no piece is selected → do nothing
+      return;
+    }
+
+    const { fileIndex, rankIndex } =
+      BoardUtils.getBoardIndicesFromAlgebraicNotation(square);
+
+    this.updatePiecePosition(
+      this.selectedPiece,
+      Number(rankIndex),
+      Number(fileIndex),
+      false
+    );
+    this.clearSelectedPiece();
+  };
 
   /*
    * Methods for handling pieces
@@ -341,7 +444,8 @@ class ChessBoard extends ChessBoardController {
     const currentPlayer: Player = this.currentPlayer;
     const legalMoves: LegalMoves = this.allLegalMovesForCurrentPlayer;
 
-    // ♔ Checkmate
+    // * Win-Loss scenarios
+    // ? ♔ Checkmate
     if (RulesEngine.isCheckmate({ legalMoves, currentPlayer })) {
       const rivalPlayer: PieceColor = this.rivalPlayer.color;
       this.endGame({ winner: rivalPlayer, reason: "checkmate" });
@@ -349,31 +453,27 @@ class ChessBoard extends ChessBoardController {
     }
     // TODO for much later: Win-Loss by timeout or resign
 
-    // 🤝 Stalemate
+    // * Draw scenarios
+    // ? ✖ Stalemate
     if (RulesEngine.isStalemate({ legalMoves, currentPlayer })) {
       this.endGame({ winner: null, reason: "stalemate" });
-      return;
     }
-
-    // 📋 Threefold Repetition
-    if (RulesEngine.isThreefoldRepetitionDraw(this.positionRepetitionMap)) {
+    // ? 📋 Threefold Repetition
+    else if (
+      RulesEngine.isThreefoldRepetitionDraw(this.positionRepetitionMap)
+    ) {
       this.endGame({ winner: null, reason: "threefold-repetition" });
-      return;
     }
-
-    // ⏱️ Fifty-Move Rule
-    if (RulesEngine.isFiftyMoveRuleDraw(this.halfMoveClock)) {
+    // ? ⏱️ Fifty-Move Rule
+    else if (RulesEngine.isFiftyMoveRuleDraw(this.halfMoveClock)) {
       this.endGame({ winner: null, reason: "50-move-rule" });
-      return;
     }
-
-    // 🪙 Insufficient Material
-    if (RulesEngine.isInsufficientMaterialDraw(this.piecesMap)) {
+    // ? 🪙 Insufficient Material
+    else if (RulesEngine.isInsufficientMaterialDraw(this.piecesMap)) {
       this.endGame({
         winner: null,
         reason: "insufficient-checkmating-material",
       });
-      return;
     }
 
     // TODO: Handle other draw scenarios: timeout vs insufficient material and agreement

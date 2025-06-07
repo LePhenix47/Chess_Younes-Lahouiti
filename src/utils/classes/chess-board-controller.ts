@@ -211,7 +211,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       oldPosition || prev.position.algebraicNotation;
 
     // ? UI update
-    this.highlightSelectedSquare(an as AlgebraicNotation, "remove");
+    this.highlightSelectedSquare(an, "remove");
     this.highlightLegalMoves(this.legalMovesForSelectedPiece, "remove");
 
     // ? Logic update
