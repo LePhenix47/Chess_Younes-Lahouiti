@@ -52,7 +52,7 @@ export type PlayabilityCheckInput = {
 abstract class RulesEngine {
   public static isFenPositionPlayable = (board: ChessBoard): boolean => {
     try {
-      const { piecesMap } = board;
+      const { piecesMap, allLegalMovesForCurrentPlayer } = board;
 
       // * 1. Validate each side has exactly 1 king
       const whiteMaterial: PlayerMaterialCount = ChessBoard.getPlayerMaterial(
@@ -101,6 +101,15 @@ abstract class RulesEngine {
         (board.currentTurn === "white" && blackInCheck) ||
         (board.currentTurn === "black" && whiteInCheck)
       ) {
+        return false;
+      }
+
+      console.log(
+        "allLegalMovesForCurrentPlayer",
+        allLegalMovesForCurrentPlayer
+      );
+
+      if (!allLegalMovesForCurrentPlayer.length) {
         return false;
       }
 

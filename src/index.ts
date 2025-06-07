@@ -229,5 +229,5 @@ userPointer.on("custom:pointer-drag-end", (e) => {
 
 chessBoardInstance.generateBoard();
 // chessBoardInstance.loadFen(chessBoardInstance.initialFen);
-const fen = "kq6/6R1/K7/8/3p4/4N3/8/4N1R1 w - - 0 1";
+const fen = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w Qq - 0 1";
 chessBoardInstance.loadFen(fen);

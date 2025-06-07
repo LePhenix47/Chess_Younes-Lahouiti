@@ -430,6 +430,7 @@ class ChessBoard extends ChessBoardController {
     this.clearBoard();
 
     // 3. Validate and apply the parsed piece positions
+    // TODO: Make this a separate method
     for (let rankIndex = 0; rankIndex < 8; rankIndex++) {
       for (let fileIndex = 0; fileIndex < 8; fileIndex++) {
         const char = pieces[rankIndex][fileIndex];
@@ -466,13 +467,8 @@ class ChessBoard extends ChessBoardController {
     // 5. Update metadata (e.g., repetition map, legal moves, checks)
     this.recordMoveAsHash();
 
-    this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
-
-    console.log(`%cGame is playable: ${this.isGamePlayable}`, "color: green");
-
-    if (!this.isGamePlayable) {
-      alert("Game is not playable! Please fix the board and try again.");
-    }
+    this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
+    this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
 
     this.updateCheckStateFor(this.whitePlayer);
     this.updateCheckStateFor(this.blackPlayer);
@@ -480,8 +476,18 @@ class ChessBoard extends ChessBoardController {
     this.updateCheckStateFor(this.currentPlayer);
     this.updateAllLegalMovesForCurrentPlayer();
 
-    this.updatePlayerState(this.whitePlayer, false, castlingRights.white);
-    this.updatePlayerState(this.blackPlayer, false, castlingRights.black);
+    console.log({ castlingRights });
+
+    this.isGamePlayable = RulesEngine.isFenPositionPlayable(this);
+
+    console.log(
+      `%cGame is playable: ${this.isGamePlayable}`,
+      `background: ${this.isGamePlayable ? "green" : "red"}`
+    );
+
+    if (!this.isGamePlayable) {
+      alert("Game is not playable! Please fix the board and try again.");
+    }
   };
 
   public loadPgn = (pgn: string): void => {};
