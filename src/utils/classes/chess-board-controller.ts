@@ -86,12 +86,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
   }
 
   public get squareSize(): number {
-    const square =
-      this.container.querySelector<HTMLDivElement>("[data-square]");
-
-    const squareSize = square.offsetWidth;
-
-    return squareSize;
+    return BoardUI.getSquareSizeFromContainer(this.container);
   }
 
   public readonly generateBoard = (): void => {

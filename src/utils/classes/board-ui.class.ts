@@ -11,6 +11,21 @@ export interface IBoardUI {
 }
 
 class BoardUI implements IBoardUI {
+  public static getSquareSizeFromContainer = (
+    container: HTMLElement,
+    includeCssLayoutTransforms?: boolean
+  ): number => {
+    const square = container.querySelector<HTMLDivElement>("[data-square]");
+    let squareSize: number = square.offsetWidth;
+
+    if (includeCssLayoutTransforms) {
+      const squareDomRect: DOMRect = square.getBoundingClientRect();
+      squareSize = squareDomRect.width;
+    }
+
+    return squareSize;
+  };
+
   constructor(private chessBoardController: ChessBoardController) {}
 
   public generateBoard = (): void => {
