@@ -10,7 +10,12 @@ type DragManagerCallbacks = Partial<{
     pieceElement: HTMLElement,
     startSquare: AlgebraicNotation
   ) => void;
-  onDragMove: (pieceElement: HTMLElement, pageX: number, pageY: number) => void;
+  onDragMove: (
+    pieceElement: HTMLElement,
+    pieceDragX: number,
+    pieceDragY: number,
+    hoveringSquare: AlgebraicNotation | null
+  ) => void;
   onDrop: (
     pieceElement: HTMLElement,
     fromSquare: AlgebraicNotation,
@@ -44,11 +49,8 @@ class DragManager {
     this.attachEvents();
   }
 
-  public setCallback = <TCallbackKey extends keyof DragManagerCallbacks>(
-    callbackName: TCallbackKey,
-    callback: DragManagerCallbacks[TCallbackKey]
-  ) => {
-    this.callbacks[callbackName] = callback;
+  public setCallbacks = (callbacks: DragManagerCallbacks) => {
+    this.callbacks = { ...this.callbacks, ...callbacks };
   };
 
   public get squareSize(): number {
@@ -56,27 +58,18 @@ class DragManager {
   }
 
   private attachEvents = () => {
-    this.userPointer.on("custom:pointer-drag-start", this.handleDragStart);
-
     this.userPointer.on("custom:pointer-drag-click", this.handleClick);
+
+    this.userPointer.on("custom:pointer-drag-start", this.handleDragStart);
     this.userPointer.on("custom:pointer-drag-move", this.handleDragMove);
     this.userPointer.on("custom:pointer-drag-end", this.handleDragEnd);
-  };
-
-  private handleDragStart = (e: DragStartEvent) => {
-    const pieceElement = this.userPointer.pressedElement;
-    if (!this.isChessPiece(pieceElement)) return;
-
-    this.draggedPiece = pieceElement;
-    this.startSquare = this.getSquareFromElement(this.draggedPiece);
-
-    this.callbacks.onDragStart?.(this.draggedPiece, this.startSquare);
   };
 
   private handleClick = (e: DragClickEvent) => {
     const { clickedElement } = e.detail;
 
     const square: AlgebraicNotation = this.getSquareFromElement(clickedElement);
+    this.startSquare = square;
 
     if (this.isChessPiece(clickedElement)) {
       this.callbacks.onPieceClick?.(clickedElement, square);
@@ -85,26 +78,52 @@ class DragManager {
     }
   };
 
+  private handleDragStart = (e: DragStartEvent) => {
+    const pieceElement = this.userPointer.pressedElement;
+    if (!this.isChessPiece(pieceElement)) return;
+
+    const { adjustedX, adjustedY } = e.detail;
+
+    this.draggedPiece = pieceElement;
+    this.startSquare = this.getSquareFromElement(this.draggedPiece);
+
+    this.callbacks.onDragStart?.(this.draggedPiece, this.startSquare);
+  };
+
   private handleDragMove = (e: DragMoveEvent) => {
     if (!this.draggedPiece) return;
 
-    const { pageX, pageY } = e.detail;
-    this.callbacks.onDragMove?.(this.draggedPiece, pageX, pageY);
+    const { pageX, pageY, adjustedX, adjustedY } = e.detail;
+
+    let hoveringSquare: AlgebraicNotation | null = null;
+
+    if (this.coordsAreWithinBounds(pageX, pageY)) {
+      hoveringSquare = this.getSquareFromCoords(adjustedX, adjustedY);
+    }
+
+    const pieceDragX: number = pageX - this.userPointer.initXOffset;
+    const pieceDragY: number = pageY - this.userPointer.initYOffset;
+
+    this.callbacks.onDragMove?.(
+      this.draggedPiece,
+      pieceDragX,
+      pieceDragY,
+      hoveringSquare
+    );
   };
 
   private handleDragEnd = (e: DragEndEvent) => {
-    if (!this.draggedPiece || !this.startSquare) return;
+    if (!this.draggedPiece) return;
 
     const { pageX, pageY } = e.detail;
     const isInsideBoard: boolean = this.coordsAreWithinBounds(pageX, pageY);
 
     const { containerX, containerY } = this.userPointer.lastRecordedPositions;
-    // Calculate target square from pointer position
-    const fileIndex = Math.floor(containerX / this.squareSize);
-    const rankIndex = Math.floor(containerY / this.squareSize);
 
-    const toSquare: AlgebraicNotation =
-      BoardUtils.getAlgebraicNotationFromBoardIndices(rankIndex, fileIndex);
+    const toSquare: AlgebraicNotation = this.getSquareFromCoords(
+      containerX,
+      containerY
+    );
 
     this.callbacks.onDrop?.(
       this.draggedPiece,
@@ -117,8 +136,28 @@ class DragManager {
     this.startSquare = null;
   };
 
+  private getIndicesFromCoords = (x: number, y: number): [number, number] => {
+    const fileIndex: number = Math.floor(x / this.squareSize);
+    const rankIndex: number = Math.floor(y / this.squareSize);
+
+    return [fileIndex, rankIndex];
+  };
+
+  public getSquareFromCoords = (x: number, y: number): AlgebraicNotation => {
+    const [fileIndex, rankIndex] = this.getIndicesFromCoords(x, y);
+
+    return BoardUtils.getAlgebraicNotationFromBoardIndices(
+      fileIndex,
+      rankIndex
+    );
+  };
+
   private isChessPiece = (element: HTMLElement | null): boolean => {
-    return Boolean(element?.classList.contains("chess-piece"));
+    if (!element) {
+      return false;
+    }
+
+    return element.hasAttribute("data-piece");
   };
 
   private coordsAreWithinBounds = (x: number, y: number): boolean => {
