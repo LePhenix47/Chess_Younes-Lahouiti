@@ -83,6 +83,7 @@ userPointer.on("custom:pointer-drag-click", (e) => {
 
   const { clickedElement } = e.detail;
 
+  // TODO: BODGE FIX
   clickedElement.classList.remove("dragging");
 
   // console.log("custom:pointer-drag-click");
