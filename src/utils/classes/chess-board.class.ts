@@ -123,6 +123,8 @@ class ChessBoard extends ChessBoardController {
   constructor(container: HTMLElement) {
     super(container);
 
+    this.generateBoard();
+
     this.uiDragManager = new DragManager(container);
 
     this.uiDragManager.setCallbacks({
@@ -151,7 +153,6 @@ class ChessBoard extends ChessBoardController {
     }
 
     this.dragPiece(draggedPiece, pieceDragX, pieceDragY);
-    console.log(hoveringSquare);
 
     this.clearDragHoveredSquare();
     if (!hoveringSquare) {
@@ -173,7 +174,6 @@ class ChessBoard extends ChessBoardController {
     const draggedPiece: Piece = this.getPieceFromElement(pieceElement);
 
     if (!isInsideBoard) {
-      // Not inside → snap back to original square!
       draggedPiece.moveTo(draggedPiece.position, false); // `noAnimation = true`
       this.clearSelectedPiece();
       return;

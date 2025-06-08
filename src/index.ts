@@ -56,7 +56,6 @@ const chessBoardElement: HTMLElement = selectQuery(
 
 const chessBoardInstance = new ChessBoard(chessBoardElement);
 
-chessBoardInstance.generateBoard();
 // chessBoardInstance.loadFen(chessBoardInstance.initialFen);
 const fen = "r3k2r/pppppppp/8/8/8/8/PPPPPPPP/R3K2R w Qq - 0 1";
 chessBoardInstance.loadFen(fen);
