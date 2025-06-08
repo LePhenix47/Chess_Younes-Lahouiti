@@ -31,7 +31,7 @@ export default defineConfig({
     },
   },
   build: {
-    outDir: "dist",
+    outDir: "docs",
     rollupOptions: {
       input: {
         index: path.resolve(__dirname, "src/index.ts"),
