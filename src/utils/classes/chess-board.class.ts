@@ -245,6 +245,21 @@ class ChessBoard extends ChessBoardController {
     this.clearSelectedPiece();
   };
 
+  public readonly dragPiece = (
+    piece: Piece,
+    offsetX: number,
+    offsetY: number
+  ) => {
+    // Turn check: Ensure it's the current player's turn before dragging
+    if (piece.color !== this.currentTurn) {
+      piece.moveTo(piece.position, true);
+      console.error("It's not your turn! Cannot drag piece.");
+      return;
+    }
+
+    piece.drag(offsetX, offsetY);
+  };
+
   /*
    * Methods for handling pieces
    */

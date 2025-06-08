@@ -7,7 +7,6 @@ export interface IBoardUI {
   elementIsChessPiece(el: HTMLElement): boolean;
   elementIsPieceSelected(el: HTMLElement): boolean;
   getPieceFromElement(el: HTMLElement): Piece | null;
-  dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
 }
 
 export type BoardHighlightType = keyof typeof BoardUI.highlightAttributes;

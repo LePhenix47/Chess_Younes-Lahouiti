@@ -143,20 +143,6 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
       piece
     );
   };
-  public readonly dragPiece = (
-    piece: Piece,
-    offsetX: number,
-    offsetY: number
-  ) => {
-    // Turn check: Ensure it's the current player's turn before dragging
-    if (piece.color !== this.currentTurn) {
-      piece.moveTo(piece.position, true);
-      console.error("It's not your turn! Cannot drag piece.");
-      return;
-    }
-
-    piece.drag(offsetX, offsetY);
-  };
 
   public readonly elementIsChessPiece = (element: HTMLElement): boolean => {
     return this.boardUI.elementIsChessPiece(element);
