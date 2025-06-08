@@ -32,17 +32,11 @@ export default defineConfig({
   },
   build: {
     outDir: "docs",
-    rollupOptions: {
-      input: {
-        index: path.resolve(__dirname, "src/index.ts"),
-        style: path.resolve(__dirname, "src/sass/main.scss"),
-      },
-      output: {
-        entryFileNames: "[name].js",
-        assetFileNames: "[name].[ext]",
-      },
-    },
+    emptyOutDir: true,
     minify: "terser",
+    rollupOptions: {
+      input: path.resolve(__dirname, "index.html"), // this is the main entry
+    },
   },
   resolve: {
     alias: {
