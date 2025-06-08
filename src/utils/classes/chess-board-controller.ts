@@ -18,7 +18,7 @@ import type {
 import RulesEngine from "./rules-engine.class";
 import ChessBoard from "./chess-board.class";
 import GameLogic, { IGameLogic } from "./game-logic.class";
-import BoardUI, { IBoardUI } from "./board-ui.class";
+import BoardUI, { BoardHighlightType, IBoardUI } from "./board-ui.class";
 
 export type LegalMoves = {
   piece: Piece;
@@ -252,7 +252,7 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type?: "selected" | "can-move" | "occupied" | "checked" | "last-move";
+    type?: BoardHighlightType;
     mode?: "add" | "remove" | "toggle";
     value?: string;
     className?: string;
@@ -465,6 +465,26 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     for (const square of lastTwoMovesSquares) {
       square.removeAttribute("data-last-move");
     }
+  };
+
+  public readonly highlightDragHoveredSquare = (
+    hoveringSquare: AlgebraicNotation
+  ) => {
+    this.updateSquareHighlight({
+      targetSquares: hoveringSquare,
+      type: "drag-hover",
+      mode: "add",
+    });
+  };
+
+  public readonly clearDragHoveredSquare = () => {
+    const previouslyDragHoveredSquare =
+      this.container.querySelector<HTMLDivElement>("[data-drag-hover]");
+
+    if (!previouslyDragHoveredSquare) {
+      return;
+    }
+    previouslyDragHoveredSquare.removeAttribute("data-drag-hover");
   };
 }
 export default ChessBoardController;

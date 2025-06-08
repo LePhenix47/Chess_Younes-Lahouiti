@@ -4,6 +4,8 @@
     @include center-flex-column(20px);
 
     --_square-size: 100px;
+
+    overflow: hidden;
 }
 
 .sprite-cranberry {
@@ -94,7 +96,7 @@
             }
         }
 
-        &::after {
+        &[data-checked]::after {
             --_blur-transparency: 80%;
             --_diameter: 40%;
             --_color: rgba(255, 0, 0, 85%);
@@ -108,13 +110,8 @@
             width: 100%;
             height: 100%;
 
-            transition: opacity 150ms ease-in-out;
             opacity: 0;
-        }
-
-        &[data-checked]::after {
-            content: "";
-            opacity: 1;
+            animation: fade-in 150ms ease-in-out forwards;
         }
 
         &[data-last-move].light-square {
@@ -123,6 +120,39 @@
 
         &[data-last-move].dark-square {
             background-color: #aaa23a;
+        }
+
+        &[data-drag-hover] {
+            --_thickness: 0.75cqi;
+            box-shadow: inset 0 0 0 var(--_thickness) white;
+
+            @include mobile-only {
+                box-shadow: none;
+
+                &::after {
+                    content: "";
+                    position: absolute;
+
+                    top: 0 !important;
+                    left: 0 !important;
+
+                    width: 100% !important;
+                    height: 100% !important;
+                    background-color: rgb(37, 37, 37) !important;
+                    background-image: none;
+
+                    translate: 0 0 !important;
+
+
+                    border-radius: 50% !important;
+
+                    opacity: 65% !important;
+                    animation: none !important;
+                    scale: 1.25;
+
+                    z-index: 2;
+                }
+            }
         }
 
         &.light-square {
@@ -250,8 +280,8 @@
             --_drag-x: 0px;
             --_drag-y: 0px;
 
-            left: calc(var(--_drag-x));
-            top: calc(var(--_drag-y));
+            left: var(--_drag-x);
+            top: var(--_drag-y);
 
             will-change: left, top;
             transform: translateZ(0);

@@ -10,21 +10,44 @@ export interface IBoardUI {
   dragPiece(piece: Piece, offsetX: number, offsetY: number): void;
 }
 
+export type BoardHighlightType = keyof typeof BoardUI.highlightAttributes;
+export type BoardHighlightValue =
+  (typeof BoardUI.highlightAttributes)[BoardHighlightType];
+
 class BoardUI implements IBoardUI {
   public static getSquareSizeFromContainer = (
     container: HTMLElement,
-    includeCssLayoutTransforms?: boolean
+    includeCssTransforms?: boolean
   ): number => {
     const square = container.querySelector<HTMLDivElement>("[data-square]");
     let squareSize: number = square.offsetWidth;
 
-    if (includeCssLayoutTransforms) {
+    if (includeCssTransforms) {
       const squareDomRect: DOMRect = square.getBoundingClientRect();
       squareSize = squareDomRect.width;
     }
 
     return squareSize;
   };
+
+  public static readonly highlightAttributes = {
+    selected: "data-selected-square",
+    "can-move": "data-available-move",
+    occupied: "data-occupied-by",
+    checked: "data-checked",
+    "last-move": "data-last-move",
+    "drag-hover": "data-drag-hover",
+  } as const;
+
+  public static readonly attrMap = new Map<
+    BoardHighlightType,
+    BoardHighlightValue
+  >(
+    Object.entries(BoardUI.highlightAttributes) as [
+      BoardHighlightType,
+      BoardHighlightValue
+    ][]
+  );
 
   constructor(private chessBoardController: ChessBoardController) {}
 
@@ -93,49 +116,6 @@ class BoardUI implements IBoardUI {
       square.appendChild(rankLabel);
     }
   };
-
-  // TODO: Think about this method, Issue is it mixes both UI and logic
-  // public addPiece = (
-  //   type: PieceType,
-  //   color: PieceColor,
-  //   position:
-  //     | Omit<IPieceLogic["position"], "algebraicNotation">
-  //     | AlgebraicNotation
-  // ): void => {
-  //   const normalizedPosition: IPieceLogic["position"] =
-  //     BoardUtils.normalizePosition(position);
-
-  //   let piece: Piece;
-
-  //   const { piecesMap, container } = this.chessBoardController;
-
-  //   if (piecesMap.has(normalizedPosition.algebraicNotation)) {
-  //     piece = piecesMap.get(normalizedPosition.algebraicNotation) as Piece;
-
-  //     piece.moveTo(normalizedPosition, false);
-
-  //     piecesMap.delete(normalizedPosition.algebraicNotation);
-  //   } else {
-  //     // * Create the piece using the updated normalizedPosition
-  //     piece = new Piece(type, color, normalizedPosition);
-
-  //     // * Attach to board
-  //     piece.attachToBoard(container);
-  //   }
-
-  //   // * Update square occupation
-
-  //   this.chessBoardController.setOccupiedSquare(
-  //     normalizedPosition.algebraicNotation as AlgebraicNotation,
-  //     piece
-  //   );
-
-  //   // * Step 7: Save to internal map
-  //   piecesMap.set(
-  //     normalizedPosition.algebraicNotation as AlgebraicNotation,
-  //     piece
-  //   );
-  // };
 
   public dragPiece = (piece: Piece, offsetX: number, offsetY: number) => {
     const { currentTurn } = this.chessBoardController;
@@ -240,7 +220,7 @@ class BoardUI implements IBoardUI {
     className = "",
   }: {
     targetSquares: AlgebraicNotation | AlgebraicNotation[];
-    type?: "selected" | "can-move" | "occupied" | "checked" | "last-move";
+    type?: BoardHighlightType;
     mode?: "add" | "remove" | "toggle";
     value?: string;
     className?: string;
@@ -250,27 +230,11 @@ class BoardUI implements IBoardUI {
     const squares: AlgebraicNotation[] =
       typeof targetSquares === "string" ? [targetSquares] : targetSquares;
 
-    const attrMap = new Map<string, string>(
-      Object.entries({
-        selected: "data-selected-square",
-        "can-move": "data-available-move",
-        occupied: "data-occupied-by",
-        checked: "data-checked",
-        "last-move": "data-last-move",
-      })
-    );
-
-    const attrName = attrMap.get(type);
+    const attrName = BoardUI.attrMap.get(type);
     if (!attrName && !className) {
       console.warn(`Unknown highlight type "${type}"`);
       return;
     }
-
-    // console.debug(
-    //   `Updating squares "${squares.join(
-    //     ", "
-    //   )}" with attribute "${attrName}", value "${value}", mode "${mode}"`
-    // );
 
     for (const an of squares) {
       const square = this.chessBoardController.squareElementsMap.get(an);
@@ -328,7 +292,7 @@ class BoardUI implements IBoardUI {
     return dialogHTML;
   };
 
-  public getDialogCoordinates = (
+  public getPromotionDialogCoordinates = (
     square: AlgebraicNotation
   ): { left: number; top: number } => {
     const { container, squareSize } = this.chessBoardController;
@@ -352,7 +316,7 @@ class BoardUI implements IBoardUI {
   ): Promise<PromotedPiece> => {
     this.clearPromotionDialog();
 
-    const { left, top } = this.getDialogCoordinates(square);
+    const { left, top } = this.getPromotionDialogCoordinates(square);
     const html = this.renderPromotionDialogHTML(left, top, color);
 
     return new Promise((resolve) => {

@@ -134,10 +134,7 @@ class ChessBoard extends ChessBoardController {
     });
   }
 
-  private handleDragStart = (
-    pieceElement: HTMLElement,
-    startSquare: AlgebraicNotation
-  ) => {
+  private handleDragStart = (pieceElement: HTMLElement) => {
     this.selectPiece(pieceElement);
   };
 
@@ -148,8 +145,20 @@ class ChessBoard extends ChessBoardController {
     hoveringSquare: AlgebraicNotation | null
   ) => {
     const draggedPiece = this.getPieceFromElement(pieceElement);
+    if (draggedPiece.color !== this.currentTurn) {
+      console.error("It's not your turn! Cannot drag piece.");
+      return;
+    }
+
     this.dragPiece(draggedPiece, pieceDragX, pieceDragY);
     console.log(hoveringSquare);
+
+    this.clearDragHoveredSquare();
+    if (!hoveringSquare) {
+      return;
+    }
+
+    this.highlightDragHoveredSquare(hoveringSquare);
   };
 
   private handleDrop = (
@@ -158,6 +167,8 @@ class ChessBoard extends ChessBoardController {
     toSquare: AlgebraicNotation,
     isInsideBoard: boolean
   ) => {
+    this.clearDragHoveredSquare();
+
     console.log("custom:pointer-drag-drop");
     const draggedPiece: Piece = this.getPieceFromElement(pieceElement);
 
@@ -182,12 +193,9 @@ class ChessBoard extends ChessBoardController {
     this.clearSelectedPiece();
   };
 
-  private handlePieceClick = (
-    pieceElement: HTMLElement,
-    square: AlgebraicNotation
-  ) => {
-    // TODO: BODGE FIX
+  private handlePieceClick = (pieceElement: HTMLElement) => {
     console.log("custom:pointer-click");
+    // TODO: BODGE FIX
     pieceElement.classList.remove("dragging");
 
     const draggedPiece: Piece = this.getPieceFromElement(pieceElement);
@@ -203,6 +211,18 @@ class ChessBoard extends ChessBoardController {
     // * 3. Clicked another of my own pieces → switch selection
     else if (draggedPiece.color === this.selectedPiece.color) {
       this.selectPiece(pieceElement);
+    }
+    // * 4. Has selected piece and clicked another of the opponent's pieces → try to move
+    else if (
+      this.selectedPiece &&
+      draggedPiece.color !== this.selectedPiece.color
+    ) {
+      this.updatePiecePosition(
+        this.selectedPiece,
+        Number(draggedPiece.position.rankIndex),
+        Number(draggedPiece.position.fileIndex),
+        false
+      );
     }
   };
 

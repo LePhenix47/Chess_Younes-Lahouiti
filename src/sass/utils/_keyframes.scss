@@ -1,5 +1,9 @@
-@keyframes identifier {
-    from {}
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
 
-    to {}
+    to {
+        opacity: 1;
+    }
 }
