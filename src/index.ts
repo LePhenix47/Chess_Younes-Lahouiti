@@ -5,6 +5,18 @@ import "./sass/main.scss";
 import { selectQuery } from "@utils/functions/helper-functions/dom.functions";
 import ChessBoard from "@utils/classes/chess-board.class";
 
+const allowLocalHost: boolean = false;
+window.addEventListener("beforeunload", (e) => {
+  const currentUrl = new URL(window.location.href);
+  if (currentUrl.hostname === "localhost" || !allowLocalHost) {
+    return;
+  }
+
+  e.preventDefault();
+
+  e.returnValue = ""; // ? Legacy method for Chrome and Firefox
+});
+
 const analysisTabForm = selectQuery(
   '[data-element="analysis-tab"]'
 ) as HTMLFormElement;
