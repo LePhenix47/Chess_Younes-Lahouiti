@@ -175,6 +175,7 @@ class ChessBoard extends ChessBoardController {
     if (!isInsideBoard) {
       // Not inside → snap back to original square!
       draggedPiece.moveTo(draggedPiece.position, false); // `noAnimation = true`
+      this.clearSelectedPiece();
       return;
     }
 
