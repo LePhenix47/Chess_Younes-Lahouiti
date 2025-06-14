@@ -1,6 +1,5 @@
 import { defineConfig } from "vite";
 import path from "path";
-import alias from "@rollup/plugin-alias";
 import autoprefixer from "autoprefixer";
 
 export default defineConfig({
@@ -10,21 +9,6 @@ export default defineConfig({
     open: true, // Optional: Opens the browser automatically
   },
   base: "/Chess_Younes-Lahouiti/",
-  plugins: [
-    alias({
-      entries: [
-        { find: "@public", replacement: path.resolve(__dirname, "public") },
-        { find: "@assets", replacement: path.resolve(__dirname, "src/assets") },
-        {
-          find: "@components",
-          replacement: path.resolve(__dirname, "src/components"),
-        },
-        { find: "@pages", replacement: path.resolve(__dirname, "src/pages") },
-        { find: "@utils", replacement: path.resolve(__dirname, "src/utils") },
-        { find: "@sass", replacement: path.resolve(__dirname, "src/sass") },
-      ],
-    }),
-  ],
   css: {
     postcss: {
       plugins: [autoprefixer()],
