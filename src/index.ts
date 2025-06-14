@@ -5,10 +5,10 @@ import "./sass/main.scss";
 import { selectQuery } from "@utils/functions/helper-functions/dom.functions";
 import ChessBoard from "@utils/classes/chess-board.class";
 
-const allowLocalHost: boolean = false;
+const noLocalHostReloadPrevention: boolean = true;
 window.addEventListener("beforeunload", (e) => {
   const currentUrl = new URL(window.location.href);
-  if (currentUrl.hostname === "localhost" || !allowLocalHost) {
+  if (currentUrl.hostname === "localhost" && noLocalHostReloadPrevention) {
     return;
   }
 
@@ -20,14 +20,6 @@ window.addEventListener("beforeunload", (e) => {
 const analysisTabForm = selectQuery(
   '[data-element="analysis-tab"]'
 ) as HTMLFormElement;
-
-const fenInputElement = selectQuery(
-  '[data-element="fen-input"]'
-) as HTMLInputElement;
-
-const pgnInputElement = selectQuery(
-  '[data-element="pgn-input"]'
-) as HTMLTextAreaElement;
 
 analysisTabForm.addEventListener("submit", (event) => {
   event.preventDefault();
@@ -56,6 +48,7 @@ const chessBoardElement: HTMLElement = selectQuery(
 
 const chessBoardInstance = new ChessBoard(chessBoardElement);
 
-// chessBoardInstance.loadFen(chessBoardInstance.initialFen);
 const fen = "8/8/8/8/8/k2q4/8/K7 b - - 0 1";
 chessBoardInstance.loadFen(fen);
+
+// chessBoardInstance.loadFen(chessBoardInstance.initialFen);

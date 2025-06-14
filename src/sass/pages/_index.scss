@@ -18,9 +18,17 @@
     }
 }
 
+@view-transition {
+    navigation: auto;
+}
+
+
+::view-transition-group(chess-board) {}
+
 .chess {
     &__board {
 
+        view-transition-name: chess-board;
 
         container-type: inline-size;
         container-name: chess-board;

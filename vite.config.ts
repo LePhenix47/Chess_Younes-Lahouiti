@@ -19,7 +19,10 @@ export default defineConfig({
     emptyOutDir: true,
     minify: "terser",
     rollupOptions: {
-      input: path.resolve(__dirname, "index.html"), // this is the main entry
+      input: {
+        main: path.resolve(__dirname, "index.html"),
+        editor: path.resolve(__dirname, "pages/editor.html"),
+      },
     },
   },
   resolve: {
