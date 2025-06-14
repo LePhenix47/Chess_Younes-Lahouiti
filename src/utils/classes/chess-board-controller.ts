@@ -16,7 +16,6 @@ import type {
   Move,
 } from "./chess-board.class"; //
 import RulesEngine from "./rules-engine.class";
-import ChessBoard from "./chess-board.class";
 import GameLogic, { IGameLogic } from "./game-logic.class";
 import BoardUI, { BoardHighlightType, IBoardUI } from "./board-ui.class";
 
