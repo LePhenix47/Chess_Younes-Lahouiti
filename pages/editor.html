@@ -248,43 +248,43 @@
                     <legend>Pieces</legend>
                     <div class="editor__pieces-row editor__pieces-row--white">
                         <!-- White pieces row -->
-                        <span class="chess__piece" data-piece="king" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="king" data-color="white"><svg>
                                 <use href="#white-king" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="queen" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="queen" data-color="white"><svg>
                                 <use href="#white-queen" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="rook" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="rook" data-color="white"><svg>
                                 <use href="#white-rook" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="bishop" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="bishop" data-color="white"><svg>
                                 <use href="#white-bishop" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="knight" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="knight" data-color="white"><svg>
                                 <use href="#white-knight" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="pawn" data-color="white"><svg>
+                        <span class="chess__piece editor__piece" data-piece="pawn" data-color="white"><svg>
                                 <use href="#white-pawn" />
                             </svg></span>
                     </div>
                     <div class="editor__pieces-row editor__pieces-row--black">
                         <!-- Black pieces row -->
-                        <span class="chess__piece" data-piece="king" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="king" data-color="black"><svg>
                                 <use href="#black-king" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="queen" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="queen" data-color="black"><svg>
                                 <use href="#black-queen" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="rook" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="rook" data-color="black"><svg>
                                 <use href="#black-rook" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="bishop" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="bishop" data-color="black"><svg>
                                 <use href="#black-bishop" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="knight" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="knight" data-color="black"><svg>
                                 <use href="#black-knight" />
                             </svg></span>
-                        <span class="chess__piece" data-piece="pawn" data-color="black"><svg>
+                        <span class="chess__piece editor__piece" data-piece="pawn" data-color="black"><svg>
                                 <use href="#black-pawn" />
                             </svg></span>
                     </div>
@@ -294,7 +294,7 @@
                 <fieldset class="editor__fieldset editor__game-options" data-element="game-options">
                     <legend>Game Options</legend>
                     <label>
-                        Turn:
+                        <i class="fa-solid fa-chess-king"></i> Turn:
                         <select name="turn" data-element="turn-select">
                             <option value="white">White</option>
                             <option value="black">Black</option>
@@ -302,14 +302,29 @@
                     </label>
 
                     <fieldset class="editor__castling">
-                        <legend>Castling</legend>
-                        <label><input type="checkbox" data-element="castle-wk"> White kingside</label>
-                        <label><input type="checkbox" data-element="castle-wq"> White queenside</label>
-                        <label><input type="checkbox" data-element="castle-bk"> Black kingside</label>
-                        <label><input type="checkbox" data-element="castle-bq"> Black queenside</label>
+                        <legend><i class="fa-solid fa-chess"></i> Castling</legend>
+
+                        <ul>
+                            <li>
+                                <label><input type="checkbox" data-element="castle-wk" checked> White O-O</label>
+                            </li>
+                            <li>
+                                <label><input type="checkbox" data-element="castle-wq"> White O-O-O</label>
+                            </li>
+                        </ul>
+
+                        <ul>
+                            <li>
+                                <label><input type="checkbox" data-element="castle-bk"> Black O-O</label>
+                            </li>
+                            <li>
+                                <label><input type="checkbox" data-element="castle-bq"> Black O-O-O</label>
+                            </li>
+                        </ul>
                     </fieldset>
 
                     <label>
+                        <i class="fa-solid fa-chess-pawn"></i>
                         En Passant:
                         <select data-element="en-passant-square">
                             <option value="-">-</option>
@@ -320,26 +335,32 @@
                 <!-- FEN / PGN -->
                 <fieldset class="editor__fieldset editor__notation" data-element="editor-notation">
                     <legend>Notation</legend>
-                    <label>
-                        FEN:
-                        <input type="text" data-element="fen-input" placeholder="FEN here" />
+                    <label for="fen">
+                        <i class="fa-solid fa-code">
+                        </i> FEN:
                     </label>
-                    <label>
-                        PGN:
-                        <textarea data-element="pgn-input" disabled placeholder="PGN not yet supported"></textarea>
+                    <input type="text" id="fen" data-element="fen-input" placeholder="FEN here" />
+                    <label for="pgn">
+                        <i class="fa-solid fa-file-lines">
+                        </i> PGN:
                     </label>
+                    <textarea id="pgn" data-element="pgn-input" disabled placeholder="PGN not yet supported"></textarea>
                 </fieldset>
 
                 <!-- Quick actions -->
                 <fieldset class="editor__fieldset editor__actions" data-element="quick-actions">
                     <legend>Quick Actions</legend>
-                    <button type="button" data-action="set-start">Set Starting Position</button>
-                    <button type="button" data-action="clear-board">Clear Board</button>
-                    <button type="button" data-action="flip-board">Flip Board</button>
+                    <button type="button" data-action="set-start"><i class="fa-solid fa-house"></i> Set Starting
+                        Position</button>
+                    <button type="button" data-action="clear-board"><i class="fa-solid fa-trash-can"></i> Clear
+                        Board</button>
+                    <button type="button" data-action="flip-board"><i class="fa-solid fa-rotate"></i> Flip
+                        Board</button>
                 </fieldset>
 
                 <!-- Start game -->
-                <button type="submit" class="editor__start-button" data-action="start-game">Play from this
+                <button type="submit" class="editor__start-button" data-action="start-game" disabled><i
+                        class="fa-solid fa-chess-board"></i> Play from this
                     position</button>
 
             </form>

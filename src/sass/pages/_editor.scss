@@ -2,11 +2,120 @@
 
 
 .editor {
-    flex-direction: row;
+    --_square-size: 100px;
+
+
+    display: grid;
+    grid-template-columns: auto auto;
     height: fit-content;
+    gap: 15px;
+
+    margin-block: auto;
+
+    @media screen and (768px <=width < 1450px) {
+        --_square-size: max((50cqi/ 8), 35px);
+    }
+
+    @include mobile-only {
+        --_square-size: max((100cqi/ 8), 35px);
+    }
+
+
 
     &__tools {
         display: flex;
         height: 100%;
+
+        background-color: var(--editor-bg-color);
+
+        padding: 15px;
+    }
+
+    &__form {
+        display: flex;
+        flex-direction: column;
+
+        gap: 10px;
+
+        & label {
+            display: flex;
+            align-items: center;
+
+            gap: 10px;
+
+            font-size: 18px;
+            font-weight: 500;
+        }
+    }
+
+
+    &__fieldset {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+
+        padding: 15px;
+
+        border: 1px solid var(--border-color);
+        border-radius: 5px;
+
+        background-color: var(--semi-transparent-bg);
+    }
+
+    &__pieces {
+        background-color: var(--editor-pieces-bg-color);
+    }
+
+    &__pieces-row {
+        display: flex;
+    }
+
+    &__piece {
+        position: static;
+    }
+
+
+    &__game-options {
+        display: flex;
+        flex-direction: column;
+
+        gap: 25px;
+
+    }
+
+
+    &__castling {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+
+
+    &__notation {
+
+        &>label {
+
+            align-items: flex-start;
+        }
+
+        &>:is(input, textarea) {
+            margin-block: 5px 25px;
+        }
+    }
+
+
+    &__actions {
+        &>button {
+            width: 100%;
+            text-align: left;
+
+            padding: 10px;
+
+            border-radius: 100vmax;
+
+            &:hover {
+                background-color: var(--bg-secondary);
+            }
+        }
     }
 }
