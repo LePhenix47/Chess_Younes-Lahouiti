@@ -30,8 +30,15 @@
 
         view-transition-name: chess-board;
 
-        container-type: inline-size;
+        @supports not (-moz-user-select: none) {
+            // ? Apply container queries only in non-Firefox browsers.
+            // ? Firefox's container query support is incomplete with grid layouts,
+            // ? causing chess pieces to be misaligned if enabled (offset by 5 squares).
+            container-type: inline-size;
+        }
+
         container-name: chess-board;
+
 
         isolation: isolate;
 
