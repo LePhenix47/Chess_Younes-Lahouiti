@@ -86,6 +86,7 @@
         position: relative;
 
 
+        // TODO: Update it to use classes instead of attributes
         &[data-available-move] {
 
             &:not([data-occupied-by])::before {

@@ -118,7 +118,7 @@ class ChessBoard extends ChessBoardController {
     return piece;
   };
 
-  private readonly uiDragManager: DragManager;
+  protected readonly uiDragManager: DragManager;
 
   constructor(container: HTMLElement) {
     super(container);

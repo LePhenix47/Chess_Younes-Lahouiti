@@ -1,0 +1,12 @@
+@use "../utils/" as *;
+
+
+.editor {
+    flex-direction: row;
+    height: fit-content;
+
+    &__tools {
+        display: flex;
+        height: 100%;
+    }
+}
