@@ -27,7 +27,6 @@
 
 .chess {
     &__board {
-
         view-transition-name: chess-board;
 
         @supports not (-moz-user-select: none) {
@@ -57,6 +56,13 @@
 
         @include mobile-only {
             --_square-size: max((100cqi/ 8), 35px);
+        }
+
+        // ? For iPads on landscape mode (Flawed as laptops are also landscape)
+        @include device-orientation(landscape) {
+            @include laptop-only {
+                --_square-size: 50px;
+            }
         }
 
         &.black-perspective {
@@ -278,7 +284,7 @@
         width: var(--_square-size);
         height: var(--_square-size);
 
-        display: flex;
+        display: block;
 
         touch-action: none;
         user-select: none;
@@ -321,6 +327,7 @@
 
         &>svg {
             pointer-events: none;
+            height: 100%;
         }
 
         &:hover {
