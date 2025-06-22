@@ -38,23 +38,70 @@ class UserPointer {
   public static computeOffsetFromContainer = (
     pageX: number,
     pageY: number,
-    container: HTMLElement
+    container: HTMLElement,
+    containerRect?: DOMRect
   ): { x: number; y: number } => {
     if (!(container instanceof HTMLElement)) {
       throw new TypeError("Container must be an HTMLElement");
     }
 
-    const containerRect: DOMRect = container.getBoundingClientRect();
+    const rect = containerRect ?? container.getBoundingClientRect();
 
-    const x = pageX - containerRect.x;
-    const y = pageY - containerRect.y;
+    const x = pageX - rect.x;
+    const y = pageY - rect.y;
 
+    return { x, y };
+  };
+
+  public static rotateAroundContainerCenter = (
+    localX: number,
+    localY: number,
+    container: HTMLElement,
+    angleInDegrees: number
+  ): { rotatedX: number; rotatedY: number } => {
+    // ? Get the center of the container
+    const centerX: number = container.offsetWidth / 2;
+    const centerY: number = container.offsetHeight / 2;
+
+    // ? Translate point to origin (center)
+    const dx: number = localX - centerX;
+    const dy: number = localY - centerY;
+
+    // ? Convert angle to radians
+    const angle: number = (angleInDegrees * Math.PI) / 180;
+
+    /*
+    ? Apply rotation
+    ? See this video to understand how it works: https://youtu.be/h9OWnuarYuc?si=bb0mmXS2vvbuG_kY    
+    */
+    const rotatedXFromMiddle: number =
+      dx * Math.cos(angle) - dy * Math.sin(angle);
+    const rotatedYFromMiddle: number =
+      dx * Math.sin(angle) + dy * Math.cos(angle);
+
+    // ? Translate back to top-left origin (undo the center shift)
     return {
-      x,
-      y,
+      rotatedX: rotatedXFromMiddle + centerX,
+      rotatedY: rotatedYFromMiddle + centerY,
     };
   };
 
+  public static computeInitialPointerOffset = (
+    pageX: number,
+    pageY: number,
+    elementRect: DOMRect,
+    containerRect: DOMRect
+  ): { offsetX: number; offsetY: number } => {
+    const relativeElementX = elementRect.x - containerRect.x;
+    const relativeElementY = elementRect.y - containerRect.y;
+
+    return {
+      offsetX: pageX - relativeElementX,
+      offsetY: pageY - relativeElementY,
+    };
+  };
+
+  private rotationAngle: number = 0; // Default rotation angle for the container
   public isPressing: boolean = false;
   public pressedElement: HTMLElement | null = null;
 
@@ -125,6 +172,16 @@ class UserPointer {
         signal: this.controller.signal,
       });
     }
+  };
+
+  public setRotationAngle = (angle: number): this => {
+    if (typeof angle !== "number") {
+      throw new TypeError("Rotation angle must be a number");
+    }
+
+    this.rotationAngle = angle;
+
+    return this;
   };
 
   // Add one listener for each event
@@ -221,10 +278,15 @@ class UserPointer {
       this.pressedElement.getBoundingClientRect?.();
     const containerDomRect = this.container.getBoundingClientRect?.();
 
-    this.initXOffset =
-      event.pageX + containerDomRect.x - selectedElementDomRect.x;
-    this.initYOffset =
-      event.pageY + containerDomRect.y - selectedElementDomRect.y;
+    const { offsetX, offsetY } = UserPointer.computeInitialPointerOffset(
+      event.pageX,
+      event.pageY,
+      selectedElementDomRect,
+      containerDomRect
+    );
+
+    this.initXOffset = offsetX;
+    this.initYOffset = offsetY;
 
     const lastRecordedValuesKeys = Object.keys(
       this.lastRecordedPositions
@@ -256,8 +318,25 @@ class UserPointer {
 
     // Only dispatch drag start once when the threshold is met
     const containerRect = this.container.getBoundingClientRect?.();
-    const adjustedX = event.pageX - containerRect.x;
-    const adjustedY = event.pageY - containerRect.y;
+
+    const { x: localX, y: localY } = UserPointer.computeOffsetFromContainer(
+      event.pageX,
+      event.pageY,
+      this.container,
+      containerRect
+    );
+
+    const { rotatedX: adjustedX, rotatedY: adjustedY } =
+      UserPointer.rotateAroundContainerCenter(
+        localX,
+        localY,
+        this.container,
+        this.rotationAngle
+      );
+
+    // const adjustedX = event.pageX - containerRect.x;
+    // const adjustedY = event.pageY - containerRect.y;
+
     if (dragDuration >= this.DRAG_TIME_THRESHOLD_MS && !this.dragStarted) {
       this.lastRecordedPositions.containerX = adjustedX;
       this.lastRecordedPositions.containerY = adjustedY;
@@ -321,8 +400,23 @@ class UserPointer {
     } else {
       // Long duration means it's a drag
       const containerRect = this.container.getBoundingClientRect?.();
-      const adjustedX = event.pageX - containerRect.x;
-      const adjustedY = event.pageY - containerRect.y;
+
+      const { x: localX, y: localY } = UserPointer.computeOffsetFromContainer(
+        event.pageX,
+        event.pageY,
+        this.container,
+        containerRect
+      );
+
+      const { rotatedX: adjustedX, rotatedY: adjustedY } =
+        UserPointer.rotateAroundContainerCenter(
+          localX,
+          localY,
+          this.container,
+          this.rotationAngle
+        );
+      // const adjustedX = event.pageX - containerRect.x;
+      // const adjustedY = event.pageY - containerRect.y;
 
       this.lastRecordedPositions.containerX = adjustedX;
       this.lastRecordedPositions.containerY = adjustedY;
