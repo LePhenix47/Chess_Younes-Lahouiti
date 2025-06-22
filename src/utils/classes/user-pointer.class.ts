@@ -35,11 +35,34 @@ export type LastPointerPositions = Mutable<
   }>;
 
 class UserPointer {
+  public static computeOffsetFromContainer = (
+    pageX: number,
+    pageY: number,
+    container: HTMLElement
+  ): { x: number; y: number } => {
+    if (!(container instanceof HTMLElement)) {
+      throw new TypeError("Container must be an HTMLElement");
+    }
+
+    const containerRect: DOMRect = container.getBoundingClientRect();
+
+    const x = pageX - containerRect.x;
+    const y = pageY - containerRect.y;
+
+    return {
+      x,
+      y,
+    };
+  };
+
   public isPressing: boolean = false;
   public pressedElement: HTMLElement | null = null;
 
   public initXOffset: number = NaN;
   public initYOffset: number = NaN;
+
+  private dragStartTimeout: NodeJS.Timeout;
+  private dragStarted: any;
 
   public lastRecordedPositions: LastPointerPositions = {
     pageX: NaN,
@@ -60,28 +83,6 @@ class UserPointer {
 
   private pointerDownTime: number = NaN;
   private readonly DRAG_TIME_THRESHOLD_MS = 85;
-
-  static computeOffsetFromContainer = (
-    pageX: number,
-    pageY: number,
-    container: HTMLElement
-  ): { x: number; y: number } => {
-    if (!(container instanceof HTMLElement)) {
-      throw new TypeError("Container must be an HTMLElement");
-    }
-
-    const containerRect: DOMRect = container.getBoundingClientRect();
-
-    const x = pageX - containerRect.x;
-    const y = pageY - containerRect.y;
-
-    return {
-      x,
-      y,
-    };
-  };
-  dragStartTimeout: NodeJS.Timeout;
-  dragStarted: any;
 
   constructor(container?: HTMLElement) {
     const containerIsNotHTMLElement =
