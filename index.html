@@ -237,11 +237,15 @@
                 </defs>
             </svg>
         </span>
-        <section class="chess__board black-perspective" data-element="chess-board"></section>
+        <section class="chess__board" data-element="chess-board"></section>
         <form class="analysis" data-element="analysis-tab">
-            <label for="analysis" class="analysis__label">
-                <input data-element="fen-input" placeholder="Enter FEN here" type="text" name="fen"
+            <label class="analysis__label">
+                <input data-element="fen-input" placeholder="Enter FEN here" type="text" name="chess-board"
                     class="analysis__input" />
+            </label>
+            <label class="analysis__label">
+                <input data-element="perspective-toggle" type="checkbox" name="chess-board" class="analysis__input" />
+                Toggle to black's perspective
             </label>
             <a href="/Chess_Younes-Lahouiti/pages/editor.html" target="_self">Go to board editor</a>
         </form>

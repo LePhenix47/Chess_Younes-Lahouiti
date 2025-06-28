@@ -147,6 +147,8 @@ abstract class ChessBoardController implements IGameLogic, IBoardUI {
     return this.boardUI.elementIsChessPiece(element);
   };
 
+  public abstract setPerspective(color: PieceColor): void;
+
   public readonly getPieceFromElement = (el: HTMLElement): Piece | null => {
     const piece: Piece | null = [...this.piecesMap.values()].find(
       (piece) => piece.element === el

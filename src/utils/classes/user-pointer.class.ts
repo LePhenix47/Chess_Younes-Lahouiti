@@ -38,14 +38,17 @@ class UserPointer {
   public static computeOffsetFromContainer = (
     pageX: number,
     pageY: number,
-    container: HTMLElement,
-    containerRect?: DOMRect
+    containerOrRect: HTMLElement | DOMRect
   ): { x: number; y: number } => {
-    if (!(container instanceof HTMLElement)) {
-      throw new TypeError("Container must be an HTMLElement");
-    }
+    let rect: DOMRect;
 
-    const rect = containerRect ?? container.getBoundingClientRect();
+    if (containerOrRect instanceof HTMLElement) {
+      rect = containerOrRect.getBoundingClientRect();
+    } else if (containerOrRect instanceof DOMRect) {
+      rect = containerOrRect;
+    } else {
+      throw new TypeError("Argument must be an HTMLElement or DOMRect");
+    }
 
     const x = pageX - rect.x;
     const y = pageY - rect.y;
@@ -95,13 +98,16 @@ class UserPointer {
     const relativeElementX = elementRect.x - containerRect.x;
     const relativeElementY = elementRect.y - containerRect.y;
 
+    const { x: adjustedX, y: adjustedY } =
+      UserPointer.computeOffsetFromContainer(pageX, pageY, containerRect);
+
     return {
-      offsetX: pageX - relativeElementX,
-      offsetY: pageY - relativeElementY,
+      offsetX: adjustedX - relativeElementX,
+      offsetY: adjustedY - relativeElementY,
     };
   };
 
-  private rotationAngle: number = 180; // Default rotation angle for the container
+  private rotationAngle: number = 0; // Default rotation angle for the container
   public isPressing: boolean = false;
   public pressedElement: HTMLElement | null = null;
 
@@ -322,7 +328,7 @@ class UserPointer {
     const { x: localX, y: localY } = UserPointer.computeOffsetFromContainer(
       event.pageX,
       event.pageY,
-      this.container,
+      // this.container,
       containerRect
     );
 
@@ -333,9 +339,6 @@ class UserPointer {
         this.container,
         this.rotationAngle
       );
-
-    // const adjustedX = event.pageX - containerRect.x;
-    // const adjustedY = event.pageY - containerRect.y;
 
     if (dragDuration >= this.DRAG_TIME_THRESHOLD_MS && !this.dragStarted) {
       this.lastRecordedPositions.containerX = adjustedX;
@@ -404,7 +407,7 @@ class UserPointer {
       const { x: localX, y: localY } = UserPointer.computeOffsetFromContainer(
         event.pageX,
         event.pageY,
-        this.container,
+        // this.container,
         containerRect
       );
 

@@ -49,6 +49,10 @@ class DragManager {
     this.attachEvents();
   }
 
+  public setAngle = (angleInDegrees: number): void => {
+    this.userPointer.setRotationAngle(angleInDegrees);
+  };
+
   public setCallbacks = (callbacks: DragManagerCallbacks) => {
     this.callbacks = { ...this.callbacks, ...callbacks };
   };
@@ -101,8 +105,8 @@ class DragManager {
       hoveringSquare = this.getSquareFromCoords(adjustedX, adjustedY);
     }
 
-    const pieceDragX: number = pageX - this.userPointer.initXOffset;
-    const pieceDragY: number = pageY - this.userPointer.initYOffset;
+    const pieceDragX: number = adjustedX - this.userPointer.initXOffset;
+    const pieceDragY: number = adjustedY - this.userPointer.initYOffset;
 
     this.callbacks.onDragMove?.(
       this.draggedPiece,

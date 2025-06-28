@@ -51,4 +51,16 @@ const chessBoardInstance = new ChessBoard(chessBoardElement);
 const fen = "8/8/8/8/8/k2q4/8/K7 b - - 0 1";
 // chessBoardInstance.loadFen(fen);
 
-chessBoardInstance.loadFen(chessBoardInstance.initialFen);
+const blackPerspectiveToggle = document.querySelector<HTMLInputElement>(
+  "[data-element=perspective-toggle]"
+);
+
+blackPerspectiveToggle?.addEventListener("change", () => {
+  if (blackPerspectiveToggle.checked) {
+    chessBoardInstance.setPerspective("black");
+  } else {
+    chessBoardInstance.setPerspective("white");
+  }
+});
+
+chessBoardInstance.loadFen(fen);

@@ -136,6 +136,15 @@ class ChessBoard extends ChessBoardController {
     });
   }
 
+  public setPerspective = (color: PieceColor): void => {
+    this.boardPerspective = color;
+
+    const angle: number = color === "white" ? 0 : 180;
+    this.uiDragManager.setAngle(angle);
+
+    this.container.classList.toggle("black-perspective", color === "black");
+  };
+
   private handleDragStart = (pieceElement: HTMLElement) => {
     this.selectPiece(pieceElement);
   };
