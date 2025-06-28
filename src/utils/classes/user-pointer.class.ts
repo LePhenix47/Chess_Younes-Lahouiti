@@ -301,10 +301,6 @@ class UserPointer {
     this.isPressing = isPressing;
     this.pressedElement = event.target! as HTMLElement;
 
-    const selectedElementDomRect =
-      this.pressedElement.getBoundingClientRect?.();
-    const containerDomRect = this.container.getBoundingClientRect?.();
-
     const { offsetX, offsetY } = UserPointer.computeInitialPointerOffset(
       event.pageX,
       event.pageY,
