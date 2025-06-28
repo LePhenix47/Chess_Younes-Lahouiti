@@ -71,22 +71,32 @@ class UserPointer {
     const dy: number = localY - centerY;
 
     // ? Convert angle to radians
-    const angle: number = (angleInDegrees * Math.PI) / 180;
 
-    /*
-    ? Apply rotation
-    ? See this video to understand how it works: https://youtu.be/h9OWnuarYuc?si=bb0mmXS2vvbuG_kY    
-    */
-    const rotatedXFromMiddle: number =
-      dx * Math.cos(angle) - dy * Math.sin(angle);
-    const rotatedYFromMiddle: number =
-      dx * Math.sin(angle) + dy * Math.cos(angle);
+    const { x: rotatedXFromMiddle, y: rotatedYFromMiddle } =
+      UserPointer.rotateVector(dx, dy, angleInDegrees);
 
     // ? Translate back to top-left origin (undo the center shift)
     return {
       rotatedX: rotatedXFromMiddle + centerX,
       rotatedY: rotatedYFromMiddle + centerY,
     };
+  };
+
+  public static rotateVector = (
+    dx: number, // ? Coord from the center of the container
+    dy: number, // ? Coord from the center of the container
+    angleInDegrees: number
+  ): { x: number; y: number } => {
+    const angleRad = (angleInDegrees * Math.PI) / 180;
+
+    /*
+    ? Apply rotation from the middle of the container
+    ? See this video to understand how it works: https://youtu.be/h9OWnuarYuc?si=bb0mmXS2vvbuG_kY    
+    */
+    const rotatedX = dx * Math.cos(angleRad) - dy * Math.sin(angleRad);
+    const rotatedY = dx * Math.sin(angleRad) + dy * Math.cos(angleRad);
+
+    return { x: rotatedX, y: rotatedY };
   };
 
   public static computeInitialPointerOffset = (

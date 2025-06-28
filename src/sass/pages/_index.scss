@@ -66,10 +66,12 @@
         }
 
         &.black-perspective {
-            rotate: 180deg;
+            --_rotation: 180deg;
+
+            rotate: var(--_rotation);
 
             & *:is(.chess__square, .chess__piece) {
-                rotate: 180deg;
+                rotate: calc(-1 * var(--_rotation));
             }
 
             & .chess__square {
