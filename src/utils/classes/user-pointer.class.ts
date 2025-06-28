@@ -102,18 +102,29 @@ class UserPointer {
   public static computeInitialPointerOffset = (
     pageX: number,
     pageY: number,
-    elementRect: DOMRect,
-    containerRect: DOMRect
+    pressedElement: HTMLElement,
+    container: HTMLElement
   ): { offsetX: number; offsetY: number } => {
-    const relativeElementX = elementRect.x - containerRect.x;
-    const relativeElementY = elementRect.y - containerRect.y;
+    const elementRect = pressedElement.getBoundingClientRect?.();
+    const containerRect = container.getBoundingClientRect?.();
 
-    const { x: adjustedX, y: adjustedY } =
-      UserPointer.computeOffsetFromContainer(pageX, pageY, containerRect);
+    const { x: pointerX, y: pointerY } = UserPointer.computeOffsetFromContainer(
+      pageX,
+      pageY,
+      containerRect
+    );
+
+    const pieceX = elementRect.x - containerRect.x;
+    const pieceY = elementRect.y - containerRect.y;
+
+    const offsetX = pointerX - pieceX;
+    const offsetY = pointerY - pieceY;
+
+    console.log("offsetX", offsetX, "offsetY", offsetY);
 
     return {
-      offsetX: adjustedX - relativeElementX,
-      offsetY: adjustedY - relativeElementY,
+      offsetX,
+      offsetY,
     };
   };
 
@@ -297,8 +308,8 @@ class UserPointer {
     const { offsetX, offsetY } = UserPointer.computeInitialPointerOffset(
       event.pageX,
       event.pageY,
-      selectedElementDomRect,
-      containerDomRect
+      this.pressedElement,
+      this.container
     );
 
     this.initXOffset = offsetX;
