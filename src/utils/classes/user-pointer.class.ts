@@ -101,7 +101,7 @@ class UserPointer {
     };
   };
 
-  private rotationAngle: number = 0; // Default rotation angle for the container
+  private rotationAngle: number = 180; // Default rotation angle for the container
   public isPressing: boolean = false;
   public pressedElement: HTMLElement | null = null;
 
