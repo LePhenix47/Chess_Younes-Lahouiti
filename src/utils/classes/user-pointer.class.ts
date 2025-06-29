@@ -103,29 +103,54 @@ class UserPointer {
     pageX: number,
     pageY: number,
     pressedElement: HTMLElement,
-    container: HTMLElement
+    container: HTMLElement,
+    rotationAngle: number
   ): { offsetX: number; offsetY: number } => {
-    const elementRect = pressedElement.getBoundingClientRect?.();
-    const containerRect = container.getBoundingClientRect?.();
+    const elementRect = pressedElement.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
 
+    // Step 1: Compute pointer coords relative to container (unrotated screen coords)
     const { x: pointerX, y: pointerY } = UserPointer.computeOffsetFromContainer(
       pageX,
       pageY,
       containerRect
     );
 
+    // Step 2: Undo container rotation on pointer coords to get unrotated pointer position
+    const pointerUnrotated = UserPointer.rotateAroundContainerCenter(
+      pointerX,
+      pointerY,
+      container,
+      -rotationAngle // Negative to undo rotation
+    );
+
+    // Step 3: Compute piece coords relative to container (unrotated screen coords)
     const pieceX = elementRect.x - containerRect.x;
     const pieceY = elementRect.y - containerRect.y;
 
-    const offsetX = pointerX - pieceX;
-    const offsetY = pointerY - pieceY;
+    // Step 4: Undo container rotation on piece coords to get unrotated piece position
+    const pieceUnrotated = UserPointer.rotateAroundContainerCenter(
+      pieceX,
+      pieceY,
+      container,
+      -rotationAngle // Same negative angle to undo rotation
+    );
 
-    console.log("offsetX", offsetX, "offsetY", offsetY);
+    // Step 5: Calculate offset between pointer and piece in unrotated container space
+    // This offset preserves correct relative position regardless of rotation
+    let offsetX = -1 * (pointerUnrotated.rotatedX - pieceUnrotated.rotatedX);
+    let offsetY = -1 * (pointerUnrotated.rotatedY - pieceUnrotated.rotatedY);
 
-    return {
-      offsetX,
-      offsetY,
-    };
+    if (Math.round(rotationAngle) === 180) {
+      offsetX = -offsetX + pressedElement.offsetWidth;
+      offsetY = -offsetY + pressedElement.offsetHeight;
+    }
+
+    console.log(
+      `offsetX: ${offsetX}, offsetY: ${offsetY}, rotationAngle: ${rotationAngle}`
+    );
+
+    return { offsetX, offsetY };
   };
 
   private rotationAngle: number = 0; // Default rotation angle for the container
@@ -305,7 +330,8 @@ class UserPointer {
       event.pageX,
       event.pageY,
       this.pressedElement,
-      this.container
+      this.container,
+      this.rotationAngle
     );
 
     this.initXOffset = offsetX;
