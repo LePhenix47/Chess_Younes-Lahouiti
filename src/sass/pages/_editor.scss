@@ -13,10 +13,26 @@
     margin-block: auto;
 
     @media screen and (768px <=width < 1450px) {
+
+
         --_square-size: max((50cqi/ 8), 35px);
     }
 
+    @include tablet-only {
+        display: block;
+        columns: 2;
+
+        & *:not(.chess__board > *) {
+            break-inside: avoid;
+
+            margin-bottom: 5px;
+        }
+    }
+
     @include mobile-only {
+        display: flex;
+        flex-direction: column;
+
         --_square-size: max((100cqi/ 8), 35px);
     }
 
@@ -29,6 +45,15 @@
         background-color: var(--editor-bg-color);
 
         padding: 15px;
+
+        @include tablet-only {
+            display: contents;
+        }
+
+        @include mobile-only {
+            display: contents;
+        }
+
     }
 
     &__form {
@@ -36,6 +61,15 @@
         flex-direction: column;
 
         gap: 10px;
+
+        @include tablet-only {
+            display: contents;
+        }
+
+        @include mobile-only {
+            display: contents;
+        }
+
 
         & label {
             display: flex;
@@ -51,6 +85,7 @@
 
     &__fieldset {
         display: flex;
+        width: 100%;
         flex-direction: column;
         gap: 5px;
 
@@ -64,10 +99,30 @@
 
     &__pieces {
         background-color: var(--editor-pieces-bg-color);
+
+        @include mobile-only {
+            display: contents;
+
+            &>legend {
+                display: none;
+            }
+        }
     }
 
     &__pieces-row {
         display: flex;
+
+        @include mobile-only {
+            justify-content: center;
+
+            &--white {
+                order: -1;
+            }
+
+            &--black {
+                order: 0;
+            }
+        }
     }
 
     &__piece {
