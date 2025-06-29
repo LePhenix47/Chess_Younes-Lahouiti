@@ -109,41 +109,74 @@ class UserPointer {
     const elementRect = pressedElement.getBoundingClientRect();
     const containerRect = container.getBoundingClientRect();
 
-    // Step 1: Compute pointer coords relative to container (unrotated screen coords)
+    // Pointer relative to container, then unrotate
     const { x: pointerX, y: pointerY } = UserPointer.computeOffsetFromContainer(
       pageX,
       pageY,
       containerRect
     );
 
-    // Step 2: Undo container rotation on pointer coords to get unrotated pointer position
     const pointerUnrotated = UserPointer.rotateAroundContainerCenter(
       pointerX,
       pointerY,
       container,
-      -rotationAngle // Negative to undo rotation
+      -rotationAngle
     );
 
-    // Step 3: Compute piece coords relative to container (unrotated screen coords)
+    // Piece relative to container, then unrotate
     const pieceX = elementRect.x - containerRect.x;
     const pieceY = elementRect.y - containerRect.y;
 
-    // Step 4: Undo container rotation on piece coords to get unrotated piece position
     const pieceUnrotated = UserPointer.rotateAroundContainerCenter(
       pieceX,
       pieceY,
       container,
-      -rotationAngle // Same negative angle to undo rotation
+      -rotationAngle
     );
 
-    // Step 5: Calculate offset between pointer and piece in unrotated container space
-    // This offset preserves correct relative position regardless of rotation
-    let offsetX = -1 * (pointerUnrotated.rotatedX - pieceUnrotated.rotatedX);
-    let offsetY = -1 * (pointerUnrotated.rotatedY - pieceUnrotated.rotatedY);
+    // Offset vector in unrotated space
+    const offsetXUnrotated =
+      pointerUnrotated.rotatedX - pieceUnrotated.rotatedX;
+    const offsetYUnrotated =
+      pointerUnrotated.rotatedY - pieceUnrotated.rotatedY;
 
-    if (Math.round(rotationAngle) === 180) {
-      offsetX = -offsetX + pressedElement.offsetWidth;
-      offsetY = -offsetY + pressedElement.offsetHeight;
+    // Rotate offset vector *forward* by rotationAngle to get rotated offset
+    const rotatedOffset = UserPointer.rotateVector(
+      offsetXUnrotated,
+      offsetYUnrotated,
+      rotationAngle
+    );
+
+    const w = pressedElement.offsetWidth;
+    const h = pressedElement.offsetHeight;
+
+    // Normalize rotationAngle between 0-359
+    const angle = ((Math.round(rotationAngle) % 360) + 360) % 360;
+
+    let offsetX: number;
+    let offsetY: number;
+
+    switch (angle) {
+      case 0:
+        offsetX = rotatedOffset.x;
+        offsetY = rotatedOffset.y;
+        break;
+      case 90:
+        offsetX = w - rotatedOffset.x;
+        offsetY = rotatedOffset.y;
+        break;
+      case 180:
+        offsetX = w - rotatedOffset.x;
+        offsetY = h - rotatedOffset.y;
+        break;
+      case 270:
+        offsetX = rotatedOffset.x;
+        offsetY = h - rotatedOffset.y;
+        break;
+      default:
+        // For arbitrary angles, just fallback to rotated offset directly
+        offsetX = rotatedOffset.x;
+        offsetY = rotatedOffset.y;
     }
 
     console.log(
