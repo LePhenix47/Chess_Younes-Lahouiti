@@ -54,6 +54,8 @@
         touch-action: none;
         user-select: none;
 
+        transition: rotate 500ms ease;
+
         @include mobile-only {
             --_square-size: max((100cqi/ 8), 35px);
         }
@@ -300,8 +302,9 @@
 
         left: calc(var(--_rank) * var(--_square-size));
         top: calc(var(--_file) * var(--_square-size));
+        will-change: left, top;
 
-        transition: top var(--_piece-transition-duration) var(--_piece-transition-timing-function), left var(--_piece-transition-duration) var(--_piece-transition-timing-function);
+        transition: top var(--_piece-transition-duration) var(--_piece-transition-timing-function), left var(--_piece-transition-duration) var(--_piece-transition-timing-function), rotate 500ms ease;
 
         width: var(--_square-size);
         height: var(--_square-size);
@@ -327,7 +330,6 @@
             left: var(--_drag-x);
             top: var(--_drag-y);
 
-            will-change: left, top;
             transform: translateZ(0);
         }
 
