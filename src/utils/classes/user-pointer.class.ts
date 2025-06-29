@@ -137,6 +137,7 @@ class UserPointer {
     // Offset vector in unrotated space
     const offsetXUnrotated =
       pointerUnrotated.rotatedX - pieceUnrotated.rotatedX;
+
     const offsetYUnrotated =
       pointerUnrotated.rotatedY - pieceUnrotated.rotatedY;
 
@@ -157,26 +158,18 @@ class UserPointer {
     let offsetY: number;
 
     switch (angle) {
-      case 0:
+      case 0: {
         offsetX = rotatedOffset.x;
         offsetY = rotatedOffset.y;
         break;
-      case 90:
-        offsetX = w - rotatedOffset.x;
-        offsetY = rotatedOffset.y;
-        break;
-      case 180:
+      }
+      case 180: {
         offsetX = w - rotatedOffset.x;
         offsetY = h - rotatedOffset.y;
         break;
-      case 270:
-        offsetX = rotatedOffset.x;
-        offsetY = h - rotatedOffset.y;
-        break;
+      }
       default:
-        // For arbitrary angles, just fallback to rotated offset directly
-        offsetX = rotatedOffset.x;
-        offsetY = rotatedOffset.y;
+        throw new Error("Invalid rotation angle, must be 0 or 180");
     }
 
     console.log(
