@@ -56,11 +56,8 @@ const blackPerspectiveToggle = document.querySelector<HTMLInputElement>(
 );
 
 blackPerspectiveToggle?.addEventListener("change", () => {
-  if (blackPerspectiveToggle.checked) {
-    chessBoardInstance.setPerspective("black");
-  } else {
-    chessBoardInstance.setPerspective("white");
-  }
+  const perspective = blackPerspectiveToggle.checked ? "black" : "white";
+  chessBoardInstance.setPerspective(perspective);
 });
 
 chessBoardInstance.loadFen(fen);
