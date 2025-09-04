@@ -7,13 +7,13 @@ import BaseMovesGenerator, {
 } from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
 import { LegalMoves } from "./chess-board-controller";
-import ChessBoard, {
+import type {
   AlgebraicNotation,
   ChessFile,
   ChessRank,
   Move,
   PlayerMaterialCount,
-} from "./chess-board.class";
+} from "../types/chess.types";
 import {
   DirectionKey,
   KingPiece,
@@ -23,6 +23,7 @@ import {
 } from "./move-generator.class";
 import Piece, { PieceColor } from "./piece.class";
 import Player from "./player.class";
+import ChessBoard from "./chess-board.class";
 
 export type CastleSquares = `${"c" | "d" | "e" | "f" | "g"}${"1" | "8"}`;
 
@@ -55,12 +56,12 @@ abstract class RulesEngine {
       const { piecesMap, allLegalMovesForCurrentPlayer } = board;
 
       // * 1. Validate each side has exactly 1 king
-      const whiteMaterial: PlayerMaterialCount = ChessBoard.getPlayerMaterial(
+      const whiteMaterial: PlayerMaterialCount = BoardUtils.getPlayerMaterial(
         piecesMap,
         "white"
       );
 
-      const blackMaterial: PlayerMaterialCount = ChessBoard.getPlayerMaterial(
+      const blackMaterial: PlayerMaterialCount = BoardUtils.getPlayerMaterial(
         piecesMap,
         "black"
       );
@@ -163,8 +164,8 @@ abstract class RulesEngine {
   public static isInsufficientMaterialDraw = (
     piecesMap: Map<AlgebraicNotation, Piece>
   ): boolean => {
-    const whiteMaterial = ChessBoard.getPlayerMaterial(piecesMap, "white");
-    const blackMaterial = ChessBoard.getPlayerMaterial(piecesMap, "black");
+    const whiteMaterial = BoardUtils.getPlayerMaterial(piecesMap, "white");
+    const blackMaterial = BoardUtils.getPlayerMaterial(piecesMap, "black");
 
     const whiteInsufficient =
       RulesEngine.hasInsufficientMaterialForPlayer(whiteMaterial);
@@ -291,7 +292,7 @@ abstract class RulesEngine {
     player: Player,
     opponentAttacksDetailed?: OpponentAttackDetail[]
   ): boolean => {
-    const king = ChessBoard.getPieceFromArray(
+    const king = BoardUtils.getPieceFromArray(
       pieces,
       "king",
       player.color

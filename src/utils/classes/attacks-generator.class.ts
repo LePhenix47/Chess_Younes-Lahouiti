@@ -1,6 +1,6 @@
 import BaseMovesGenerator from "./base-moves-generator.class";
 import BoardUtils from "./board-utils.class";
-import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import MovesGenerator, {
   PawnPiece,
   SlidingPiece,
@@ -158,7 +158,7 @@ abstract class AttacksGenerator {
       }
     }
 
-    const king = ChessBoard.getPieceFromArray(
+    const king = BoardUtils.getPieceFromArray(
       pieces,
       "king",
       piece.color

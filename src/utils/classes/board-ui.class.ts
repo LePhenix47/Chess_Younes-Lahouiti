@@ -1,6 +1,6 @@
 import BoardUtils from "./board-utils.class";
 import ChessBoardController from "./chess-board-controller";
-import { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import Piece, { PieceColor, PromotedPiece } from "./piece.class";
 
 export interface IBoardUI {

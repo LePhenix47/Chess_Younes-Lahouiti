@@ -14,7 +14,7 @@ import type {
   WinLossResult,
   DrawResult,
   Move,
-} from "./chess-board.class"; //
+} from "../types/chess.types"; //
 import RulesEngine from "./rules-engine.class";
 import GameLogic, { IGameLogic } from "./game-logic.class";
 import BoardUI, { BoardHighlightType, IBoardUI } from "./board-ui.class";

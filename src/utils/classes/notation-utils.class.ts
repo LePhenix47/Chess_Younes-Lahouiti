@@ -1,11 +1,11 @@
 import BoardUtils from "./board-utils.class";
 import { LegalMoves } from "./chess-board-controller";
-import {
+import type {
   AlgebraicNotation,
   ChessFile,
   ChessRank,
   Move,
-} from "./chess-board.class";
+} from "../types/chess.types";
 import Piece, {
   PgnPieceType,
   PgnPromotionPieceType,

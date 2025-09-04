@@ -1,4 +1,4 @@
-import { AlgebraicNotation, ChessFile, ChessRank } from "./chess-board.class";
+import type { AlgebraicNotation, ChessFile, ChessRank, PlayerMaterialCount } from "../types/chess.types";
 import { IPieceLogic, PieceColor } from "./piece.class";
 
 abstract class BoardUtils {
@@ -198,6 +198,85 @@ abstract class BoardUtils {
     }
 
     return null;
+  };
+
+  public static getPlayerMaterial = (
+    piecesMap: Map<AlgebraicNotation, any>,
+    playerColor: "white" | "black"
+  ): PlayerMaterialCount => {
+    const initialCounts = {
+      kings: 0,
+      pawns: 0,
+      bishops: 0,
+      knights: 0,
+      rooks: 0,
+      queens: 0,
+    };
+
+    const materialMap = new Map<keyof PlayerMaterialCount, number>(
+      Object.entries(initialCounts) as [keyof PlayerMaterialCount, number][]
+    );
+
+    // Bishop colors stored separately
+    const bishopColors = new Set<"light" | "dark">();
+
+    for (const [square, piece] of piecesMap.entries()) {
+      if (piece.color !== playerColor) continue;
+
+      const key = `${piece.type}s` as keyof PlayerMaterialCount;
+
+      // Increment count for piece type if it's tracked
+      if (materialMap.has(key)) {
+        const previousCount: number = materialMap.get(key) ?? 0;
+        materialMap.set(key, previousCount + 1);
+      }
+
+      if (piece.type === "bishop") {
+        const bishopSquareColor = BoardUtils.isSquareOfType(square, "light")
+          ? "light"
+          : "dark";
+        bishopColors.add(bishopSquareColor);
+      }
+    }
+
+    // Convert Map back to object
+    const countsObject = Object.fromEntries(materialMap.entries()) as Omit<
+      PlayerMaterialCount,
+      "bishopColors"
+    >;
+
+    // Return full PlayerMaterialCount including bishopColors
+    return {
+      ...countsObject,
+      bishopColors,
+    };
+  };
+
+  public static getPieceFromArray = (
+    pieces: Map<AlgebraicNotation, any> | any[],
+    type: string,
+    color: string,
+    algebraicNotation?: AlgebraicNotation
+  ): any | null => {
+    if (pieces instanceof Map) {
+      pieces = [...pieces.values()];
+    }
+
+    const piece: any | null =
+      pieces.find((p) => {
+        const isSamePieceType = p.type === type && p.color === color;
+
+        if (algebraicNotation) {
+          return (
+            isSamePieceType &&
+            p.position.algebraicNotation === algebraicNotation
+          );
+        }
+
+        return isSamePieceType;
+      }) || null;
+
+    return piece;
   };
 }
 

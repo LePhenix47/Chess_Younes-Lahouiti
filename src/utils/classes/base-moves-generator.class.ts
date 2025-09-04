@@ -1,5 +1,5 @@
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import MovesGenerator, {
   DirectionKey,
   KingPiece,

@@ -4,7 +4,7 @@ import AttacksGenerator, {
 import BaseMovesGenerator from "./base-moves-generator.class";
 import ChessBoardController from "./chess-board-controller";
 import BoardUtils from "./board-utils.class";
-import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import Piece from "./piece.class";
 import Player from "./player.class";
 import RulesEngine, { PinnedPieceInfo } from "./rules-engine.class";
@@ -47,7 +47,7 @@ abstract class MovesGenerator {
     piece: Piece;
     moves: AlgebraicNotation[];
   }[] => {
-    const king = ChessBoard.getPieceFromArray(
+    const king = BoardUtils.getPieceFromArray(
       piecesMap,
       "king",
       player.color
@@ -128,7 +128,7 @@ abstract class MovesGenerator {
   ): { moves: AlgebraicNotation[]; piece: Piece }[] => {
     const result: { moves: AlgebraicNotation[]; piece: Piece }[] = [];
 
-    const king = ChessBoard.getPieceFromArray(
+    const king = BoardUtils.getPieceFromArray(
       pieces,
       "king",
       player.color

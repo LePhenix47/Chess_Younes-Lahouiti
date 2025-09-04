@@ -1,6 +1,6 @@
 import BoardUI from "./board-ui.class";
 import BoardUtils from "./board-utils.class";
-import { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import UserPointer, { PointerDragEventMap } from "./user-pointer.class";
 
 type DragManagerCallbacks = Partial<{

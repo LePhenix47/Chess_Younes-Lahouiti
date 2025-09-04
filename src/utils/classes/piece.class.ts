@@ -1,5 +1,5 @@
 import BoardUtils from "./board-utils.class";
-import ChessBoard, { AlgebraicNotation } from "./chess-board.class";
+import type { AlgebraicNotation } from "../types/chess.types";
 import { SlidingPiece } from "./move-generator.class";
 
 export type PieceColor = "white" | "black";

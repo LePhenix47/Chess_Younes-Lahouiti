@@ -4,7 +4,7 @@ import Piece, { PieceColor } from "./piece.class";
 import Player, { CastlingRights } from "./player.class";
 
 import RulesEngine from "./rules-engine.class";
-import { AlgebraicNotation, ChessFile, Move } from "./chess-board.class";
+import type { AlgebraicNotation, ChessFile, Move } from "../types/chess.types";
 import ZobristHasher from "./zobrist-hasher.class";
 import BoardUtils from "./board-utils.class";
 
